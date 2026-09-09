@@ -14,6 +14,7 @@ spec:
     spec:
       containers:
         - name: vuorovaikutuspeli
+          imagePullPolicy: Always
           image: eerohy/vuorovaikutuspeli:staging
           ports:
             - containerPort: 3000

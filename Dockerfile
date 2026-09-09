@@ -12,6 +12,9 @@ RUN chmod -R 777 *
 
 RUN npm run build
 
+# Give group 0 ownership and full read/write/execute access across the whole directory
+RUN chgrp -R 0 /app && chmod -R g=u /app
+
 # Vite preview defaults to port 4173 (or 3000 if configured in vite.config)
 EXPOSE 4173
 
