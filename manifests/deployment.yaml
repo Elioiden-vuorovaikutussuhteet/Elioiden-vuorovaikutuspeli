@@ -14,7 +14,7 @@ spec:
     spec:
       containers:
         - name: vuorovaikutuspeli
-          image: eerohy/vuorovaikutuspeli:1
+          image: eerohy/vuorovaikutuspeli:staging
           ports:
             - containerPort: 3000
           
