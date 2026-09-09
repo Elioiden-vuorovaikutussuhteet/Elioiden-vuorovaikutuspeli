@@ -1,0 +1,20 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: vuorovaikutuspeli-dep
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: vuorovaikutuspeli
+  template:
+    metadata:
+      labels:
+        app: vuorovaikutuspeli
+    spec:
+      containers:
+        - name: vuorovaikutuspeli
+          image: eerohy/vuorovaikutuspeli:1
+          ports:
+            - containerPort: 3000
+          
