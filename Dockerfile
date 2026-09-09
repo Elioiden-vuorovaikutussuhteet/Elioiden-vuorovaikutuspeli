@@ -12,6 +12,8 @@ RUN chmod -R 777 *
 
 RUN npm run build
 
-EXPOSE 3000
+# Vite preview defaults to port 4173 (or 3000 if configured in vite.config)
+EXPOSE 4173
 
-CMD ["npm", "run"]
+# Bind to 0.0.0.0 so Kubernetes can route traffic into the container
+CMD ["npm", "run", "preview", "--", "--host", "0.0.0.0", "--port", "4173"]
