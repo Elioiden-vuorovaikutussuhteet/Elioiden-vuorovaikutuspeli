@@ -19,7 +19,7 @@ spec:
       containers:
         - name: eliopeli
           imagePullPolicy: Always
-          image: eerohy/eliopeli:staging
+          image: eliopeli:staging
           ports:
             - containerPort: 4173
           
