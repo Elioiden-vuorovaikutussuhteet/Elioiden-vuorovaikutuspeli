@@ -12,7 +12,7 @@ spec:
     - name: staging
       from:
         kind: DockerImage
-        name: eeroHY/eliopeli:staging
+        name: eerohy/eliopeli:staging
       importPolicy:
         scheduled: true
       referencePolicy:
