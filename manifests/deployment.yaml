@@ -1,0 +1,25 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: eliopeli-dep
+  annotations:
+    alpha.image.policy.openshift.io/resolve-names: "*"
+    image.openshift.io/triggers: >-
+      [{"from":{"kind":"ImageStreamTag","name":"eliopeli:staging","namespace":"eliopeli"},"fieldPath":"spec.template.spec.containers[?(@.name==\"eliopeli\")].image","pause":"false"}]
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: eliopeli
+  template:
+    metadata:
+      labels:
+        app: eliopeli
+    spec:
+      containers:
+        - name: eliopeli
+          imagePullPolicy: Always
+          image: eerohy/eliopeli:staging
+          ports:
+            - containerPort: 4173
+          
