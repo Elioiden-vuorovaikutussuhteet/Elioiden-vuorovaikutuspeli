@@ -1,5 +1,5 @@
 import react from '@vitejs/plugin-react'
-import { defineConfig } from 'vite'
+import { defineConfig } from 'vitest/config'
 
 //vite.dev/config/
 export default defineConfig({
@@ -9,7 +9,15 @@ export default defineConfig({
       '/api': {
         target: "http://localhost:4173",
         changeOrigin: true, 
-      }
-    }
-  }
+      },
+    },
+  },
+    test: {
+    environment: 'jsdom',
+
+    coverage: {
+      provider: 'v8',
+      reporter: ['text', 'html'],
+    },
+  },
 })
