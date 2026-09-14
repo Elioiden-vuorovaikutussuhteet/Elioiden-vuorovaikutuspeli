@@ -9,7 +9,15 @@ export default defineConfig({
       '/api': {
         target: "http://localhost:4173",
         changeOrigin: true, 
-      }
-    }
-  }
+      },
+    },
+  },
+    test: {
+    environment: 'jsdom',
+
+    coverage: {
+      provider: 'v8',
+      reporter: ['text', 'html'],
+    },
+  },
 })
