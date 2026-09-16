@@ -1,0 +1,18 @@
+apiVersion: route.openshift.io/v1
+kind: Route
+metadata:
+  name: eliopeli-route-prod
+  namespace: eliopeli
+  labels:
+    app: eliopeli-prod
+    type: external
+spec:
+  port:
+    targetPort: 4173
+  to:
+    kind: Service
+    name: eliopeli-prod-svc
+  tls:
+    termination: edge
+    insecureEdgeTerminationPolicy: Redirect
+  wildcardPolicy: None  
