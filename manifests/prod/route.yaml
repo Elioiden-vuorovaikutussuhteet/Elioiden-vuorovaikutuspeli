@@ -8,7 +8,7 @@ metadata:
     type: external
 spec:
   # TODO move to ocp-prod-0
-  host: eliopeli.ext.ocp-test-0.k8s.it.helsinki.fi
+  host: eliopeli.ext.ocp-prod-0.k8s.it.helsinki.fi
   port:
     targetPort: 4173
   to:
