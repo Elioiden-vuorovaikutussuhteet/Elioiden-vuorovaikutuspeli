@@ -1,21 +1,18 @@
-import Phaser from 'phaser';
+import Phaser from "phaser";
 
 export default class GameScene extends Phaser.Scene {
   constructor() {
     super("GameScene");
   }
 
-  preload() {
-  }
+  preload() {}
 
   create() {
-    this.scene.launch('MenuScene');
+    this.scene.launch("MenuScene");
     this.time.delayedCall(5000, () => {
       console.log("5 seconds passed!");
     });
   }
 
-
-  update() {
-  }
+  update() {}
 }
