@@ -2,10 +2,18 @@ name: Build and Push Docker Image
 
 on:
   workflow_dispatch:
+    inputs:
+      target_environment:
+        description: 'Choose target environment'
+        required: true
+        default: 'staging'
+        type: choice
+        options:
+          - staging
+          - production
   push:
     branches:
       - main
-      - openshift 
   release:
     types: [published]
 
@@ -28,9 +36,9 @@ jobs:
         with:
           images: ${{ secrets.DOCKER_USERNAME }}/eliopeli
           tags: |
-            type=raw,value=staging,enable=${{ github.event_name != 'release' }}
+            type=raw,value=staging,enable=${{ github.event_name == 'push' || (github.event_name == 'workflow_dispatch' && inputs.target_environment == 'staging') }}
+            type=raw,value=latest,enable=${{ github.event_name == 'release' || (github.event_name == 'workflow_dispatch' && inputs.target_environment == 'production') }}
             type=semver,pattern={{version}},enable=${{ github.event_name == 'release' }}
-            type=raw,value=latest,enable=${{ github.event_name == 'release' }}
 
       - name: Build and push Docker image
         uses: docker/build-push-action@v5
