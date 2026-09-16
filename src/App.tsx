@@ -1,5 +1,7 @@
+import { PhaserGame } from './components/PhaserGame';
+
 function App() {
-  return <h1> Tervetuloa peliin!</h1>
+  return <PhaserGame />;
 }
 
-export default App
+export default App;
