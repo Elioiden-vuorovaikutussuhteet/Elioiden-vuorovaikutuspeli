@@ -1,11 +1,19 @@
 import Phaser from 'phaser';
 
 export default class GameScene extends Phaser.Scene {
+
   constructor() {
     super("GameScene");
   }
 
-  preload() {
+ 
+  
+  preload (){
+        //  Load the assets for the game
+        this.load.setPath('assets');
+
+        this.load.image('bullhornacacia', 'bullhornacacia.png');
+        
   }
 
   create() {
@@ -13,6 +21,7 @@ export default class GameScene extends Phaser.Scene {
     this.time.delayedCall(5000, () => {
       console.log("5 seconds passed!");
     });
+    this.bullhornacacia = this.add.image(512, 384, 'bullhornacacia');
   }
 
 
