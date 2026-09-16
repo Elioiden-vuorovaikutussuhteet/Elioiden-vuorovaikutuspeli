@@ -14,6 +14,8 @@ export default class Organism extends Phaser.GameObjects.Sprite {
 
         super(scene, x, y, organismData.texture);
 
+        this.setScale(organismData.default_scale);
+
         scene.add.existing(this);
     }
 
