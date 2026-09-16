@@ -1,5 +1,5 @@
-import { useEffect, useRef } from 'react';
-import { createGame } from '../game/Game';
+import { useEffect, useRef } from "react";
+import { createGame } from "../game/Game";
 
 export function PhaserGame() {
   const containerRef = useRef<HTMLDivElement>(null);
@@ -18,9 +18,9 @@ export function PhaserGame() {
     <div
       ref={containerRef}
       style={{
-        width: '90vw',
-        height: '90vh',
-        overflow: 'hidden',
+        width: "100%",
+        height: "100%",
+        overflow: "hidden",
       }}
     />
   );
