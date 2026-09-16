@@ -1,10 +1,10 @@
 apiVersion: route.openshift.io/v1
 kind: Route
 metadata:
-  name: eliopeli-route
+  name: eliopeli-route-staging
   namespace: eliopeli
   labels:
-    app: eliopeli
+    app: eliopeli-staging
     type: external
 spec:
   host: eliopeli-staging.ext.ocp-test-0.k8s.it.helsinki.fi 
@@ -12,7 +12,7 @@ spec:
     targetPort: 4173 
   to:
     kind: Service
-    name: eliopeli-svc
+    name: eliopeli-staging-svc
   tls:
     termination: edge
     insecureEdgeTerminationPolicy: Redirect

@@ -6,6 +6,16 @@ React + TypeScript perusteinen opetuspeli.
 
 # Käyttö
 
+## Production 
+
+https://eliopeli-route-prod-eliopeli.apps.ocp-prod-0.k8s.it.helsinki.fi/
+
+## Staging 
+
+https://eliopeli-staging.ext.ocp-test-0.k8s.it.helsinki.fi/
+
+## Local
+
 Vaatimukset:
 
 - Node.js

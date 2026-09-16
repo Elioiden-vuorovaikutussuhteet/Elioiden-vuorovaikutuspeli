@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: eliopeli-prod-svc
+  namespace: eliopeli
+  labels:
+    app: eliopeli-prod
+spec:
+  selector:
+    app: eliopeli-prod
+  ports:
+    - name: http
+      port: 80
+      targetPort: 4173
+  type: ClusterIP

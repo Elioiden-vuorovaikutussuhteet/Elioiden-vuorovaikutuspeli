@@ -1,18 +1,17 @@
 kind: ImageStream
 apiVersion: image.openshift.io/v1
-
 metadata:
   name: eliopeli
   labels:
-    app: eliopeli
+    app: eliopeli-prod
 spec:
   lookupPolicy:
     local: false
   tags:
-    - name: staging
+    - name: latest
       from:
         kind: DockerImage
-        name: eerohy/eliopeli:staging
+        name: eerohy/eliopeli:latest
       importPolicy:
         scheduled: true
       referencePolicy:
