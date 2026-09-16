@@ -2,6 +2,7 @@ import Phaser from "phaser";
 import Organism from "../entities/organism"
 
 export default class GameScene extends Phaser.Scene {
+  private organisms: Organism[] = [];
 
   constructor() {
     super("GameScene");
@@ -20,7 +21,9 @@ export default class GameScene extends Phaser.Scene {
     this.time.delayedCall(5000, () => {
       console.log("5 seconds passed!");
     });
-    this.bullhornacacia = new Organism(this, 800, 500, "acacia")
+    this.organisms.push(
+      new Organism(this, centerX, centerY, "acacia")
+    );
   }
 
   update() {}

@@ -1,11 +1,11 @@
-export interface Organism {
+export interface OrganismData {
    id: string;
    name: string;
    texture: string;
 
 }
 
-export const organisms: Organism[] = [
+export const organisms: OrganismData[] = [
    {
       id: "acacia",
       name: "Acacia",
