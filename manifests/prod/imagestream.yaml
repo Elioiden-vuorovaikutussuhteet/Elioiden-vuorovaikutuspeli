@@ -3,19 +3,11 @@ apiVersion: image.openshift.io/v1
 metadata:
   name: eliopeli
   labels:
-    app: eliopeli
+    app: eliopeli-prod
 spec:
   lookupPolicy:
     local: false
   tags:
-    - name: staging
-      from:
-        kind: DockerImage
-        name: eerohy/eliopeli:staging
-      importPolicy:
-        scheduled: true
-      referencePolicy:
-        type: Local
     - name: latest
       from:
         kind: DockerImage
