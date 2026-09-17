@@ -1,6 +1,8 @@
 import Phaser from "phaser";
+import Organism from "../entities/organism"
 
 export default class GameScene extends Phaser.Scene {
+  private organisms: Organism[] = [];
 
   constructor() {
     super("GameScene");
@@ -8,7 +10,7 @@ export default class GameScene extends Phaser.Scene {
 
   preload() {
     this.load.setPath("assets");
-    this.load.image('bullhornacacia', 'bullhornacacia.png');
+    this.load.image('acacia_sprite', 'bullhornacacia.png');
   }
 
   create() {
@@ -19,8 +21,9 @@ export default class GameScene extends Phaser.Scene {
     this.time.delayedCall(5000, () => {
       console.log("5 seconds passed!");
     });
-    this.bullhornacacia = this.add.image(centerX, centerY, 'bullhornacacia');
-    this.bullhornacacia.setScale(1.5);
+    this.organisms.push(
+      new Organism(this, centerX, centerY, "acacia")
+    );
   }
 
   update() {}
