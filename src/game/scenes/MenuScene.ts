@@ -42,6 +42,7 @@ export default class MenuScene extends Phaser.Scene {
 
     button.on("pointerdown", () => {
       this.scene.stop();
+      this.scene.get("GameScene").events.emit("menuClosed");
     });
   }
 }
