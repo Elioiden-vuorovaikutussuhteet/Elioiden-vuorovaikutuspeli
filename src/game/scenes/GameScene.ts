@@ -11,6 +11,7 @@ export default class GameScene extends Phaser.Scene {
   preload() {
     this.load.setPath("assets");
     this.load.image('acacia_sprite', 'bullhornacacia.png');
+    this.load.image('amf_sprite', 'amf.png');
   }
 
   create() {
@@ -18,12 +19,18 @@ export default class GameScene extends Phaser.Scene {
     const centerY = this.cameras.main.centerY;
 
     this.scene.launch("MenuScene");
-    this.time.delayedCall(5000, () => {
-      console.log("5 seconds passed!");
-    });
+
     this.organisms.push(
       new Organism(this, centerX, centerY, "acacia")
     );
+
+    this.events.once("menuClosed", () => {
+      this.time.delayedCall(3000, () => {
+        this.organisms.push(
+          new Organism(this, centerX + 100, centerY + 350, "amf")
+        );
+      });
+    });
   }
 
   update() {}
