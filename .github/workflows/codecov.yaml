@@ -20,6 +20,9 @@ jobs:
 
       - name: Run lint
         run: npm run lint
+      
+      - name: Run TypeCheck
+        run: npm run typecheck
 
       - name: Run tests
         run: npx vitest run --coverage
