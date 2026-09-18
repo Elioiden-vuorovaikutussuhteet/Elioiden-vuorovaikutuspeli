@@ -14,6 +14,10 @@ https://eliopeli-prod.ext.ocp-prod-0.k8s.it.helsinki.fi/
 
 https://eliopeli-staging.ext.ocp-test-0.k8s.it.helsinki.fi/
 
+## Docker image
+
+https://hub.docker.com/r/eliopeli/eliopeli
+
 ## Local
 
 Vaatimukset:
