@@ -8,7 +8,7 @@ React + TypeScript perusteinen opetuspeli.
 
 ## Production 
 
-https://eliopeli-route-prod-eliopeli.apps.ocp-prod-0.k8s.it.helsinki.fi/
+https://eliopeli-prod.ext.ocp-prod-0.k8s.it.helsinki.fi/
 
 ## Staging 
 
