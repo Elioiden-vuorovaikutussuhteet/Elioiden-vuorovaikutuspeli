@@ -1,5 +1,5 @@
 import Phaser from "phaser";
-import { organisms } from './organisms'
+import { organisms } from '../data/organisms'
 
 export default class Organism extends Phaser.GameObjects.Sprite {
 
