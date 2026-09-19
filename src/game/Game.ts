@@ -1,6 +1,6 @@
-import Phaser from 'phaser';
-import GameScene from './scenes/GameScene';
-import MenuScene from './scenes/MenuScene';
+import Phaser from "phaser";
+import GameScene from "./scenes/GameScene";
+import MenuScene from "./scenes/MenuScene";
 
 export function createGame(parent: HTMLElement) {
   return new Phaser.Game({
@@ -8,14 +8,14 @@ export function createGame(parent: HTMLElement) {
     width: window.innerWidth,
     height: window.innerHeight,
     parent,
-    backgroundColor: '#adadac',
+    backgroundColor: "#d4d480",
     scene: [GameScene, MenuScene],
     scale: {
       mode: Phaser.Scale.RESIZE,
       autoCenter: Phaser.Scale.CENTER_BOTH,
     },
     physics: {
-      default: 'arcade',
+      default: "arcade",
       arcade: {
         debug: false,
       },

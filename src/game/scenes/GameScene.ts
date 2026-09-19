@@ -1,5 +1,5 @@
 import Phaser from "phaser";
-import Organism from "../entities/organism"
+import Organism from "../entities/organism";
 
 export default class GameScene extends Phaser.Scene {
   private organisms: Organism[] = [];
@@ -10,8 +10,8 @@ export default class GameScene extends Phaser.Scene {
 
   preload() {
     this.load.setPath("assets");
-    this.load.image('acacia_sprite', 'bullhornacacia.png');
-    this.load.image('amf_sprite', 'amf.png');
+    this.load.image("acacia_sprite", "bullhornacacia.png");
+    this.load.image("amf_sprite", "amf.png");
   }
 
   create() {
@@ -20,15 +20,11 @@ export default class GameScene extends Phaser.Scene {
 
     this.scene.launch("MenuScene");
 
-    this.organisms.push(
-      new Organism(this, centerX, centerY, "acacia")
-    );
+    this.organisms.push(new Organism(this, centerX, centerY - 200, "acacia"));
 
     this.events.once("menuClosed", () => {
       this.time.delayedCall(3000, () => {
-        this.organisms.push(
-          new Organism(this, centerX + 100, centerY + 350, "amf")
-        );
+        this.organisms.push(new Organism(this, centerX, centerY + 200, "amf"));
       });
     });
   }
