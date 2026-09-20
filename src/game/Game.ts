@@ -8,7 +8,7 @@ export function createGame(parent: HTMLElement) {
     width: window.innerWidth,
     height: window.innerHeight,
     parent,
-    backgroundColor: "#d4d480",
+    backgroundColor: "#f9f980",
     scene: [GameScene, MenuScene],
     scale: {
       mode: Phaser.Scale.RESIZE,
