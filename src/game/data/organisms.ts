@@ -10,12 +10,12 @@ export const organisms: OrganismData[] = [
     id: "acacia",
     name: "Bullhorn Acacia",
     texture: "acacia_sprite",
-    default_scale: 1.2,
+    default_scale: 1.3,
   },
   {
     id: "amf",
     name: "Arbuscular Mycorrhizal Fungus",
     texture: "amf_sprite",
-    default_scale: 0.4,
+    default_scale: 0.5,
   },
 ];
