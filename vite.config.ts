@@ -22,6 +22,7 @@ export default defineConfig({
       exclude: [
         'src/main.tsx',
         'src/game/data/**',
+        'src/game/Game.ts',
         ]
     },
   },
