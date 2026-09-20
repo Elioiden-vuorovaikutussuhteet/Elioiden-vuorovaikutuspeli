@@ -69,7 +69,7 @@ describe("GameScene", () => {
         );
       });
   
-    it("creates an amf after the menu closes", () => {
+    it("creates an amf 3s after the menu closes", () => {
         scene.create();
 
         const menuClosedCallback = vi.mocked(scene.events.once).mock.calls[0][1];

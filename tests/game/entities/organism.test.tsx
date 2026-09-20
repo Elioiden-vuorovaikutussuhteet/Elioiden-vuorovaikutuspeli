@@ -1,17 +1,19 @@
 import "vitest-canvas-mock";
 import { describe, expect, it, vi } from "vitest";
-import Organism from "../../../src/game/entities/organism";
+import { getOrganismData } from "../../../src/game/entities/organism";
 
-describe("Organism", () => {
+describe("getOrganismData", () => {
     it("throws error when the organism type does not exist", () => {
-        const scene = {
-            add: {
-                existing: vi.fn(),
-            },
-        } as any;
+        expect(() => getOrganismData("does-not-exist")).toThrow(
+            'Organism type "does-not-exist" not found'
+        );
+    });
+    
+    it("returns the correct data for a valid organism type", () => {
+        const data = getOrganismData("acacia");
 
-        expect(() => {
-            new Organism(scene, 100, 200, "does-not-exist");
-        }).toThrow('Organism type "does-not-exist" not found');
+        expect(data.id).toBe("acacia");
+        expect(data.name).toBe("Bullhorn Acacia");
+        expect(data.default_scale).toBe(1.5)
     });
 });
