@@ -173,4 +173,35 @@ describe("GameScene", () => {
         consoleLogSpy.mockRestore();
     });
     
+    it("does nothing when the same organism is selected twice", () => {
+    const consoleLogSpy = vi
+        .spyOn(console, "log")
+        .mockImplementation(() => {});
+
+    scene.create();
+
+    const menuClosedCallback =
+        vi.mocked(scene.events.once).mock.calls[0][1];
+
+    menuClosedCallback();
+
+    const delayedCallback =
+        vi.mocked(scene.time.delayedCall).mock.calls[0][1];
+
+    delayedCallback();
+
+    const organism =
+        vi.mocked(Organism).mock.results[0].value;
+
+    const selectionCallback =
+        mockOrganismOn.mock.calls[0][1];
+
+    selectionCallback.call(scene, organism);
+    selectionCallback.call(scene, organism);
+
+    expect(consoleLogSpy).not.toHaveBeenCalled();
+
+    consoleLogSpy.mockRestore();
+});
+
 });
