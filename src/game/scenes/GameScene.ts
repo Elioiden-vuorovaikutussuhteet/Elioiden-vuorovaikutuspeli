@@ -15,6 +15,10 @@ export default class GameScene extends Phaser.Scene {
     const first = this.selectedOrganism;
     const second = organism;
   
+    if (first.organismData.id === second.organismData.id) {
+      return;
+    }
+
     // Create arrow here
     console.log(first.organismData.id, first.x, first.y);
     console.log(second.organismData.id, second.x, second.y);

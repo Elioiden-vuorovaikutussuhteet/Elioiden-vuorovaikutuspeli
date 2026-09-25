@@ -27,8 +27,30 @@ export default class Organism extends Phaser.GameObjects.Sprite {
 
     this.setInteractive();
 
+    this.enableFilters();
+
     this.on("pointerdown", () => {
       this.emit("organismSelected", this);
+    });
+
+    const glow = this.filters.internal.addGlow(
+      0xffffff,
+      5,
+      0,
+      1,
+      false,
+      10,
+      10
+    );
+    
+    glow.active = false;
+    
+    this.on("pointerover", () => {
+      glow.active = true;
+    });
+    
+    this.on("pointerout", () => {
+      glow.active = false;
     });
 
     scene.add.existing(this);
