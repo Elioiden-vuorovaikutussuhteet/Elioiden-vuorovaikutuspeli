@@ -1,5 +1,6 @@
 import Phaser from "phaser";
 import { organisms } from "../data/organisms";
+import type { OrganismData } from "../data/organisms";
 
 export function getOrganismData(type: string) {
     const data = organisms.find((item) => item.id === type);
@@ -13,12 +14,44 @@ export function getOrganismData(type: string) {
 }
 
 export default class Organism extends Phaser.GameObjects.Sprite {
+  public readonly organismData: OrganismData;
+
   constructor(scene: Phaser.Scene, x: number, y: number, type = "acacia") {
     const organismData = getOrganismData(type);
 
     super(scene, x, y, organismData.texture);
 
+    this.organismData = organismData;
+
     this.setScale(organismData.default_scale);
+
+    this.setInteractive();
+
+    this.enableFilters();
+
+    this.on("pointerdown", () => {
+      this.emit("organismSelected", this);
+    });
+
+    const glow = this.filters!.internal.addGlow(
+      0xffffff,
+      5,
+      0,
+      1,
+      false,
+      10,
+      10
+    );
+    
+    glow.active = false;
+    
+    this.on("pointerover", () => {
+      glow.active = true;
+    });
+    
+    this.on("pointerout", () => {
+      glow.active = false;
+    });
 
     scene.add.existing(this);
     scene.add

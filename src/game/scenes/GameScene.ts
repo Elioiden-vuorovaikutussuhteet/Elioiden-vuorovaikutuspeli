@@ -4,6 +4,38 @@ import Organism from "../entities/organism";
 export default class GameScene extends Phaser.Scene {
   private organisms: Organism[] = [];
 
+  private selectedOrganism: Organism | null = null;
+
+  private getStartEndOrganisms(organism: Organism) {
+    if (this.selectedOrganism === null) {
+      this.selectedOrganism = organism;
+      return;
+    }
+
+    const first = this.selectedOrganism;
+    const second = organism;
+  
+    if (first.organismData.id === second.organismData.id) {
+      return;
+    }
+
+    // Create arrow here
+    console.log(first.organismData.id, first.x, first.y);
+    console.log(second.organismData.id, second.x, second.y);
+
+    this.selectedOrganism = null;
+  }
+
+  private createOrganism(x: number, y: number, type: string) {
+    const organism = new Organism(this, x, y, type);
+  
+    organism.on("organismSelected", this.getStartEndOrganisms, this);
+  
+    this.organisms.push(organism);
+  
+    return organism;
+  }
+  
   constructor() {
     super("GameScene");
   }
@@ -20,11 +52,11 @@ export default class GameScene extends Phaser.Scene {
 
     this.scene.launch("MenuScene");
 
-    this.organisms.push(new Organism(this, centerX, centerY - 200, "acacia"));
+    this.createOrganism(centerX, centerY - 200, "acacia");
 
     this.events.once("menuClosed", () => {
       this.time.delayedCall(3000, () => {
-        this.organisms.push(new Organism(this, centerX, centerY + 200, "amf"));
+        this.createOrganism(centerX, centerY + 200, "amf");
       });
     });
   }
