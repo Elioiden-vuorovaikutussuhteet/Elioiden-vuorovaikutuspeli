@@ -1,5 +1,6 @@
 import Phaser from "phaser";
 import { organisms } from "../data/organisms";
+import type { OrganismData } from "../data/organisms";
 
 export function getOrganismData(type: string) {
     const data = organisms.find((item) => item.id === type);
@@ -13,6 +14,8 @@ export function getOrganismData(type: string) {
 }
 
 export default class Organism extends Phaser.GameObjects.Sprite {
+  public readonly organismData: OrganismData;
+
   constructor(scene: Phaser.Scene, x: number, y: number, type = "acacia") {
     const organismData = getOrganismData(type);
 
