@@ -33,7 +33,7 @@ export default class Organism extends Phaser.GameObjects.Sprite {
       this.emit("organismSelected", this);
     });
 
-    const glow = this.filters.internal.addGlow(
+    const glow = this.filters!.internal.addGlow(
       0xffffff,
       5,
       0,
