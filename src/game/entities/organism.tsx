@@ -12,7 +12,15 @@ export default class Organism extends Phaser.GameObjects.Sprite {
 
     super(scene, x, y, organismData.texture);
 
+    this.organismData = organismData;
+
     this.setScale(organismData.default_scale);
+
+    this.setInteractive();
+
+    this.on("pointerdown", () => {
+      this.emit("organismSelected", this);
+    });
 
     scene.add.existing(this);
     scene.add
