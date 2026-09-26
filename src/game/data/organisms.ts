@@ -18,4 +18,10 @@ export const organisms: OrganismData[] = [
     texture: "amf_sprite",
     default_scale: 0.5,
   },
+  {
+    id: "sapota",
+    name: "Sapota",
+    texture: "sapota_sprite",
+    default_scale: 1.4,
+  },
 ];
