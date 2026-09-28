@@ -45,7 +45,7 @@ export default class GameScene extends Phaser.Scene {
     this.load.setPath("assets");
     this.load.image("acacia_sprite", "bullhornacacia.png");
     this.load.image("amf_sprite", "amf.png");
-    this.load.image("infobutton_sprite", "infobutton.png");
+    this.load.image("infobutton_sprite", "altinfo.png");
   }
 
   create() {
@@ -53,7 +53,7 @@ export default class GameScene extends Phaser.Scene {
     const centerY = this.cameras.main.centerY;
 
     this.scene.launch("MenuScene");
-    const infobutton = new InfoButton(this, 50, 50, "infobutton_sprite");
+    const infobutton = new InfoButton(this, 40, 40, "infobutton_sprite");
     infobutton.on("infoButtonClicked", () => {
       this.scene.launch("TutorialScene");
     });
