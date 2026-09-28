@@ -1,5 +1,6 @@
 import Phaser from "phaser";
 import Organism from "../entities/organism";
+import { getRelation } from "../RelationsService";
 
 export default class GameScene extends Phaser.Scene {
   private organisms: Organism[] = [];
@@ -14,14 +15,18 @@ export default class GameScene extends Phaser.Scene {
 
     const first = this.selectedOrganism;
     const second = organism;
+    const relation = getRelation(
+      first.organismData.id,
+      second.organismData.id
+    );
   
     if (first.organismData.id === second.organismData.id) {
       return;
     }
 
     // Create arrow here
-    console.log(first.organismData.id, first.x, first.y);
-    console.log(second.organismData.id, second.x, second.y);
+    console.log(first.organismData.id, first.x, first.y, relation);
+    console.log(second.organismData.id, second.x, second.y, relation);
 
     this.selectedOrganism = null;
   }
