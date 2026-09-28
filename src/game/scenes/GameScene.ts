@@ -53,7 +53,7 @@ export default class GameScene extends Phaser.Scene {
     const centerY = this.cameras.main.centerY;
 
     this.scene.launch("MenuScene");
-    const infobutton = new InfoButton(this, 40, 40, "infobutton_sprite");
+    const infobutton = new InfoButton(this, 40, 40);
     infobutton.on("infoButtonClicked", () => {
       this.scene.launch("TutorialScene");
     });

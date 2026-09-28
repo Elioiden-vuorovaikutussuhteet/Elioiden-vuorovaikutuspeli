@@ -55,7 +55,7 @@ export default class TutorialScene extends Phaser.Scene {
         })
         .setOrigin(0.0);
 
-        const closebutton = new CloseButton(this, centerX, centerY + 200, "close_button_sprite")
+        const closebutton = new CloseButton(this, centerX, centerY + 200)
         closebutton.on("closeButtonClicked", () => {
             this.scene.stop();
         });
