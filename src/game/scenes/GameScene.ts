@@ -52,6 +52,8 @@ export default class GameScene extends Phaser.Scene {
 
     this.scene.launch("MenuScene");
 
+    this.scene.launch("TutorialScene");
+
     this.createOrganism(centerX, centerY - 200, "acacia");
 
     this.events.once("menuClosed", () => {
