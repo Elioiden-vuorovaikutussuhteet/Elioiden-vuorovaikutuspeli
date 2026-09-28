@@ -37,12 +37,17 @@ export default class TutorialScene extends Phaser.Scene {
             30,
         );
 
-        const text = " Select whether you want \n \
-to draw a positive \n or a negative relation \n by clicking on \n the corresponding arrow \n \
-and then choosing your \n starting and end organism."
+        const text = `
+        Select whether you want
+        to draw a positive
+        or a negative relation
+        by clicking on
+        the corresponding icon
+        and then choosing your
+        starting and end organism.`;
 
         this.add
-        .text((centerX - menuWidth / 2), centerY / 2, text, {
+        .text((centerX - menuWidth / 2) - 70, centerY / 2, text, {
             fontFamily: "monospace",
             fontSize: "18px",
             fontStyle: "bold",
