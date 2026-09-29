@@ -53,12 +53,7 @@ describe("GameScene", () => {
 
         scene.input = mockDeep<typeof scene.input>({
             keyboard: {
-                createCursorKeys: vi.fn().mockReturnValue({
-                    left: { isDown: false },
-                    right: { isDown: false },
-                    up: { isDown: false },
-                    down: { isDown: false },
-                }),
+                createCursorKeys: vi.fn().mockReturnValue({}),
             },
         });
 
@@ -218,4 +213,96 @@ describe("GameScene", () => {
         consoleLogSpy.mockRestore();
     });
 
+});
+
+describe("GameScene Camera System", () => {
+    let scene: GameScene;
+    let mockCamera: Phaser.Cameras.Scene2D.Camera;
+    let mockCursors: {
+        left: { isDown: boolean };
+        right: { isDown: boolean };
+        up: { isDown: boolean };
+        down: { isDown: boolean };
+    };
+
+    beforeEach(() => {
+        vi.clearAllMocks();
+
+        scene = new GameScene();
+
+        scene.cameras = mockDeep<typeof scene.cameras>();
+        scene.input = mockDeep<typeof scene.input>();
+        scene.add = mockDeep<typeof scene.add>();
+
+        scene.cameras.main.width = 1920;
+        scene.cameras.main.height = 1080;
+        scene.cameras.main.scrollX = 0;
+        scene.cameras.main.scrollY = 0;
+        scene.cameras.main.zoom = 1;
+
+        mockCursors = {
+            left: { isDown: false },
+            right: { isDown: false },
+            up: { isDown: false },
+            down: { isDown: false },
+        };
+
+        scene.input.keyboard!.createCursorKeys = vi.fn().mockReturnValue(mockCursors);
+
+        scene.scene = mockPartial<typeof scene.scene>({
+            launch: vi.fn(),
+        });
+
+        scene.events = mockPartial<typeof scene.events>({
+            once: vi.fn(),
+        });
+
+        scene.time = mockPartial<typeof scene.time>({
+            delayedCall: vi.fn(),
+        });
+
+
+    });
+
+    describe('create()', () => {
+        it('configures bounds to 1 screen left and 3 screens wide', () => {
+            scene.create();
+
+            expect(scene.cameras.main.setBounds).toHaveBeenCalledWith(-1920, -1080, 5760, 3240);
+            expect(scene.cameras.main.scrollX).toBe(0);
+        });
+
+        it('registers a wheel event listener on input', () => {
+            scene.create();
+
+            expect(scene.input.on).toHaveBeenCalledWith(
+                'wheel',
+                expect.any(Function)
+            );
+        });
+    });
+
+    describe('update()', () => {
+        it('pans camera up when up arrow is pressed', () => {
+            scene.create();
+
+            mockCursors.up.isDown = true;
+            scene.cameras.main.scrollY = 0;
+
+            scene.update();
+
+            expect(scene.cameras.main.scrollY).toBeLessThan(0);
+        });
+
+        it('pans camera down when down arrow is pressed', () => {
+            scene.create();
+            
+            mockCursors.down.isDown = true;
+            scene.cameras.main.scrollY = 0;
+
+            scene.update();
+
+            expect(scene.cameras.main.scrollY).toBeGreaterThan(0);
+        });
+    });
 });
