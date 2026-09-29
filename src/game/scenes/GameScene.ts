@@ -110,7 +110,7 @@ export default class GameScene extends Phaser.Scene {
     this.previewArrow.setDepth(100);
 
     //Eventlistener for: If players clicks on empty space, preview arrow disappears
-    this.input.on("pointerdown", (pointer: Phaser.Input.Pointer,currentlyOver: Phaser.GameObjects.GameObject[]) => {
+    this.input.on("pointerdown", (_pointer: Phaser.Input.Pointer,currentlyOver: Phaser.GameObjects.GameObject[]) => {
       if (currentlyOver.length === 0) {
       this.selectedOrganism = null;
       this.previewArrow.clear();
