@@ -160,14 +160,16 @@ describe("GameScene", () => {
             1,
             "acacia",
             500,
-            300
+            300,
+            1
         );
     
         expect(consoleLogSpy).toHaveBeenNthCalledWith(
             2,
             "amf",
             500,
-            700
+            700,
+            1
         );
     
         consoleLogSpy.mockRestore();
