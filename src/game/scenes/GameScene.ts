@@ -26,25 +26,24 @@ export default class GameScene extends Phaser.Scene {
       return;
     }
 
-    // Create arrow here if it doesnt exist yet
+    // Create arrow if it doesnt exist yet
     if (!this.interactions.some(
       interaction =>
       interaction.from === first.organismData.id &&
       interaction.to === second.organismData.id
 
     )) {
+      // relation is positive = green(0x064f15), bad = red(0xed0924)
+      if (relation === 1){
+      this.drawArrow(this.permanentArrows, first.x, first.y, this.input.activePointer.x, this.input.activePointer.y, 0x064f15,4);
+      } else if (relation === -1){
+      this.drawArrow(this.permanentArrows, first.x, first.y, this.input.activePointer.x, this.input.activePointer.y, 0xed0924,4);
+      }
+      this.interactions.push({
+      from: first.organismData.id,
+      to: second.organismData.id
+      })}
 
-    // relation is positive = green(0x064f15), bad = red(0xed0924)
-    if (relation === 1){
-    this.drawArrow(this.permanentArrows, first.x, first.y, this.input.activePointer.x, this.input.activePointer.y, 0x064f15,4);
-    } else if (relation === -1){
-    this.drawArrow(this.permanentArrows, first.x, first.y, this.input.activePointer.x, this.input.activePointer.y, 0xed0924,4);
-    }
-    this.interactions.push({
-    from: first.organismData.id,
-    to: second.organismData.id
-    })
-    }
     this.previewArrow.clear();
 
     console.log(first.organismData.id, first.x, first.y);
@@ -109,8 +108,15 @@ export default class GameScene extends Phaser.Scene {
     this.previewArrow = this.add.graphics();
     this.permanentArrows.setDepth(100);
     this.previewArrow.setDepth(100);
+
+    //Eventlistener for: If players clicks on empty space, preview arrow disappears
+    this.input.on("pointerdown", (pointer: Phaser.Input.Pointer,currentlyOver: Phaser.GameObjects.GameObject[]) => {
+      if (currentlyOver.length === 0) {
+      this.selectedOrganism = null;
+      this.previewArrow.clear();
+      }
+    });
     
-  
     this.scene.launch("MenuScene");
 
     this.createOrganism(centerX, centerY - 200, "acacia");
@@ -124,18 +130,18 @@ export default class GameScene extends Phaser.Scene {
 
   update() {
     //This creates preview arrow when you click an organism
-    // arrowcolor true false is a placeholder that tells which button player pressed in UI
+    // arrowcolor true/false is a placeholder that tells which button player pressed in UI
     if (this.selectedOrganism !== null && this.arrowColor === false) {
-        this.previewArrow.clear();
+      this.previewArrow.clear();
 
-        this.drawArrow(
-            this.previewArrow,
-            this.selectedOrganism.x,
-            this.selectedOrganism.y,
-            this.input.activePointer.x,
-            this.input.activePointer.y,
-            0xed0924,
-            2
+      this.drawArrow(
+          this.previewArrow,
+          this.selectedOrganism.x,
+          this.selectedOrganism.y,
+          this.input.activePointer.x,
+          this.input.activePointer.y,
+          0xed0924,
+          2
         );
     }
 
