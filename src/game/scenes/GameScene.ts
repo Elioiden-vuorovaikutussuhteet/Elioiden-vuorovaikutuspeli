@@ -1,11 +1,14 @@
 import Phaser from "phaser";
 import Organism from "../entities/organism";
+import ArrowButtons from "../entities/arrowbuttons";
 import { getRelation } from "../RelationsService";
 
 export default class GameScene extends Phaser.Scene {
   private organisms: Organism[] = [];
 
   private selectedOrganism: Organism | null = null;
+
+  private arrowColorValue: boolean = true;
 
   private getStartEndOrganisms(organism: Organism) {
     if (this.selectedOrganism === null) {
@@ -40,7 +43,7 @@ export default class GameScene extends Phaser.Scene {
   
     return organism;
   }
-  
+
   constructor() {
     super("GameScene");
   }
@@ -49,15 +52,34 @@ export default class GameScene extends Phaser.Scene {
     this.load.setPath("assets");
     this.load.image("acacia_sprite", "bullhornacacia.png");
     this.load.image("amf_sprite", "amf.png");
+    this.load.image("greenbutton", "greenbutton.png");
+    this.load.image("redbutton", "redbutton.png");
   }
 
   create() {
     const centerX = this.cameras.main.centerX;
     const centerY = this.cameras.main.centerY;
-
     this.scene.launch("MenuScene");
 
     this.createOrganism(centerX, centerY - 200, "acacia");
+
+    const greenButton = new ArrowButtons(
+      this, 60, centerY - 50, "greenbutton"
+    );
+
+    const redButton = new ArrowButtons(
+      this, 60, centerY + 50, "redbutton"
+    );
+
+    greenButton.on("arrowButtonClicked", () => {
+      this.arrowColorValue = true;
+      console.log(this.arrowColorValue);
+    })
+
+    redButton.on("arrowButtonClicked", () => {
+      this.arrowColorValue = false;
+      console.log(this.arrowColorValue);
+    });
 
     this.events.once("menuClosed", () => {
       this.time.delayedCall(3000, () => {
