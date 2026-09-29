@@ -2,6 +2,9 @@ import Phaser from "phaser";
 import Organism from "../entities/organism";
 
 export default class GameScene extends Phaser.Scene {
+
+  private cursors!: Phaser.Types.Input.Keyboard.CursorKeys;
+
   private organisms: Organism[] = [];
 
   private selectedOrganism: Organism | null = null;
@@ -14,7 +17,7 @@ export default class GameScene extends Phaser.Scene {
 
     const first = this.selectedOrganism;
     const second = organism;
-  
+
     if (first.organismData.id === second.organismData.id) {
       return;
     }
@@ -28,14 +31,14 @@ export default class GameScene extends Phaser.Scene {
 
   private createOrganism(x: number, y: number, type: string) {
     const organism = new Organism(this, x, y, type);
-  
+
     organism.on("organismSelected", this.getStartEndOrganisms, this);
-  
+
     this.organisms.push(organism);
-  
+
     return organism;
   }
-  
+
   constructor() {
     super("GameScene");
   }
@@ -47,6 +50,16 @@ export default class GameScene extends Phaser.Scene {
   }
 
   create() {
+    const cam = this.cameras.main;
+    const screenW = cam.width;
+    const screenH = cam.height;
+
+    cam.setBounds(-screenW, -screenH, screenW * 3, screenH * 3);
+    cam.scrollX = 0;
+    cam.scrollY = 0;
+
+    this.cursors = this.input.keyboard!.createCursorKeys();
+
     const centerX = this.cameras.main.centerX;
     const centerY = this.cameras.main.centerY;
 
@@ -61,5 +74,20 @@ export default class GameScene extends Phaser.Scene {
     });
   }
 
-  update() {}
+  update() {
+    const cam = this.cameras.main;
+    const speed = 10;
+
+    if (this.cursors.left.isDown) {
+      cam.scrollX -= speed;
+    } else if (this.cursors.right.isDown) {
+      cam.scrollX += speed;
+    }
+
+    if (this.cursors.up.isDown) {
+      cam.scrollY -= speed;
+    } else if (this.cursors.down.isDown) {
+      cam.scrollY += speed;
+    }
+  }
 }
