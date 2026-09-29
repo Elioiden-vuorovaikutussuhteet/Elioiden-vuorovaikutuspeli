@@ -1,4 +1,5 @@
 import "vitest-canvas-mock";
+import { mockDeep } from 'vitest-mock-extended';
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import GameScene from "../../../src/game/scenes/GameScene";
 import Organism from "../../../src/game/entities/organism";
@@ -43,10 +44,21 @@ describe("GameScene", () => {
 
         scene = new GameScene();
 
-        scene.cameras = mockPartial<typeof scene.cameras>({
+        scene.cameras = mockDeep<typeof scene.cameras>({
             main: {
                 centerX: 500,
                 centerY: 500,
+            },
+        });
+
+        scene.input = mockDeep<typeof scene.input>({
+            keyboard: {
+                createCursorKeys: vi.fn().mockReturnValue({
+                    left: { isDown: false },
+                    right: { isDown: false },
+                    up: { isDown: false },
+                    down: { isDown: false },
+                }),
             },
         });
 
@@ -127,32 +139,32 @@ describe("GameScene", () => {
         // edit this test once arrow making function is called instead of log
         const consoleLogSpy = vi
             .spyOn(console, "log")
-            .mockImplementation(() => {});
-    
+            .mockImplementation(() => { });
+
         scene.create();
-    
+
         const menuClosedCallback =
             vi.mocked(scene.events.once).mock.calls[0][1];
-    
+
         menuClosedCallback();
-    
+
         const delayedCallback =
             vi.mocked(scene.time.delayedCall).mock.calls[0][1];
-    
+
         delayedCallback();
-    
+
         const firstOrganism =
             vi.mocked(Organism).mock.results[0].value;
-    
+
         const secondOrganism =
             vi.mocked(Organism).mock.results[1].value;
-    
+
         const firstSelectionCallback =
             mockOrganismOn.mock.calls[0][1];
-    
+
         const secondSelectionCallback =
             mockOrganismOn.mock.calls[1][1];
-    
+
         firstSelectionCallback.call(scene, firstOrganism);
         secondSelectionCallback.call(scene, secondOrganism);
 
@@ -163,7 +175,7 @@ describe("GameScene", () => {
             300,
             1
         );
-    
+
         expect(consoleLogSpy).toHaveBeenNthCalledWith(
             2,
             "amf",
@@ -171,39 +183,39 @@ describe("GameScene", () => {
             700,
             1
         );
-    
+
         consoleLogSpy.mockRestore();
     });
-    
+
     it("does nothing when the same organism is selected twice", () => {
-    const consoleLogSpy = vi
-        .spyOn(console, "log")
-        .mockImplementation(() => {});
+        const consoleLogSpy = vi
+            .spyOn(console, "log")
+            .mockImplementation(() => { });
 
-    scene.create();
+        scene.create();
 
-    const menuClosedCallback =
-        vi.mocked(scene.events.once).mock.calls[0][1];
+        const menuClosedCallback =
+            vi.mocked(scene.events.once).mock.calls[0][1];
 
-    menuClosedCallback();
+        menuClosedCallback();
 
-    const delayedCallback =
-        vi.mocked(scene.time.delayedCall).mock.calls[0][1];
+        const delayedCallback =
+            vi.mocked(scene.time.delayedCall).mock.calls[0][1];
 
-    delayedCallback();
+        delayedCallback();
 
-    const organism =
-        vi.mocked(Organism).mock.results[0].value;
+        const organism =
+            vi.mocked(Organism).mock.results[0].value;
 
-    const selectionCallback =
-        mockOrganismOn.mock.calls[0][1];
+        const selectionCallback =
+            mockOrganismOn.mock.calls[0][1];
 
-    selectionCallback.call(scene, organism);
-    selectionCallback.call(scene, organism);
+        selectionCallback.call(scene, organism);
+        selectionCallback.call(scene, organism);
 
-    expect(consoleLogSpy).not.toHaveBeenCalled();
+        expect(consoleLogSpy).not.toHaveBeenCalled();
 
-    consoleLogSpy.mockRestore();
-});
+        consoleLogSpy.mockRestore();
+    });
 
 });
