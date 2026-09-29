@@ -296,13 +296,35 @@ describe("GameScene Camera System", () => {
 
         it('pans camera down when down arrow is pressed', () => {
             scene.create();
-            
+
             mockCursors.down.isDown = true;
             scene.cameras.main.scrollY = 0;
 
             scene.update();
 
             expect(scene.cameras.main.scrollY).toBeGreaterThan(0);
+        });
+
+        it('pans camera left when left arrow is pressed', () => {
+            scene.create();
+
+            mockCursors.left.isDown = true;
+            scene.cameras.main.scrollX = 0;
+
+            scene.update();
+
+            expect(scene.cameras.main.scrollX).toBeLessThan(0);
+        });
+
+        it('pans camera right when right arrow is pressed', () => {
+            scene.create();
+
+            mockCursors.right.isDown = true;
+            scene.cameras.main.scrollY = 0;
+
+            scene.update();
+
+            expect(scene.cameras.main.scrollX).toBeGreaterThan(0);
         });
     });
 });
