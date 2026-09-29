@@ -6,15 +6,17 @@ export default class GameScene extends Phaser.Scene {
   private organisms: Organism[] = [];
   private interactions: {from: string; to: string}[] = [];
   private selectedOrganism: Organism | null = null;
-  private permanentArrows!: Phaser.GameObjects.Graphics;
-  private previewArrow!: Phaser.GameObjects.Graphics;
-
+  private permanentArrowsGreen!: Phaser.GameObjects.Graphics;
+  private previewArrowGreen!: Phaser.GameObjects.Graphics;
+  private permanentArrowsRed!: Phaser.GameObjects.Graphics;
+  private previewArrowRed!: Phaser.GameObjects.Graphics;
+  private arrowColor = false
   private getStartEndOrganisms(organism: Organism) {
     if (this.selectedOrganism === null) {
       this.selectedOrganism = organism;
       return;
     }
-
+    
     const first = this.selectedOrganism;
     const second = organism;
     const relation = getRelation(
@@ -26,16 +28,15 @@ export default class GameScene extends Phaser.Scene {
       return;
     }
 
-<<<<<<< HEAD
-    // Create arrow here if it doesnt exist yet
-    if (!this.interactions.some(
+    // Create arrow here if it doesnt exist yet & relation is right
+    if (relation === 1 && !this.interactions.some(
       interaction =>
       interaction.from === first.organismData.id &&
       interaction.to === second.organismData.id
 
     )) {
     this.drawArrow(
-    this.permanentArrows,
+    this.permanentArrowsGreen,
     first.x,
     first.y,
     this.input.activePointer.x,
@@ -46,15 +47,10 @@ export default class GameScene extends Phaser.Scene {
     to: second.organismData.id
     })
     }
-    this.previewArrow.clear();
+    this.previewArrowGreen.clear();
 
     console.log(first.organismData.id, first.x, first.y);
     console.log(second.organismData.id, second.x, second.y);
-=======
-    // Create arrow here
-    console.log(first.organismData.id, first.x, first.y, relation);
-    console.log(second.organismData.id, second.x, second.y, relation);
->>>>>>> main
 
     this.selectedOrganism = null;
   }
@@ -108,11 +104,15 @@ export default class GameScene extends Phaser.Scene {
   create() {
     const centerX = this.cameras.main.centerX;
     const centerY = this.cameras.main.centerY;
-
-    this.permanentArrows = this.add.graphics();
-    this.permanentArrows.lineStyle(4, 0x064f15);
-    this.previewArrow = this.add.graphics();
-    this.previewArrow.lineStyle(4, 0x064f15);
+    
+    this.permanentArrowsGreen = this.add.graphics();
+    this.permanentArrowsGreen.lineStyle(4, 0x064f15);
+    this.previewArrowGreen = this.add.graphics();
+    this.previewArrowGreen.lineStyle(4, 0x064f15);
+    this.permanentArrowsRed = this.add.graphics();
+    this.permanentArrowsRed.lineStyle(4, 0xe00000);
+    this.previewArrowRed = this.add.graphics();
+    this.previewArrowRed.lineStyle(4, 0xe00000);
   
     this.scene.launch("MenuScene");
 
@@ -127,11 +127,23 @@ export default class GameScene extends Phaser.Scene {
 
   update() {
     //This creates preview arrow when you click an organism
-     if (this.selectedOrganism !== null) {
-        this.previewArrow.clear();
+    if (this.selectedOrganism !== null && this.arrowColor === true) {
+        this.previewArrowGreen.clear();
 
         this.drawArrow(
-            this.previewArrow,
+            this.previewArrowGreen,
+            this.selectedOrganism.x,
+            this.selectedOrganism.y,
+            this.input.activePointer.x,
+            this.input.activePointer.y,
+        );
+    }
+
+    if (this.selectedOrganism !== null && this.arrowColor === false) {
+        this.previewArrowGreen.clear();
+
+        this.drawArrow(
+            this.previewArrowRed,
             this.selectedOrganism.x,
             this.selectedOrganism.y,
             this.input.activePointer.x,
