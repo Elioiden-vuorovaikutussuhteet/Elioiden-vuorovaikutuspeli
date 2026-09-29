@@ -62,8 +62,14 @@ export default class GameScene extends Phaser.Scene {
     cam.setBounds(-screenW, -screenH, screenW * 3, screenH * 3);
     cam.scrollX = 0;
     cam.scrollY = 0;
-
+    
     this.cursors = this.input.keyboard!.createCursorKeys();
+    
+    //Mouse wheel zoom event
+    this.input.on('wheel', (_pointer: Phaser.Input.Pointer, _over: Phaser.GameObjects.GameObject[], _dx: number, dy: number) => {
+      const zoomChange = dy > 0 ? -0.1 : 0.1;
+      cam.zoom = Phaser.Math.Clamp(cam.zoom + zoomChange, 0.5, 2.0);
+    });
 
     const centerX = this.cameras.main.centerX;
     const centerY = this.cameras.main.centerY;
