@@ -217,7 +217,6 @@ describe("GameScene", () => {
 
 describe("GameScene Camera System", () => {
     let scene: GameScene;
-    let mockCamera: Phaser.Cameras.Scene2D.Camera;
     let mockCursors: {
         left: { isDown: boolean };
         right: { isDown: boolean };
@@ -283,7 +282,7 @@ describe("GameScene Camera System", () => {
     });
 
     describe('update()', () => {
-        it('pans camera up when up arrow is pressed', () => {
+        it('scrolls camera up when up arrow is pressed', () => {
             scene.create();
 
             mockCursors.up.isDown = true;
@@ -294,7 +293,7 @@ describe("GameScene Camera System", () => {
             expect(scene.cameras.main.scrollY).toBeLessThan(0);
         });
 
-        it('pans camera down when down arrow is pressed', () => {
+        it('scrolls camera down when down arrow is pressed', () => {
             scene.create();
 
             mockCursors.down.isDown = true;
@@ -305,7 +304,7 @@ describe("GameScene Camera System", () => {
             expect(scene.cameras.main.scrollY).toBeGreaterThan(0);
         });
 
-        it('pans camera left when left arrow is pressed', () => {
+        it('scrolls camera left when left arrow is pressed', () => {
             scene.create();
 
             mockCursors.left.isDown = true;
@@ -316,7 +315,7 @@ describe("GameScene Camera System", () => {
             expect(scene.cameras.main.scrollX).toBeLessThan(0);
         });
 
-        it('pans camera right when right arrow is pressed', () => {
+        it('scrolls camera right when right arrow is pressed', () => {
             scene.create();
 
             mockCursors.right.isDown = true;
