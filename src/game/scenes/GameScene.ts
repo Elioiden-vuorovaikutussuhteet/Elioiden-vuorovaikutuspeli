@@ -91,7 +91,8 @@ export default class GameScene extends Phaser.Scene {
     const y3 = y2 - 20 * udy + 15 * pdy;
     const x4 = x2 - 20 * udx - 15 * pdx;
     const y4 = y2 - 20 * udy - 15 * pdy;
-
+    this.uiCamera.ignore(this.previewArrow);
+    this.uiCamera.ignore(this.permanentArrows);
     graphics.lineStyle(thickness, color);
     graphics.fillStyle(color, 1);
    
