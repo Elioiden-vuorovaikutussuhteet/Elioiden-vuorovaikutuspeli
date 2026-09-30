@@ -29,9 +29,9 @@ vi.hoisted(() => {
     });
 
     const MockInfoButton = vi.fn(function (
-        _scene: GameScene,
-        _x: number,
-        _y: number
+        //_scene: GameScene,
+        //_x: number,
+        //_y: number
     ) {
         return {
             on: mockInfoButtonOn,
@@ -224,6 +224,20 @@ describe("GameScene", () => {
     expect(consoleLogSpy).not.toHaveBeenCalled();
 
     consoleLogSpy.mockRestore();
-});
+    });
+
+    it("launches the tutorial scene when the info button is clicked", () => {
+        scene.create();
+
+        expect(InfoButton).toHaveBeenCalledWith(scene, 40, 40);
+
+        const infoButtonCallback =
+            vi.mocked(mockInfoButtonOn).mock.calls[0][1];
+
+        infoButtonCallback();
+
+        expect(scene.scene.launch).toHaveBeenCalledWith("TutorialScene");
+    });
+
 
 });
