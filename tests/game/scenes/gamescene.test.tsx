@@ -28,7 +28,7 @@ vi.hoisted(() => {
             on: mockOrganismOn,
         };
     });
-
+    
     const MockInfoButton = vi.fn(function (
         //_scene: GameScene,
         //_x: number,
@@ -71,6 +71,11 @@ describe("GameScene", () => {
                 centerX: 500,
                 centerY: 500,
             },
+            add: vi.fn().mockReturnValue({
+                setScroll: vi.fn(),
+                setZoom: vi.fn(),
+                ignore: vi.fn(),
+            }),
         });
 
         scene.input = mockDeep<typeof scene.input>({
@@ -263,7 +268,20 @@ describe("GameScene Camera System", () => {
 
         scene = new GameScene();
 
-        scene.cameras = mockDeep<typeof scene.cameras>();
+        scene.cameras = mockDeep<typeof scene.cameras>({
+            main: {
+                centerX: 500,
+                centerY: 500,
+                width: 1920,
+                height: 1080,
+            },
+            add: vi.fn().mockReturnValue({
+                setScroll: vi.fn(),
+                setZoom: vi.fn(),
+                ignore: vi.fn(),
+            }),
+        });
+                
         scene.input = mockDeep<typeof scene.input>();
         scene.add = mockDeep<typeof scene.add>();
 
