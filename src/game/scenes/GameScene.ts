@@ -7,6 +7,8 @@ export default class GameScene extends Phaser.Scene {
 
   private cursors!: Phaser.Types.Input.Keyboard.CursorKeys;
 
+  private uiCamera!: Phaser.Cameras.Scene2D.Camera;
+
   private organisms: Organism[] = [];
 
   private selectedOrganism: Organism | null = null;
@@ -42,6 +44,9 @@ export default class GameScene extends Phaser.Scene {
 
     this.organisms.push(organism);
 
+    this.uiCamera.ignore(organism);
+    this.uiCamera.ignore(organism.nameText);
+
     return organism;
   }
 
@@ -73,11 +78,19 @@ export default class GameScene extends Phaser.Scene {
       cam.zoom = Phaser.Math.Clamp(cam.zoom + zoomChange, 0.5, 2.0);
     });
 
+    this.uiCamera = this.cameras.add(0, 0, screenW, screenH);
+    this.uiCamera.setScroll(0, 0);
+    this.uiCamera.setZoom(1);
+
     const centerX = this.cameras.main.centerX;
     const centerY = this.cameras.main.centerY;
 
     this.scene.launch("MenuScene");
     const infobutton = new InfoButton(this, 40, 40);
+    
+    // Make main camera ignore the button so it stays fixed
+    cam.ignore(infobutton);
+
     infobutton.on("infoButtonClicked", () => {
       this.scene.launch("TutorialScene");
     });
