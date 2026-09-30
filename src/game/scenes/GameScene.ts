@@ -235,7 +235,7 @@ export default class GameScene extends Phaser.Scene {
     });
 
     this.createOrganism(centerX, centerY - 200, "acacia");
-    this.createOrganism(centerX+500, centerY - 200, "ants");
+    
 
 
 

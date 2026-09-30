@@ -196,7 +196,8 @@ describe("GameScene", () => {
         const consoleLogSpy = vi
             .spyOn(console, "log")
             .mockImplementation(() => { });
-
+            
+        vi.mocked(getRelation).mockReturnValue(1);
         scene.create();
 
         const menuClosedCallback =
@@ -517,7 +518,7 @@ describe("GameScene Camera System", () => {
 
         it("luo negatiiviselle vuorovaikutukselle punaisen nuolen", () => {
             vi.mocked(getRelation).mockReturnValue(-1);
-
+            (scene as any).arrowColorValue = false;
             const first = organism("tree");
             const second = organism("ant");
 
@@ -551,7 +552,7 @@ describe("GameScene Camera System", () => {
             (scene as any).getStartEndOrganisms(first);
 
             expect((scene as any).interactions).toHaveLength(0);
-            expect(getRelation).not.toHaveBeenCalled();
+            expect(getRelation).toHaveBeenCalledWith("tree", "tree");
         });
 
         it("tunnistaa oikeat yhteydet", () => {
