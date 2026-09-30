@@ -12,7 +12,6 @@ const {
     MockInfoButton,
     mockInfoButtonOn,
     MockArrowButtons,
-    mockArrowButtonsOn,
 } = vi.hoisted(() => {
     const mockOrganismOn = vi.fn();
     const mockInfoButtonOn = vi.fn();
