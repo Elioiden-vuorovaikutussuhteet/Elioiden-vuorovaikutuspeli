@@ -2,6 +2,8 @@ import Phaser from "phaser";
 import Organism from "../entities/organism";
 import InfoButton from "../entities/infobutton"
 import { getRelation } from "../RelationsService";
+import { relations } from "../data/relations";
+import type { organismsRelations } from "../data/relations";
 
 export default class GameScene extends Phaser.Scene {
 
@@ -11,6 +13,7 @@ export default class GameScene extends Phaser.Scene {
 
   private organisms: Organism[] = [];
   private interactions: {from: string; to: string}[] = [];
+  private rightConnections: {from: string; to: string} [] = [];
   private selectedOrganism: Organism | null = null;
   private permanentArrows!: Phaser.GameObjects.Graphics;
   private previewArrow!: Phaser.GameObjects.Graphics;
@@ -54,23 +57,70 @@ export default class GameScene extends Phaser.Scene {
 
     console.log(first.organismData.id, first.x, first.y);
     console.log(second.organismData.id, second.x, second.y);
-
+    // check if all arrows correct here
+    this.checkConnections()
+    console.log("this interactions",this.interactions)
+    console.log(this.interactions)
     this.selectedOrganism = null;
   }
 
   private createOrganism(x: number, y: number, type: string) {
     const organism = new Organism(this, x, y, type);
-
+    
     organism.on("organismSelected", this.getStartEndOrganisms, this);
-
+    
     this.organisms.push(organism);
-
+    this.createRightConnections()
     this.uiCamera.ignore(organism);
     this.uiCamera.ignore(organism.nameText);
-
+    
     return organism;
   }
+  //This is ran everytime organism is added
+  private createRightConnections(){
+    const ids = this.organisms.map(organism => organism.organismData.id);
+    for (const organism of this.organisms){
+      let sourceRelations: organismsRelations[] = relations.filter(relation => relation.source === organism.organismData.id)
+      //(source = { source: "tree", target: "shroom" })
+      for(const relation of sourceRelations){
+        //relation == source
+        if(ids.some(x => x === relation.target)){
+          this.rightConnections.push({
+        from: relation.source,
+        to: relation.target
+        
+      })
+        }
+      }
+
+    }
+
+    console.log("this righcons",this.rightConnections)
+    
+  }
   
+  private checkConnections(){
+    //if every right connection is found in current interactions list returns true else false
+    console.log(this.rightConnections.every(connection => this.interactions.includes(connection)))
+      if (
+       this.rightConnections.length === this.interactions.length &&
+        this.rightConnections.every(x =>
+        this.interactions.some(y =>
+        x.from === y.from && x.to === y.to
+      )
+      )
+      ){
+      
+      console.log("true")
+      return true
+      
+    } else {
+      console.log("false")
+      return false
+      
+    }
+   
+  }
   private drawArrow(graphics: Phaser.GameObjects.Graphics, x1: number, y1: number, x2: number, y2: number,color: number,thickness: number){
 
     const dx = x2 - x1;
@@ -91,8 +141,10 @@ export default class GameScene extends Phaser.Scene {
     const y3 = y2 - 20 * udy + 15 * pdy;
     const x4 = x2 - 20 * udx - 15 * pdx;
     const y4 = y2 - 20 * udy - 15 * pdy;
+
     this.uiCamera.ignore(this.previewArrow);
     this.uiCamera.ignore(this.permanentArrows);
+
     graphics.lineStyle(thickness, color);
     graphics.fillStyle(color, 1);
    
@@ -109,6 +161,7 @@ export default class GameScene extends Phaser.Scene {
     this.load.image("acacia_sprite", "bullhornacacia.png");
     this.load.image("amf_sprite", "amf.png");
     this.load.image("infobutton_sprite", "altinfo.png");
+    this.load.image("ants_sprite", "ants.png");
   }
 
   create() {
@@ -160,7 +213,7 @@ export default class GameScene extends Phaser.Scene {
 
 
     this.createOrganism(centerX, centerY - 200, "acacia");
-
+    this.createOrganism(centerX+500, centerY - 200, "ants");
     this.events.once("menuClosed", () => {
       this.time.delayedCall(3000, () => {
         this.createOrganism(centerX, centerY + 200, "amf");
