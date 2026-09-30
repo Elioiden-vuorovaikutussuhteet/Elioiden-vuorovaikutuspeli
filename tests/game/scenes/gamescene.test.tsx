@@ -247,7 +247,7 @@ describe("GameScene", () => {
 
         expect(scene.scene.launch).toHaveBeenCalledWith("TutorialScene");
     });
-
+});
 
 describe("GameScene Camera System", () => {
     let scene: GameScene;
