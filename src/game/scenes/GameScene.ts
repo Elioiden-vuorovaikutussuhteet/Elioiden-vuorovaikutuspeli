@@ -1,5 +1,6 @@
-import Phaser from "phaser";
+import Phaser, { NONE } from "phaser";
 import Organism from "../entities/organism";
+import ArrowButtons from "../entities/arrowbuttons";
 import InfoButton from "../entities/infobutton"
 import { getRelation } from "../RelationsService";
 import { relations } from "../data/relations";
@@ -17,7 +18,8 @@ export default class GameScene extends Phaser.Scene {
   private selectedOrganism: Organism | null = null;
   private permanentArrows!: Phaser.GameObjects.Graphics;
   private previewArrow!: Phaser.GameObjects.Graphics;
-  private arrowColor = true
+  private arrowColorValue: boolean = true;
+
   private getStartEndOrganisms(organism: Organism) {
     if (this.selectedOrganism === null) {
       this.selectedOrganism = organism;
@@ -43,15 +45,18 @@ export default class GameScene extends Phaser.Scene {
 
     )) {
       // relation is positive = green(0x064f15), bad = red(0xed0924)
-      if (relation === 1){
-      this.drawArrow(this.permanentArrows, first.x, first.y, this.input.activePointer.x, this.input.activePointer.y, 0x064f15,4);
-      } else if (relation === -1){
-      this.drawArrow(this.permanentArrows, first.x, first.y, this.input.activePointer.x, this.input.activePointer.y, 0xed0924,4);
-      }
-      this.interactions.push({
-      from: first.organismData.id,
-      to: second.organismData.id
-      })}
+      if (relation === 1 && this.arrowColorValue === true){
+        this.drawArrow(this.permanentArrows, first.x, first.y, this.input.activePointer.x, this.input.activePointer.y, 0x064f15,4);
+        this.interactions.push({
+        from: first.organismData.id,
+        to: second.organismData.id
+      })} else if (relation === -1 && this.arrowColorValue === false){
+        this.drawArrow(this.permanentArrows, first.x, first.y, this.input.activePointer.x, this.input.activePointer.y, 0xed0924,4);
+        this.interactions.push({
+        from: first.organismData.id,
+        to: second.organismData.id
+      })
+    }}
 
     this.previewArrow.clear();
 
@@ -157,6 +162,8 @@ export default class GameScene extends Phaser.Scene {
     this.load.setPath("assets");
     this.load.image("acacia_sprite", "bullhornacacia.png");
     this.load.image("amf_sprite", "amf.png");
+    this.load.image("greenbutton", "greenbutton.png");
+    this.load.image("redbutton", "redbutton.png");
     this.load.image("infobutton_sprite", "altinfo.png");
     this.load.image("ants_sprite", "ants.png");
   }
@@ -200,17 +207,38 @@ export default class GameScene extends Phaser.Scene {
     
     this.scene.launch("MenuScene");
     const infobutton = new InfoButton(this, 40, 40);
+
+    const greenButton = new ArrowButtons(
+      this, 60, centerY - 50, "greenbutton"
+    );
+    const redButton = new ArrowButtons(
+      this, 60, centerY + 50, "redbutton"
+    );
+
     
     // Make main camera ignore the button so it stays fixed
     cam.ignore(infobutton);
+    cam.ignore(greenButton);
+    cam.ignore(redButton);
 
     infobutton.on("infoButtonClicked", () => {
       this.scene.launch("TutorialScene");
     });
 
+    greenButton.on("arrowButtonClicked", () => {
+      this.arrowColorValue = true;
+      console.log(this.arrowColorValue);
+    });
+    redButton.on("arrowButtonClicked", () => {
+      this.arrowColorValue = false;
+      console.log(this.arrowColorValue);
+    });
 
     this.createOrganism(centerX, centerY - 200, "acacia");
     this.createOrganism(centerX+500, centerY - 200, "ants");
+
+
+
     this.events.once("menuClosed", () => {
       this.time.delayedCall(3000, () => {
         this.createOrganism(centerX, centerY + 200, "amf");
@@ -221,7 +249,7 @@ export default class GameScene extends Phaser.Scene {
   update() {
     //This creates preview arrow when you click an organism
     // arrowcolor true/false is a placeholder that tells which button player pressed in UI
-    if (this.selectedOrganism !== null && this.arrowColor === false) {
+    if (this.selectedOrganism !== null && this.arrowColorValue === false) {
       this.previewArrow.clear();
 
       this.drawArrow(
@@ -235,7 +263,7 @@ export default class GameScene extends Phaser.Scene {
         );
     }
 
-    if (this.selectedOrganism !== null && this.arrowColor === true) {
+    if (this.selectedOrganism !== null && this.arrowColorValue === true) {
         this.previewArrow.clear();
     
         this.drawArrow(

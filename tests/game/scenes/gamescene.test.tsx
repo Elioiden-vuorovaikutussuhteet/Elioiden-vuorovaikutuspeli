@@ -4,11 +4,19 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import GameScene from "../../../src/game/scenes/GameScene";
 import Organism from "../../../src/game/entities/organism";
 import InfoButton from "../../../src/game/entities/infobutton";
+import ArrowButtons from "../../../src/game/entities/arrowbuttons";
 import { getRelation } from "../../../src/game/RelationsService";
-const { MockOrganism, mockOrganismOn, MockInfoButton, mockInfoButtonOn } =
-vi.hoisted(() => {
+
+const {
+    MockOrganism,
+    mockOrganismOn,
+    MockInfoButton,
+    mockInfoButtonOn,
+    MockArrowButtons,
+} = vi.hoisted(() => {
     const mockOrganismOn = vi.fn();
     const mockInfoButtonOn = vi.fn();
+    const mockArrowButtonsOn = vi.fn();
 
     const MockOrganism = vi.fn(function (
         _scene: GameScene,
@@ -39,11 +47,19 @@ vi.hoisted(() => {
         };
     });
 
+    const MockArrowButtons = vi.fn(function () {
+        return {
+            on: mockArrowButtonsOn,
+        };
+    });
+
     return {
         MockOrganism,
         mockOrganismOn,
         MockInfoButton,
         mockInfoButtonOn,
+        MockArrowButtons,
+        mockArrowButtonsOn,
     };
 });
 
@@ -57,6 +73,11 @@ vi.mock("../../../src/game/entities/infobutton", () => ({
 vi.mock("../../../src/game/RelationsService", () => ({
     getRelation: vi.fn(),
 }));
+
+vi.mock("../../../src/game/entities/arrowbuttons", () => ({
+    default: MockArrowButtons,
+}));
+
 
 const mockPartial = <T,>(value: Partial<T>): T => value as T;
 
@@ -264,6 +285,26 @@ describe("GameScene", () => {
         infoButtonCallback();
 
         expect(scene.scene.launch).toHaveBeenCalledWith("TutorialScene");
+    });
+
+    it("creates green and red arrow buttons", () => {
+        scene.create();
+
+        expect(ArrowButtons).toHaveBeenNthCalledWith(
+            1,
+            scene,
+            60,
+            450,
+            "greenbutton"
+        );
+
+        expect(ArrowButtons).toHaveBeenNthCalledWith(
+            2,
+            scene,
+            60,
+            550,
+            "redbutton"
+        );
     });
 });
 
