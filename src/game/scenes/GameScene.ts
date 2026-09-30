@@ -1,5 +1,6 @@
 import Phaser from "phaser";
 import Organism from "../entities/organism";
+import InfoButton from "../entities/infobutton"
 import { getRelation } from "../RelationsService";
 
 export default class GameScene extends Phaser.Scene {
@@ -52,6 +53,7 @@ export default class GameScene extends Phaser.Scene {
     this.load.setPath("assets");
     this.load.image("acacia_sprite", "bullhornacacia.png");
     this.load.image("amf_sprite", "amf.png");
+    this.load.image("infobutton_sprite", "altinfo.png");
   }
 
   create() {
@@ -75,6 +77,11 @@ export default class GameScene extends Phaser.Scene {
     const centerY = this.cameras.main.centerY;
 
     this.scene.launch("MenuScene");
+    const infobutton = new InfoButton(this, 40, 40);
+    infobutton.on("infoButtonClicked", () => {
+      this.scene.launch("TutorialScene");
+    });
+
 
     this.createOrganism(centerX, centerY - 200, "acacia");
 

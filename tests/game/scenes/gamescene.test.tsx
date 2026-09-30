@@ -3,9 +3,12 @@ import { mockDeep } from 'vitest-mock-extended';
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import GameScene from "../../../src/game/scenes/GameScene";
 import Organism from "../../../src/game/entities/organism";
+import InfoButton from "../../../src/game/entities/infobutton";
 
-const { MockOrganism, mockOrganismOn } = vi.hoisted(() => {
+const { MockOrganism, mockOrganismOn, MockInfoButton, mockInfoButtonOn } =
+vi.hoisted(() => {
     const mockOrganismOn = vi.fn();
+    const mockInfoButtonOn = vi.fn();
 
     const MockOrganism = vi.fn(function (
         _scene: GameScene,
@@ -26,13 +29,32 @@ const { MockOrganism, mockOrganismOn } = vi.hoisted(() => {
         };
     });
 
-    return { MockOrganism, mockOrganismOn };
-});
+    const MockInfoButton = vi.fn(function (
+        //_scene: GameScene,
+        //_x: number,
+        //_y: number
+    ) {
+        return {
+            on: mockInfoButtonOn,
+        };
+    });
 
+    return {
+        MockOrganism,
+        mockOrganismOn,
+        MockInfoButton,
+        mockInfoButtonOn,
+    };
+});
 
 vi.mock("../../../src/game/entities/organism", () => ({
     default: MockOrganism,
 }));
+
+vi.mock("../../../src/game/entities/infobutton", () => ({
+    default: MockInfoButton,
+}));
+
 
 const mockPartial = <T,>(value: Partial<T>): T => value as T;
 
@@ -213,6 +235,18 @@ describe("GameScene", () => {
         consoleLogSpy.mockRestore();
     });
 
+    it("launches the tutorial scene when the info button is clicked", () => {
+        scene.create();
+
+        expect(InfoButton).toHaveBeenCalledWith(scene, 40, 40);
+
+        const infoButtonCallback =
+            vi.mocked(mockInfoButtonOn).mock.calls[0][1];
+
+        infoButtonCallback();
+
+        expect(scene.scene.launch).toHaveBeenCalledWith("TutorialScene");
+    });
 });
 
 describe("GameScene Camera System", () => {
