@@ -1,4 +1,4 @@
-import Phaser, { NONE } from "phaser";
+import Phaser from "phaser";
 import Organism from "../entities/organism";
 import ArrowButtons from "../entities/arrowbuttons";
 import InfoButton from "../entities/infobutton"
