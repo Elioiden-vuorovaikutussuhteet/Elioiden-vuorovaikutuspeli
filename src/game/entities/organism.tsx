@@ -16,6 +16,8 @@ export function getOrganismData(type: string) {
 export default class Organism extends Phaser.GameObjects.Sprite {
   public readonly organismData: OrganismData;
 
+  public readonly nameText: Phaser.GameObjects.Text;
+
   constructor(scene: Phaser.Scene, x: number, y: number, type = "acacia") {
     const organismData = getOrganismData(type);
 
@@ -54,7 +56,8 @@ export default class Organism extends Phaser.GameObjects.Sprite {
     });
 
     scene.add.existing(this);
-    scene.add
+
+    this.nameText = scene.add
       .text(x, y + this.displayHeight / 2 + 20, organismData.name, {
         fontFamily: "monospace",
         fontSize: "18px",
@@ -62,6 +65,7 @@ export default class Organism extends Phaser.GameObjects.Sprite {
         align: "center",
       })
       .setOrigin(0.5);
+
   }
 
   update() {}
