@@ -5,23 +5,28 @@ export default class TutorialScene extends Phaser.Scene {
     constructor() {
         super("TutorialScene");
     }
+
     preload() {
         this.load.setPath("assets");
         this.load.image("close_button_sprite", "closebutton.png");
     }
 
     create() {
-        const centerX = this.cameras.main.centerX / 3;
-        const centerY = this.cameras.main.centerY;
+        const { width, height } = this.cameras.main;
 
-        const menuWidth = 300;
-        const menuHeight = 500;
+        const menuWidth = Math.min(width * 0.3, 450);
+        const menuHeight = Math.min(height * 0.7, 600);
 
-        const backround = this.add.graphics();
-        backround.fillStyle(0x000000, 0.7);
-        backround.fillRoundedRect(
-            centerX - menuWidth / 2,
-            centerY - menuHeight / 2,
+        const leftMargin = width * 0.05;
+
+        const menuX = leftMargin / 2;
+        const menuY = (height - menuHeight) / 4;
+
+        const background = this.add.graphics();
+        background.fillStyle(0x000000, 0.7);
+        background.fillRoundedRect(
+            menuX,
+            menuY,
             menuWidth,
             menuHeight,
             30,
@@ -30,34 +35,47 @@ export default class TutorialScene extends Phaser.Scene {
         const border = this.add.graphics();
         border.lineStyle(8, 0xffffff, 1);
         border.strokeRoundedRect(
-            centerX - menuWidth / 2,
-            centerY - menuHeight / 2,
+            menuX,
+            menuY,
             menuWidth,
             menuHeight,
             30,
         );
 
         const text = `
-        Select whether you want
-        to draw a positive
-        or a negative relation
-        by clicking on
-        the corresponding icon
-        and then choosing your
-        starting and end organism.`;
+Select whether you want
+to draw a positive
+or a negative relation
+by clicking on
+the corresponding icon
+and then choosing your
+starting and end organism.
+        `.trim();
 
-        this.add
-        .text((centerX - menuWidth / 2) - 70, centerY / 2, text, {
-            fontFamily: "monospace",
-            fontSize: "18px",
-            fontStyle: "bold",
-            color: "#ffffff",
-        })
-        .setOrigin(0.0);
+        this.add.text(
+            menuX + menuWidth / 2,
+            menuY + menuHeight * 0.15,
+            text,
+            {
+                fontFamily: "monospace",
+                fontSize: `${Math.min(width * 0.015, 25)}px`,
+                fontStyle: "bold",
+                color: "#ffffff",
+                wordWrap: {
+                    width: menuWidth * 0.8,
+                },
+                align: "center",
+            },
+        ).setOrigin(0.5, 0);
 
-        const closebutton = new CloseButton(this, centerX, centerY + 200)
-        closebutton.on("closeButtonClicked", () => {
+        const closeButton = new CloseButton(
+            this,
+            menuX + menuWidth / 2,
+            menuY + menuHeight - 50,
+        );
+
+        closeButton.on("closeButtonClicked", () => {
             this.scene.stop();
         });
     }
-};
+}
