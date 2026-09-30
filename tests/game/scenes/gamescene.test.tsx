@@ -268,12 +268,6 @@ describe("GameScene Camera System", () => {
 
         scene = new GameScene();
 
-        const uiCamera = {
-            setScroll: vi.fn(),
-            setZoom: vi.fn(),
-            ignore: vi.fn(),
-        };
-
         scene.cameras = mockDeep<typeof scene.cameras>({
             main: {
                 centerX: 500,
