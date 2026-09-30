@@ -4,7 +4,7 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "dev": "vite",
+    "dev": "vite --host 0.0.0.0",
     "build": "tsc -b && vite build",
     "lint": "eslint .",
     "typecheck": "tsc -p tsconfig.app.json --noEmit",
@@ -38,6 +38,7 @@
     "typescript-eslint": "^8.67.0",
     "vite": "^8.2.2",
     "vitest": "^5.0.0",
-    "vitest-canvas-mock": "^1.2.0"
+    "vitest-canvas-mock": "^1.2.0",
+    "vitest-mock-extended": "^5.1.1"
   }
 }

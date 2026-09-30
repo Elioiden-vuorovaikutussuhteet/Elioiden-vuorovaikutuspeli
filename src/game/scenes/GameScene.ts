@@ -1,9 +1,13 @@
 import Phaser from "phaser";
 import Organism from "../entities/organism";
 import ArrowButtons from "../entities/arrowbuttons";
+import InfoButton from "../entities/infobutton"
 import { getRelation } from "../RelationsService";
 
 export default class GameScene extends Phaser.Scene {
+
+  private cursors!: Phaser.Types.Input.Keyboard.CursorKeys;
+
   private organisms: Organism[] = [];
 
   private selectedOrganism: Organism | null = null;
@@ -36,11 +40,11 @@ export default class GameScene extends Phaser.Scene {
 
   private createOrganism(x: number, y: number, type: string) {
     const organism = new Organism(this, x, y, type);
-  
+
     organism.on("organismSelected", this.getStartEndOrganisms, this);
-  
+
     this.organisms.push(organism);
-  
+
     return organism;
   }
 
@@ -54,12 +58,34 @@ export default class GameScene extends Phaser.Scene {
     this.load.image("amf_sprite", "amf.png");
     this.load.image("greenbutton", "greenbutton.png");
     this.load.image("redbutton", "redbutton.png");
+    this.load.image("infobutton_sprite", "altinfo.png");
   }
 
   create() {
+    const cam = this.cameras.main;
+    const screenW = cam.width;
+    const screenH = cam.height;
+
+    cam.setBounds(-screenW, -screenH, screenW * 3, screenH * 3);
+    cam.scrollX = 0;
+    cam.scrollY = 0;
+    
+    this.cursors = this.input.keyboard!.createCursorKeys();
+    
+    //Mouse wheel zoom event
+    this.input.on('wheel', (_pointer: Phaser.Input.Pointer, _over: Phaser.GameObjects.GameObject[], _dx: number, dy: number) => {
+      const zoomChange = dy > 0 ? -0.1 : 0.1;
+      cam.zoom = Phaser.Math.Clamp(cam.zoom + zoomChange, 0.5, 2.0);
+    });
+
     const centerX = this.cameras.main.centerX;
     const centerY = this.cameras.main.centerY;
     this.scene.launch("MenuScene");
+    const infobutton = new InfoButton(this, 40, 40);
+    infobutton.on("infoButtonClicked", () => {
+      this.scene.launch("TutorialScene");
+    });
+
 
     this.createOrganism(centerX, centerY - 200, "acacia");
 
@@ -88,5 +114,20 @@ export default class GameScene extends Phaser.Scene {
     });
   }
 
-  update() {}
+  update() {
+    const cam = this.cameras.main;
+    const speed = 10;
+
+    if (this.cursors.left.isDown) {
+      cam.scrollX -= speed;
+    } else if (this.cursors.right.isDown) {
+      cam.scrollX += speed;
+    }
+
+    if (this.cursors.up.isDown) {
+      cam.scrollY -= speed;
+    } else if (this.cursors.down.isDown) {
+      cam.scrollY += speed;
+    }
+  }
 }
