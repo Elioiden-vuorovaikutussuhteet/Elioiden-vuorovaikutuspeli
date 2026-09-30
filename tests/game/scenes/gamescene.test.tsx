@@ -5,6 +5,7 @@ import GameScene from "../../../src/game/scenes/GameScene";
 import Organism from "../../../src/game/entities/organism";
 import InfoButton from "../../../src/game/entities/infobutton";
 import ArrowButtons from "../../../src/game/entities/arrowbuttons";
+import { getRelation } from "../../../src/game/RelationsService";
 
 const {
     MockOrganism,
@@ -69,6 +70,9 @@ vi.mock("../../../src/game/entities/organism", () => ({
 vi.mock("../../../src/game/entities/infobutton", () => ({
     default: MockInfoButton,
 }));
+vi.mock("../../../src/game/RelationsService", () => ({
+    getRelation: vi.fn(),
+}));
 
 vi.mock("../../../src/game/entities/arrowbuttons", () => ({
     default: MockArrowButtons,
@@ -94,6 +98,7 @@ describe("GameScene", () => {
                 setScroll: vi.fn(),
                 setZoom: vi.fn(),
                 ignore: vi.fn(),
+                
             }),
         });
 
@@ -114,6 +119,16 @@ describe("GameScene", () => {
         scene.time = mockPartial<typeof scene.time>({
             delayedCall: vi.fn(),
         });
+        scene.add = mockDeep<typeof scene.add>({
+            graphics: vi.fn().mockReturnValue({
+            setDepth: vi.fn(),
+            clear: vi.fn(),
+            lineStyle: vi.fn(),
+            fillStyle: vi.fn(),
+            lineBetween: vi.fn(),
+            fillTriangle: vi.fn(),
+        }),
+});
     });
 
     it("loads the game assets", () => {
@@ -181,7 +196,8 @@ describe("GameScene", () => {
         const consoleLogSpy = vi
             .spyOn(console, "log")
             .mockImplementation(() => { });
-
+            
+        vi.mocked(getRelation).mockReturnValue(1);
         scene.create();
 
         const menuClosedCallback =
@@ -322,7 +338,16 @@ describe("GameScene Camera System", () => {
         });
                 
         scene.input = mockDeep<typeof scene.input>();
-        scene.add = mockDeep<typeof scene.add>();
+        scene.add = mockDeep<typeof scene.add>({
+            graphics: vi.fn().mockReturnValue({
+            setDepth: vi.fn(),
+            clear: vi.fn(),
+            lineStyle: vi.fn(),
+            fillStyle: vi.fn(),
+            lineBetween: vi.fn(),
+            fillTriangle: vi.fn(),
+        }),
+});
 
         scene.cameras.main.width = 1920;
         scene.cameras.main.height = 1080;
@@ -418,3 +443,147 @@ describe("GameScene Camera System", () => {
         });
     });
 });
+    describe("GameScene interactions", () => {
+        let scene: GameScene;
+        let permanentArrows: any;
+        let previewArrow: any;
+
+        beforeEach(() => {
+            vi.clearAllMocks();
+
+            scene = new GameScene();
+
+            permanentArrows = {
+                clear: vi.fn(),
+                lineStyle: vi.fn(),
+                fillStyle: vi.fn(),
+                lineBetween: vi.fn(),
+                fillTriangle: vi.fn(),
+            };
+
+            previewArrow = {
+                clear: vi.fn(),
+                lineStyle: vi.fn(),
+                fillStyle: vi.fn(),
+                lineBetween: vi.fn(),
+                fillTriangle: vi.fn(),
+            };
+
+            (scene as any).permanentArrows = permanentArrows;
+            (scene as any).previewArrow = previewArrow;
+            (scene as any).interactions = [];
+            (scene as any).rightConnections = [];
+            (scene as any).selectedOrganism = null;
+            (scene as any).uiCamera = {
+                ignore: vi.fn(),
+            };
+            (scene as any).input = {
+                activePointer: {
+                    x: 300,
+                    y: 250,
+                },
+            };
+        });
+
+        const organism = (id: string, x = 100, y = 100) => ({
+            organismData: { id },
+            x,
+            y,
+        });
+
+        it("valitsee ensimmäisen organismin", () => {
+            const first = organism("tree");
+
+            (scene as any).getStartEndOrganisms(first);
+
+            expect((scene as any).selectedOrganism).toBe(first);
+        });
+
+        it("luo positiivisen vuorovaikutuksen", () => {
+            vi.mocked(getRelation).mockReturnValue(1);
+
+            const first = organism("tree");
+            const second = organism("shroom", 300, 250);
+
+            (scene as any).getStartEndOrganisms(first);
+            (scene as any).getStartEndOrganisms(second);
+
+            expect((scene as any).interactions).toEqual([
+                { from: "tree", to: "shroom" },
+            ]);
+            expect(permanentArrows.lineBetween).toHaveBeenCalled();
+            expect(permanentArrows.fillTriangle).toHaveBeenCalled();
+            expect((scene as any).selectedOrganism).toBeNull();
+        });
+
+        it("luo negatiiviselle vuorovaikutukselle punaisen nuolen", () => {
+            vi.mocked(getRelation).mockReturnValue(-1);
+            (scene as any).arrowColorValue = false;
+            const first = organism("tree");
+            const second = organism("ant");
+
+            (scene as any).getStartEndOrganisms(first);
+            (scene as any).getStartEndOrganisms(second);
+
+            expect(permanentArrows.lineStyle).toHaveBeenCalledWith(
+                4,
+                0xed0924,
+            );
+        });
+
+        it("ei lisää samaa vuorovaikutusta kahdesti", () => {
+            vi.mocked(getRelation).mockReturnValue(1);
+
+            const first = organism("tree");
+            const second = organism("shroom");
+
+            (scene as any).getStartEndOrganisms(first);
+            (scene as any).getStartEndOrganisms(second);
+            (scene as any).getStartEndOrganisms(first);
+            (scene as any).getStartEndOrganisms(second);
+
+            expect((scene as any).interactions).toHaveLength(1);
+        });
+
+        it("ei luo vuorovaikutusta samaan organismiin", () => {
+            const first = organism("tree");
+
+            (scene as any).getStartEndOrganisms(first);
+            (scene as any).getStartEndOrganisms(first);
+
+            expect((scene as any).interactions).toHaveLength(0);
+            expect(getRelation).toHaveBeenCalledWith("tree", "tree");
+        });
+
+        it("tunnistaa oikeat yhteydet", () => {
+            (scene as any).rightConnections = [
+                { from: "tree", to: "shroom" },
+            ];
+            (scene as any).interactions = [
+                { from: "tree", to: "shroom" },
+            ];
+
+            expect((scene as any).checkConnections()).toBe(true);
+        });
+
+        it("hylkää puuttuvan yhteyden", () => {
+            (scene as any).rightConnections = [
+                { from: "tree", to: "shroom" },
+            ];
+            (scene as any).interactions = [];
+
+            expect((scene as any).checkConnections()).toBe(false);
+        });
+
+        it("tyhjentää esikatselunuolen valinnan jälkeen", () => {
+            vi.mocked(getRelation).mockReturnValue(1);
+
+            const first = organism("tree");
+            const second = organism("shroom");
+
+            (scene as any).getStartEndOrganisms(first);
+            (scene as any).getStartEndOrganisms(second);
+
+            expect(previewArrow.clear).toHaveBeenCalled();
+        });
+    });
