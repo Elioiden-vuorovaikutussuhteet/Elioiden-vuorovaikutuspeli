@@ -91,34 +91,36 @@ export default class GameScene extends Phaser.Scene {
     const centerY = this.cameras.main.centerY;
     this.scene.launch("MenuScene");
     const infobutton = new InfoButton(this, 40, 40);
+
+    const greenButton = new ArrowButtons(
+      this, 60, centerY - 50, "greenbutton"
+    );
+    const redButton = new ArrowButtons(
+      this, 60, centerY + 50, "redbutton"
+    );
+
     
     // Make main camera ignore the button so it stays fixed
     cam.ignore(infobutton);
+    cam.ignore(greenButton);
+    cam.ignore(redButton);
 
     infobutton.on("infoButtonClicked", () => {
       this.scene.launch("TutorialScene");
     });
 
-
-    this.createOrganism(centerX, centerY - 200, "acacia");
-
-    const greenButton = new ArrowButtons(
-      this, 60, centerY - 50, "greenbutton"
-    );
-
-    const redButton = new ArrowButtons(
-      this, 60, centerY + 50, "redbutton"
-    );
-
     greenButton.on("arrowButtonClicked", () => {
       this.arrowColorValue = true;
       console.log(this.arrowColorValue);
     })
-
     redButton.on("arrowButtonClicked", () => {
       this.arrowColorValue = false;
       console.log(this.arrowColorValue);
     });
+
+    this.createOrganism(centerX, centerY - 200, "acacia");
+
+
 
     this.events.once("menuClosed", () => {
       this.time.delayedCall(3000, () => {
