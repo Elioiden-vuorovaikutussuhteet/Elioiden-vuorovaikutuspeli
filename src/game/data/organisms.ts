@@ -22,12 +22,12 @@ export const organisms: OrganismData[] = [
     id: "sapota",
     name: "Sapota",
     texture: "sapota_sprite",
-    default_scale: 1.3,
+    default_scale: 1.1,
   },
   {
     id: "ants",
     name: "Ants",
     texture: "ants_sprite",
-    default_scale: 1.3,
+    default_scale: 1,
   },
 ];
