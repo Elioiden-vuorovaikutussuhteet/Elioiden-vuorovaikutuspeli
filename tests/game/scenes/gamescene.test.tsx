@@ -193,7 +193,7 @@ describe("GameScene", () => {
     selectOrganism(1).call(scene, amf);
     selectOrganism(0).call(scene, acacia);
 
-    expect(Organism).toHaveBeenCalledWith(scene, 200, 100, "ants");
+    expect(Organism).toHaveBeenCalledWith(scene, 600, 500, "ants");
 
     const ants = vi.mocked(Organism).mock.results[2].value;
 
@@ -202,7 +202,7 @@ describe("GameScene", () => {
     selectOrganism(2).call(scene, ants);
     selectOrganism(0).call(scene, acacia);
 
-    expect(Organism).toHaveBeenCalledWith(scene, 800, 500, "sapota");
+    expect(Organism).toHaveBeenCalledWith(scene, 1300, 500, "sapota");
   });
 
   it("logs to console after 2 organisms are selected", () => {

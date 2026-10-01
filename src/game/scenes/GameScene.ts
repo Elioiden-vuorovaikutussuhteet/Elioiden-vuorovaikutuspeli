@@ -83,10 +83,10 @@ export default class GameScene extends Phaser.Scene {
 
     if (allRelationsCorrect && !this.antsSpawned) {
       this.antsSpawned = true;
-      this.createOrganism(first.x - 300, first.y - 200, "ants");
+      this.createOrganism(600, 500, "ants");
     } else if (allRelationsCorrect && !this.sapotaSpawned) {
       this.sapotaSpawned = true;
-      this.createOrganism(first.x + 300, first.y + 200, "sapota");
+      this.createOrganism(1300, 500, "sapota");
     }
 
     this.selectedOrganism = null;
@@ -114,7 +114,7 @@ export default class GameScene extends Phaser.Scene {
       );
       //(source = { source: "tree", target: "shroom" })
       for (const relation of sourceRelations) {
-        //relation == source
+      
         if (ids.some((x) => x === relation.target)) {
           this.rightConnections.push({
             from: relation.source,
