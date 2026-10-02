@@ -49,8 +49,8 @@ export default class GameScene extends Phaser.Scene {
           this.permanentArrows,
           first.x,
           first.y,
-          this.input.activePointer.x,
-          this.input.activePointer.y,
+          this.input.activePointer.worldX,
+          this.input.activePointer.worldY,
           0x064f15,
           4,
         );
@@ -63,8 +63,8 @@ export default class GameScene extends Phaser.Scene {
           this.permanentArrows,
           first.x,
           first.y,
-          this.input.activePointer.x,
-          this.input.activePointer.y,
+          this.input.activePointer.worldX,
+          this.input.activePointer.worldY,
           0xed0924,
           4,
         );
@@ -290,8 +290,8 @@ export default class GameScene extends Phaser.Scene {
         this.previewArrow,
         this.selectedOrganism.x,
         this.selectedOrganism.y,
-        this.input.activePointer.x,
-        this.input.activePointer.y,
+        this.input.activePointer.worldX,
+        this.input.activePointer.worldY,
         0xed0924,
         2,
       );
@@ -304,8 +304,8 @@ export default class GameScene extends Phaser.Scene {
         this.previewArrow,
         this.selectedOrganism.x,
         this.selectedOrganism.y,
-        this.input.activePointer.x,
-        this.input.activePointer.y,
+        this.input.activePointer.worldX,
+        this.input.activePointer.worldY,
         0x064f15,
         2,
       );
