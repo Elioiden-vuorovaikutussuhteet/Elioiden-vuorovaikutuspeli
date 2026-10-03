@@ -114,7 +114,7 @@ export default class GameScene extends Phaser.Scene {
       );
       //(source = { source: "tree", target: "shroom" })
       for (const relation of sourceRelations) {
-      
+
         if (ids.some((x) => x === relation.target)) {
           this.rightConnections.push({
             from: relation.source,
@@ -232,6 +232,39 @@ export default class GameScene extends Phaser.Scene {
     this.previewArrow = this.add.graphics();
     this.permanentArrows.setDepth(100);
     this.previewArrow.setDepth(100);
+
+    // Right mouse button for dragging the scene
+    this.input.mouse?.disableContextMenu();
+    let isDragging = false;
+    let dragStartX = 0;
+    let dragStartY = 0;
+
+    this.input.on('pointerdown', (pointer: Phaser.Input.Pointer) => {
+      if (pointer.rightButtonDown()) {
+        isDragging = true;
+        dragStartX = pointer.x;
+        dragStartY = pointer.y;
+      }
+    });
+
+    this.input.on('pointerup', (pointer: Phaser.Input.Pointer) => {
+      if (pointer.rightButtonReleased()) {
+        isDragging = false;
+      }  
+    });
+
+    this.input.on('pointermove', (pointer: Phaser.Input.Pointer) => {
+      if (isDragging) {
+        const dx = pointer.x - dragStartX;
+        const dy = pointer.y - dragStartY;
+
+        cam.scrollX -= dx / cam.zoom;
+        cam.scrollY -= dy / cam.zoom;
+
+        dragStartX = pointer.x;
+        dragStartY = pointer.y;
+      }
+    });
 
     //Eventlistener for: If players clicks on empty space, preview arrow disappears
     this.input.on(
