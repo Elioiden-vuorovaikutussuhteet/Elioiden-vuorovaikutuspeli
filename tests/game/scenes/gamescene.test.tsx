@@ -33,7 +33,11 @@ const {
       },
       x,
       y,
+      HP: 100,
+      nameText: {},
       on: mockOrganismOn,
+      changeHealth: vi.fn(),
+      changeScale: vi.fn(),
     };
   });
 
@@ -174,7 +178,10 @@ describe("GameScene", () => {
   });
 
   it("adds ants and then sapota when each relation set is completed", () => {
-    vi.mocked(getRelation).mockReturnValue(1);
+    vi.mocked(getRelation).mockReturnValue({
+     value: 1,
+     mult: 1,
+    });
     scene.create();
 
     const menuClosedCallback = vi.mocked(scene.events.once).mock.calls[0][1];
@@ -209,7 +216,10 @@ describe("GameScene", () => {
     // edit this test once arrow making function is called instead of log
     const consoleLogSpy = vi.spyOn(console, "log").mockImplementation(() => {});
 
-    vi.mocked(getRelation).mockReturnValue(1);
+    vi.mocked(getRelation).mockReturnValue({
+      value: 1,
+      mult: 1,
+     });
     scene.create();
 
     const menuClosedCallback = vi.mocked(scene.events.once).mock.calls[0][1];
@@ -481,6 +491,9 @@ describe("GameScene interactions", () => {
     organismData: { id },
     x,
     y,
+    HP: 100,
+    changeHealth: vi.fn(),
+    changeScale: vi.fn(),
   });
 
   it("valitsee ensimmäisen organismin", () => {
@@ -492,7 +505,10 @@ describe("GameScene interactions", () => {
   });
 
   it("luo positiivisen vuorovaikutuksen", () => {
-    vi.mocked(getRelation).mockReturnValue(1);
+    vi.mocked(getRelation).mockReturnValue({
+      value: 1,
+      mult: 1,
+     });
 
     const first = organism("tree");
     const second = organism("shroom", 300, 250);
@@ -509,7 +525,10 @@ describe("GameScene interactions", () => {
   });
 
   it("luo negatiiviselle vuorovaikutukselle punaisen nuolen", () => {
-    vi.mocked(getRelation).mockReturnValue(-1);
+    vi.mocked(getRelation).mockReturnValue({
+      value: -1,
+      mult: 1,
+     });
     (scene as any).arrowColorValue = false;
     const first = organism("tree");
     const second = organism("ant");
@@ -521,7 +540,10 @@ describe("GameScene interactions", () => {
   });
 
   it("ei lisää samaa vuorovaikutusta kahdesti", () => {
-    vi.mocked(getRelation).mockReturnValue(1);
+    vi.mocked(getRelation).mockReturnValue({
+      value: 1,
+      mult: 1,
+     });
 
     const first = organism("tree");
     const second = organism("shroom");
@@ -559,7 +581,10 @@ describe("GameScene interactions", () => {
   });
 
   it("tyhjentää esikatselunuolen valinnan jälkeen", () => {
-    vi.mocked(getRelation).mockReturnValue(1);
+    vi.mocked(getRelation).mockReturnValue({
+      value: 1,
+      mult: 1,
+     });
 
     const first = organism("tree");
     const second = organism("shroom");

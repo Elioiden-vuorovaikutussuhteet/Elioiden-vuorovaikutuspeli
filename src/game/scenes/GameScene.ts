@@ -29,7 +29,9 @@ export default class GameScene extends Phaser.Scene {
 
     const first = this.selectedOrganism;
     const second = organism;
-    const relation = getRelation(first.organismData.id, second.organismData.id);
+    const relationData = getRelation(first.organismData.id, second.organismData.id);
+    const relation = relationData["value"];
+    const multiplier = relationData["mult"];
 
     if (first.organismData.id === second.organismData.id) {
       return;
@@ -54,6 +56,8 @@ export default class GameScene extends Phaser.Scene {
           0x064f15,
           4,
         );
+        second.changeHealth(relation, multiplier, first.HP);
+        // BFS
         this.interactions.push({
           from: first.organismData.id,
           to: second.organismData.id,
@@ -68,6 +72,8 @@ export default class GameScene extends Phaser.Scene {
           0xed0924,
           4,
         );
+        second.changeHealth(relation, multiplier, first.HP);
+        // BFS
         this.interactions.push({
           from: first.organismData.id,
           to: second.organismData.id,
@@ -79,6 +85,7 @@ export default class GameScene extends Phaser.Scene {
 
     console.log(first.organismData.id, first.x, first.y, relation);
     console.log(second.organismData.id, second.x, second.y, relation);
+
     const allRelationsCorrect = this.checkConnections();
 
     if (allRelationsCorrect && !this.antsSpawned) {
