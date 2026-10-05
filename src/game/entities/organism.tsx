@@ -18,13 +18,19 @@ export default class Organism extends Phaser.GameObjects.Sprite {
 
   public readonly nameText: Phaser.GameObjects.Text;
 
-  constructor(scene: Phaser.Scene, x: number, y: number, type = "acacia") {
-    const organismData = getOrganismData(type);
+  public HP = 100;
 
-    super(scene, x, y, organismData.texture);
+  private baseScale = 1;
+
+  constructor(scene: Phaser.Scene, x: number, y: number, type = "acacia") {
+    super(scene, x, y, getOrganismData(type).texture);
+    
+    const organismData = getOrganismData(type);
 
     this.organismData = organismData;
 
+    this.baseScale = organismData.default_scale;
+    
     this.setScale(organismData.default_scale);
 
     this.setInteractive();
@@ -68,5 +74,15 @@ export default class Organism extends Phaser.GameObjects.Sprite {
 
   }
 
+  public changeScale() {
+    const newScale = this.baseScale * (this.HP / 100)
+    this.setScale(newScale)
+  }
+
+  public changeHealth(relation: number, multiplier: number, originOrgHealth: number) {
+    const newHP = this.HP + (relation*(this.HP * multiplier * (originOrgHealth / 100)));
+    this.HP = newHP;
+    this.changeScale();
+  }
   update() {}
 }
