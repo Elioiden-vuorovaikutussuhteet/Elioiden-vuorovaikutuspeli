@@ -196,7 +196,7 @@ export default class GameScene extends Phaser.Scene {
     this.load.image("sapota_sprite", "sapota.png");
   }
 
-  create() {
+  create() {    
     const cam = this.cameras.main;
     const screenW = cam.width;
     const screenH = cam.height;
@@ -250,7 +250,7 @@ export default class GameScene extends Phaser.Scene {
     this.input.on('pointerup', (pointer: Phaser.Input.Pointer) => {
       if (pointer.rightButtonReleased()) {
         isDragging = false;
-      }  
+      }
     });
 
     this.input.on('pointermove', (pointer: Phaser.Input.Pointer) => {
@@ -280,7 +280,11 @@ export default class GameScene extends Phaser.Scene {
       },
     );
 
+    // Pause the game scene when menu is up
+    this.scene.pause();
     this.scene.launch("MenuScene");
+    this.scene.bringToTop('MenuScene');
+
     const infobutton = new InfoButton(this, 40, 40);
 
     const greenButton = new ArrowButtons(this, 60, centerY - 50, "greenbutton");
@@ -307,6 +311,8 @@ export default class GameScene extends Phaser.Scene {
     this.createOrganism(centerX, centerY - 200, "acacia");
 
     this.events.once("menuClosed", () => {
+      // Resume game scene
+      this.scene.resume()
       this.time.delayedCall(3000, () => {
         this.createOrganism(centerX, centerY + 200, "amf");
       });
