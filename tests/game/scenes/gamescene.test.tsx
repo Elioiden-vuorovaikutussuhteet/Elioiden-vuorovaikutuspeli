@@ -107,6 +107,9 @@ describe("GameScene", () => {
 
     scene.scene = mockPartial<typeof scene.scene>({
       launch: vi.fn(),
+      pause: vi.fn(),
+      bringToTop: vi.fn(),
+      resume: vi.fn(),
     });
 
     scene.events = mockPartial<typeof scene.events>({
@@ -294,6 +297,12 @@ describe("GameScene", () => {
       "redbutton",
     );
   });
+
+  it('pauses properly on game start', () => {
+    scene.create()
+    expect(scene.scene.pause).toHaveBeenCalledTimes(1);
+    expect(scene.scene.launch).toHaveBeenCalledWith('MenuScene');
+  });
 });
 
 describe("GameScene Camera System", () => {
@@ -355,6 +364,9 @@ describe("GameScene Camera System", () => {
 
     scene.scene = mockPartial<typeof scene.scene>({
       launch: vi.fn(),
+      pause: vi.fn(),
+      bringToTop: vi.fn(),
+      resume: vi.fn(),
     });
 
     scene.events = mockPartial<typeof scene.events>({
