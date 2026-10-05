@@ -82,6 +82,7 @@ export default class Organism extends Phaser.GameObjects.Sprite {
   public changeHealth(relation: number, multiplier: number, originOrgHealth: number) {
     const newHP = this.HP + (relation*(this.HP * multiplier * (originOrgHealth / 100)));
     this.HP = newHP;
+    this.changeScale();
   }
   update() {}
 }

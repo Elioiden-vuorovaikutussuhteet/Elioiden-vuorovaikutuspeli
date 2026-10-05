@@ -57,7 +57,7 @@ export default class GameScene extends Phaser.Scene {
           4,
         );
         second.changeHealth(relation, multiplier, first.HP);
-        second.changeScale();
+        // BFS
         this.interactions.push({
           from: first.organismData.id,
           to: second.organismData.id,
@@ -73,7 +73,7 @@ export default class GameScene extends Phaser.Scene {
           4,
         );
         second.changeHealth(relation, multiplier, first.HP);
-        second.changeScale();
+        // BFS
         this.interactions.push({
           from: first.organismData.id,
           to: second.organismData.id,
