@@ -18,8 +18,58 @@ export default class GameScene extends Phaser.Scene {
   private permanentArrows!: Phaser.GameObjects.Graphics;
   private previewArrow!: Phaser.GameObjects.Graphics;
   private arrowColorValue: boolean = true;
+  private organismMap = new Map<string, Organism>();
   private antsSpawned = false;
   private sapotaSpawned = false;
+
+
+  private interactionPulse(startingOrganism: Organism, initialRelation: number) {
+    const visited = new Set<string>();
+    const queue: { id: string; pulse: number }[] = [];
+
+    visited.add(startingOrganism.organismData.id);
+    queue.push({
+      id: startingOrganism.organismData.id,
+      pulse: initialRelation,
+    });
+
+    while (queue.length > 0) {
+      const current = queue.shift();
+      if (!current) {
+        continue;
+      }
+
+      const neighbours = this.interactions
+      .filter((relation) => relation.from === current.id)
+      .map((relation) => relation.to);
+
+      neighbours.forEach( (element) => {
+        if (!visited.has(element)) {
+          const relationData = getRelation(current.id, element);
+          const edgeRelation = relationData.value;
+          const edgeMultiplier = relationData.mult;
+          
+          const newPulse = current.pulse * edgeRelation;
+
+          visited.add(element);
+          queue.push({
+            id: element,
+            pulse: newPulse,
+          });
+
+          const nodeOrganism = this.organismMap.get(current.id)!;
+          const neighbourOrganism = this.organismMap.get(element)!;
+          
+          if (!nodeOrganism || !neighbourOrganism) {
+            return;
+          }
+
+          neighbourOrganism.changeHealth(newPulse, edgeMultiplier, nodeOrganism.HP);
+        }
+      }
+      );
+    }
+  }
 
   private getStartEndOrganisms(organism: Organism) {
     if (this.selectedOrganism === null) {
@@ -56,12 +106,12 @@ export default class GameScene extends Phaser.Scene {
           0x064f15,
           4,
         );
-        second.changeHealth(relation, multiplier, first.HP);
-        // BFS
         this.interactions.push({
           from: first.organismData.id,
           to: second.organismData.id,
         });
+        second.changeHealth(relation, multiplier, first.HP);
+        this.interactionPulse(second, relation);
       } else if (relation === -1 && this.arrowColorValue === false) {
         this.drawArrow(
           this.permanentArrows,
@@ -72,12 +122,12 @@ export default class GameScene extends Phaser.Scene {
           0xed0924,
           4,
         );
-        second.changeHealth(relation, multiplier, first.HP);
-        // BFS
         this.interactions.push({
           from: first.organismData.id,
           to: second.organismData.id,
         });
+        second.changeHealth(relation, multiplier, first.HP);
+        this.interactionPulse(second, relation);
       }
     }
 
@@ -105,6 +155,7 @@ export default class GameScene extends Phaser.Scene {
     organism.on("organismSelected", this.getStartEndOrganisms, this);
 
     this.organisms.push(organism);
+    this.organismMap.set(organism.organismData.id, organism);
     this.createRightConnections();
     this.uiCamera.ignore(organism);
     this.uiCamera.ignore(organism.nameText);
