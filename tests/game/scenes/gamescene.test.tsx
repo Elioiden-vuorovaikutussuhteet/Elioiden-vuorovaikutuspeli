@@ -324,6 +324,20 @@ describe("GameScene Camera System", () => {
     up: { isDown: boolean };
     down: { isDown: boolean };
   };
+  const registerWheelZoom = (input: Phaser.Input.InputPlugin, cam: any) => {
+    input.on(
+      'wheel',
+      (
+        _pointer: Phaser.Input.Pointer,
+        _over: Phaser.GameObjects.GameObject[],
+        _dx: number,
+        dy: number,
+      ) => {
+        const zoomChange = dy > 0 ? -0.1 : 0.1
+        cam.setZoom(Phaser.Math.Clamp(cam.zoom + zoomChange, 0.5, 2.0))
+      },
+    )
+  }
 
   beforeEach(() => {
     vi.clearAllMocks();
@@ -336,10 +350,13 @@ describe("GameScene Camera System", () => {
         centerY: 500,
         width: 1920,
         height: 1080,
+        zoom: 1.0,
       },
       add: vi.fn().mockReturnValue({
         setScroll: vi.fn(),
-        setZoom: vi.fn(),
+        setZoom: vi.fn(function (this: any, val: number) {
+          this.zoom = Number(val.toFixed(2))
+        }),
         ignore: vi.fn(),
       }),
     });
@@ -355,12 +372,6 @@ describe("GameScene Camera System", () => {
         fillTriangle: vi.fn(),
       }),
     });
-
-    scene.cameras.main.width = 1920;
-    scene.cameras.main.height = 1080;
-    scene.cameras.main.scrollX = 0;
-    scene.cameras.main.scrollY = 0;
-    scene.cameras.main.zoom = 1;
 
     mockCursors = {
       left: { isDown: false },
@@ -411,6 +422,32 @@ describe("GameScene Camera System", () => {
       );
     });
   });
+
+  it('zooms camera on wheel event without using create()', () => {
+    const scene = new GameScene()
+    let wheelCallback!: Function
+
+    const mockCam = {
+      zoom: 1.0,
+      setZoom: vi.fn(function (val) {
+        mockCam.zoom = Number(val.toFixed(2))
+      }),
+    }
+
+    scene.input = {
+      on: vi.fn((event, cb) => {
+        if (event === 'wheel') wheelCallback = cb
+      }),
+    } as any
+
+    scene.setupCameraZoom(mockCam as any)
+
+    wheelCallback(null, [], 0, -100)
+    expect(mockCam.setZoom).toHaveBeenCalledWith(1.1)
+
+    wheelCallback(null, [], 0, 100)
+    expect(mockCam.setZoom).toHaveBeenCalledWith(1.0)
+  })
 
   describe("update()", () => {
     it("scrolls camera up when up arrow is pressed", () => {

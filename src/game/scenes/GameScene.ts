@@ -26,47 +26,47 @@ export default class GameScene extends Phaser.Scene {
   private async interactionPulse(startingOrganism: Organism, initialRelation: number) {
     const visited = new Set<string>();
     const queue: { id: string; pulse: number }[] = [];
-  
+
     visited.add(startingOrganism.organismData.id);
     queue.push({
       id: startingOrganism.organismData.id,
       pulse: initialRelation,
     });
-  
+
     while (queue.length > 0) {
       const current = queue.shift();
-  
+
       if (!current) {
         continue;
       }
-  
+
       const neighbours = this.interactions
         .filter((relation) => relation.from === current.id)
         .map((relation) => relation.to);
-  
+
       for (const element of neighbours) {
         if (!visited.has(element)) {
           const relationData = getRelation(current.id, element);
           const edgeRelation = relationData.value;
           const edgeMultiplier = relationData.mult;
-  
+
           const newPulse = current.pulse * edgeRelation;
-  
+
           visited.add(element);
           queue.push({
             id: element,
             pulse: newPulse,
           });
-  
+
           const nodeOrganism = this.organismMap.get(current.id)!;
           const neighbourOrganism = this.organismMap.get(element)!;
-  
+
           if (!nodeOrganism || !neighbourOrganism) {
             continue;
           }
-  
+
           await new Promise(resolve => setTimeout(resolve, 100));
-  
+
           neighbourOrganism.changeHealth(newPulse, edgeMultiplier, nodeOrganism.HP);
         }
       }
@@ -256,34 +256,11 @@ export default class GameScene extends Phaser.Scene {
     this.load.image("sapota_sprite", "sapota.png");
   }
 
-  create() {    
-    const cam = this.cameras.main;
-    const screenW = cam.width;
-    const screenH = cam.height;
-
-    cam.setBounds(-screenW, -screenH, screenW * 3, screenH * 3);
-    cam.scrollX = 0;
-    cam.scrollY = 0;
+  create() {
+    this.setupCameras(this.cameras)
+    this.setupCameraZoom(this.cameras.main)
 
     this.cursors = this.input.keyboard!.createCursorKeys();
-
-    //Mouse wheel zoom event
-    this.input.on(
-      "wheel",
-      (
-        _pointer: Phaser.Input.Pointer,
-        _over: Phaser.GameObjects.GameObject[],
-        _dx: number,
-        dy: number,
-      ) => {
-        const zoomChange = dy > 0 ? -0.1 : 0.1;
-        cam.zoom = Phaser.Math.Clamp(cam.zoom + zoomChange, 0.5, 2.0);
-      },
-    );
-
-    this.uiCamera = this.cameras.add(0, 0, screenW, screenH);
-    this.uiCamera.setScroll(0, 0);
-    this.uiCamera.setZoom(1);
 
     const centerX = this.cameras.main.centerX;
     const centerY = this.cameras.main.centerY;
@@ -318,8 +295,8 @@ export default class GameScene extends Phaser.Scene {
         const dx = pointer.x - dragStartX;
         const dy = pointer.y - dragStartY;
 
-        cam.scrollX -= dx / cam.zoom;
-        cam.scrollY -= dy / cam.zoom;
+        this.cameras.main.scrollX -= dx / this.cameras.main.zoom;
+        this.cameras.main.scrollY -= dy / this.cameras.main.zoom;
 
         dragStartX = pointer.x;
         dragStartY = pointer.y;
@@ -351,9 +328,9 @@ export default class GameScene extends Phaser.Scene {
     const redButton = new ArrowButtons(this, 60, centerY + 50, "redbutton");
 
     // Make main camera ignore the button so it stays fixed
-    cam.ignore(infobutton);
-    cam.ignore(greenButton);
-    cam.ignore(redButton);
+    this.cameras.main.ignore(infobutton);
+    this.cameras.main.ignore(greenButton);
+    this.cameras.main.ignore(redButton);
 
     infobutton.on("infoButtonClicked", () => {
       this.scene.launch("TutorialScene");
@@ -377,6 +354,36 @@ export default class GameScene extends Phaser.Scene {
         this.createOrganism(centerX, centerY + 200, "amf");
       });
     });
+  }
+  
+  setupCameras(cameras: Phaser.Cameras.Scene2D.CameraManager) {
+    const cam = cameras.main
+    const screenW = cam.width;
+    const screenH = cam.height;
+
+    cam.setBounds(-screenW, -screenH, screenW * 3, screenH * 3);
+    cam.scrollX = 0;
+    cam.scrollY = 0;
+
+    this.uiCamera = cameras.add(0, 0, screenW, screenH);
+    this.uiCamera.setScroll(0, 0);
+    this.uiCamera.setZoom(1);
+  }
+
+  setupCameraZoom(cam: Phaser.Cameras.Scene2D.Camera) {
+    //Mouse wheel zoom event
+    this.input.on(
+      "wheel",
+      (
+        _pointer: Phaser.Input.Pointer,
+        _over: Phaser.GameObjects.GameObject[],
+        _dx: number,
+        dy: number,
+      ) => {
+        const zoomChange = dy > 0 ? -0.1 : 0.1;
+        cam.setZoom(Phaser.Math.Clamp(cam.zoom + zoomChange, 0.5, 2.0));
+      },
+    );
   }
 
   update() {
