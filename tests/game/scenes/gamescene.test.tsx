@@ -182,8 +182,8 @@ describe("GameScene", () => {
 
   it("adds ants and then sapota when each relation set is completed", () => {
     vi.mocked(getRelation).mockReturnValue({
-     value: 1,
-     mult: 1,
+      value: 1,
+      mult: 1,
     });
     scene.create();
 
@@ -217,12 +217,12 @@ describe("GameScene", () => {
 
   it("logs to console after 2 organisms are selected", () => {
     // edit this test once arrow making function is called instead of log
-    const consoleLogSpy = vi.spyOn(console, "log").mockImplementation(() => {});
+    const consoleLogSpy = vi.spyOn(console, "log").mockImplementation(() => { });
 
     vi.mocked(getRelation).mockReturnValue({
       value: 1,
       mult: 1,
-     });
+    });
     scene.create();
 
     const menuClosedCallback = vi.mocked(scene.events.once).mock.calls[0][1];
@@ -252,7 +252,7 @@ describe("GameScene", () => {
   });
 
   it("does nothing when the same organism is selected twice", () => {
-    const consoleLogSpy = vi.spyOn(console, "log").mockImplementation(() => {});
+    const consoleLogSpy = vi.spyOn(console, "log").mockImplementation(() => { });
 
     scene.create();
 
@@ -313,6 +313,7 @@ describe("GameScene", () => {
     expect(scene.scene.pause).toHaveBeenCalledTimes(1);
     expect(scene.scene.launch).toHaveBeenCalledWith('MenuScene');
   });
+
 });
 
 describe("GameScene Camera System", () => {
@@ -449,7 +450,7 @@ describe("GameScene Camera System", () => {
       scene.create();
 
       mockCursors.right.isDown = true;
-      scene.cameras.main.scrollY = 0;
+      scene.cameras.main.scrollX = 0;
 
       scene.update();
 
@@ -457,6 +458,7 @@ describe("GameScene Camera System", () => {
     });
   });
 });
+
 describe("GameScene interactions", () => {
   let scene: GameScene;
   let permanentArrows: any;
@@ -520,7 +522,7 @@ describe("GameScene interactions", () => {
     vi.mocked(getRelation).mockReturnValue({
       value: 1,
       mult: 1,
-     });
+    });
 
     const first = organism("tree");
     const second = organism("shroom", 300, 250);
@@ -540,7 +542,7 @@ describe("GameScene interactions", () => {
     vi.mocked(getRelation).mockReturnValue({
       value: -1,
       mult: 1,
-     });
+    });
     (scene as any).arrowColorValue = false;
     const first = organism("tree");
     const second = organism("ant");
@@ -555,7 +557,7 @@ describe("GameScene interactions", () => {
     vi.mocked(getRelation).mockReturnValue({
       value: 1,
       mult: 1,
-     });
+    });
 
     const first = organism("tree");
     const second = organism("shroom");
@@ -596,7 +598,7 @@ describe("GameScene interactions", () => {
     vi.mocked(getRelation).mockReturnValue({
       value: 1,
       mult: 1,
-     });
+    });
 
     const first = organism("tree");
     const second = organism("shroom");

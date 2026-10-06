@@ -8,16 +8,18 @@ export default defineConfig({
     proxy: {
       '/api': {
         target: "http://localhost:4173",
-        changeOrigin: true, 
+        changeOrigin: true,
       },
     },
-    watch: { 
-      usePolling: true 
+    watch: {
+      usePolling: true
     }
   },
-    test: {
+  test: {
     environment: 'jsdom',
-
+    restoreMocks: true,
+    silent: false, 
+    reporters: ['verbose'],
     coverage: {
       provider: 'v8',
       reporter: ['text', 'html', 'lcov'],
@@ -25,7 +27,7 @@ export default defineConfig({
       exclude: [
         'src/main.tsx',
         'src/game/data/**',
-        ]
+      ]
     },
   },
 })
