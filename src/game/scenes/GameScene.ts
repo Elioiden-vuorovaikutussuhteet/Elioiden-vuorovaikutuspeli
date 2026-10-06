@@ -257,8 +257,10 @@ export default class GameScene extends Phaser.Scene {
   }
 
   create() {
+    
     this.setupCameras(this.cameras)
     this.setupCameraZoom(this.cameras.main)
+    this.setupCameraDrag(this.cameras.main)
 
     this.cursors = this.input.keyboard!.createCursorKeys();
 
@@ -269,39 +271,6 @@ export default class GameScene extends Phaser.Scene {
     this.previewArrow = this.add.graphics();
     this.permanentArrows.setDepth(100);
     this.previewArrow.setDepth(100);
-
-    // Right mouse button for dragging the scene
-    this.input.mouse?.disableContextMenu();
-    let isDragging = false;
-    let dragStartX = 0;
-    let dragStartY = 0;
-
-    this.input.on('pointerdown', (pointer: Phaser.Input.Pointer) => {
-      if (pointer.rightButtonDown()) {
-        isDragging = true;
-        dragStartX = pointer.x;
-        dragStartY = pointer.y;
-      }
-    });
-
-    this.input.on('pointerup', (pointer: Phaser.Input.Pointer) => {
-      if (pointer.rightButtonReleased()) {
-        isDragging = false;
-      }
-    });
-
-    this.input.on('pointermove', (pointer: Phaser.Input.Pointer) => {
-      if (isDragging) {
-        const dx = pointer.x - dragStartX;
-        const dy = pointer.y - dragStartY;
-
-        this.cameras.main.scrollX -= dx / this.cameras.main.zoom;
-        this.cameras.main.scrollY -= dy / this.cameras.main.zoom;
-
-        dragStartX = pointer.x;
-        dragStartY = pointer.y;
-      }
-    });
 
     //Eventlistener for: If players clicks on empty space, preview arrow disappears
     this.input.on(
@@ -355,7 +324,7 @@ export default class GameScene extends Phaser.Scene {
       });
     });
   }
-  
+
   setupCameras(cameras: Phaser.Cameras.Scene2D.CameraManager) {
     const cam = cameras.main
     const screenW = cam.width;
@@ -384,6 +353,41 @@ export default class GameScene extends Phaser.Scene {
         cam.setZoom(Phaser.Math.Clamp(cam.zoom + zoomChange, 0.5, 2.0));
       },
     );
+  }
+
+  setupCameraDrag(cam: Phaser.Cameras.Scene2D.Camera) {
+    // Right mouse button for dragging the scene
+    this.input.mouse?.disableContextMenu();
+    let isDragging = false;
+    let dragStartX = 0;
+    let dragStartY = 0;
+
+    this.input.on('pointerdown', (pointer: Phaser.Input.Pointer) => {
+      if (pointer.rightButtonDown()) {
+        isDragging = true;
+        dragStartX = pointer.x;
+        dragStartY = pointer.y;
+      }
+    });
+
+    this.input.on('pointerup', (pointer: Phaser.Input.Pointer) => {
+      if (pointer.rightButtonReleased()) {
+        isDragging = false;
+      }
+    });
+
+    this.input.on('pointermove', (pointer: Phaser.Input.Pointer) => {
+      if (isDragging) {
+        const dx = pointer.x - dragStartX;
+        const dy = pointer.y - dragStartY;
+
+        cam.scrollX -= dx / cam.zoom;
+        cam.scrollY -= dy / cam.zoom;
+
+        dragStartX = pointer.x;
+        dragStartY = pointer.y;
+      }
+    });
   }
 
   update() {
@@ -416,7 +420,12 @@ export default class GameScene extends Phaser.Scene {
         2,
       );
     }
-    const cam = this.cameras.main;
+
+    this.updateCamera(this.cameras.main);
+
+  }
+
+  updateCamera(cam: Phaser.Cameras.Scene2D.Camera) {
     const speed = 10;
     if (this.cursors.left.isDown) {
       cam.scrollX -= speed;

@@ -324,20 +324,6 @@ describe("GameScene Camera System", () => {
     up: { isDown: boolean };
     down: { isDown: boolean };
   };
-  const registerWheelZoom = (input: Phaser.Input.InputPlugin, cam: any) => {
-    input.on(
-      'wheel',
-      (
-        _pointer: Phaser.Input.Pointer,
-        _over: Phaser.GameObjects.GameObject[],
-        _dx: number,
-        dy: number,
-      ) => {
-        const zoomChange = dy > 0 ? -0.1 : 0.1
-        cam.setZoom(Phaser.Math.Clamp(cam.zoom + zoomChange, 0.5, 2.0))
-      },
-    )
-  }
 
   beforeEach(() => {
     vi.clearAllMocks();
@@ -423,7 +409,7 @@ describe("GameScene Camera System", () => {
     });
   });
 
-  it('zooms camera on wheel event without using create()', () => {
+  it('zooms camera on wheel event', () => {
     const scene = new GameScene()
     let wheelCallback!: Function
 
