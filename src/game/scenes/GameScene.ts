@@ -23,51 +23,53 @@ export default class GameScene extends Phaser.Scene {
   private sapotaSpawned = false;
 
 
-  private interactionPulse(startingOrganism: Organism, initialRelation: number) {
+  private async interactionPulse(startingOrganism: Organism, initialRelation: number) {
     const visited = new Set<string>();
     const queue: { id: string; pulse: number }[] = [];
-
+  
     visited.add(startingOrganism.organismData.id);
     queue.push({
       id: startingOrganism.organismData.id,
       pulse: initialRelation,
     });
-
+  
     while (queue.length > 0) {
       const current = queue.shift();
+  
       if (!current) {
         continue;
       }
-
+  
       const neighbours = this.interactions
-      .filter((relation) => relation.from === current.id)
-      .map((relation) => relation.to);
-
-      neighbours.forEach( (element) => {
+        .filter((relation) => relation.from === current.id)
+        .map((relation) => relation.to);
+  
+      for (const element of neighbours) {
         if (!visited.has(element)) {
           const relationData = getRelation(current.id, element);
           const edgeRelation = relationData.value;
           const edgeMultiplier = relationData.mult;
-          
+  
           const newPulse = current.pulse * edgeRelation;
-
+  
           visited.add(element);
           queue.push({
             id: element,
             pulse: newPulse,
           });
-
+  
           const nodeOrganism = this.organismMap.get(current.id)!;
           const neighbourOrganism = this.organismMap.get(element)!;
-          
+  
           if (!nodeOrganism || !neighbourOrganism) {
-            return;
+            continue;
           }
-
+  
+          await new Promise(resolve => setTimeout(resolve, 100));
+  
           neighbourOrganism.changeHealth(newPulse, edgeMultiplier, nodeOrganism.HP);
         }
       }
-      );
     }
   }
 
