@@ -111,6 +111,9 @@ describe("GameScene", () => {
 
     scene.scene = mockPartial<typeof scene.scene>({
       launch: vi.fn(),
+      pause: vi.fn(),
+      bringToTop: vi.fn(),
+      resume: vi.fn(),
     });
 
     scene.events = mockPartial<typeof scene.events>({
@@ -179,8 +182,8 @@ describe("GameScene", () => {
 
   it("adds ants and then sapota when each relation set is completed", () => {
     vi.mocked(getRelation).mockReturnValue({
-     value: 1,
-     mult: 1,
+      value: 1,
+      mult: 1,
     });
     scene.create();
 
@@ -214,12 +217,12 @@ describe("GameScene", () => {
 
   it("logs to console after 2 organisms are selected", () => {
     // edit this test once arrow making function is called instead of log
-    const consoleLogSpy = vi.spyOn(console, "log").mockImplementation(() => {});
+    const consoleLogSpy = vi.spyOn(console, "log").mockImplementation(() => { });
 
     vi.mocked(getRelation).mockReturnValue({
       value: 1,
       mult: 1,
-     });
+    });
     scene.create();
 
     const menuClosedCallback = vi.mocked(scene.events.once).mock.calls[0][1];
@@ -249,7 +252,7 @@ describe("GameScene", () => {
   });
 
   it("does nothing when the same organism is selected twice", () => {
-    const consoleLogSpy = vi.spyOn(console, "log").mockImplementation(() => {});
+    const consoleLogSpy = vi.spyOn(console, "log").mockImplementation(() => { });
 
     scene.create();
 
@@ -304,79 +307,75 @@ describe("GameScene", () => {
       "redbutton",
     );
   });
+
+  it('pauses properly on game start', () => {
+    scene.create()
+    expect(scene.scene.pause).toHaveBeenCalledTimes(1);
+    expect(scene.scene.launch).toHaveBeenCalledWith('MenuScene');
+  });
+
 });
 
 describe("GameScene Camera System", () => {
   let scene: GameScene;
-  let mockCursors: {
-    left: { isDown: boolean };
-    right: { isDown: boolean };
-    up: { isDown: boolean };
-    down: { isDown: boolean };
-  };
+
 
   beforeEach(() => {
     vi.clearAllMocks();
 
     scene = new GameScene();
-
-    scene.cameras = mockDeep<typeof scene.cameras>({
-      main: {
-        centerX: 500,
-        centerY: 500,
-        width: 1920,
-        height: 1080,
-      },
-      add: vi.fn().mockReturnValue({
-        setScroll: vi.fn(),
-        setZoom: vi.fn(),
-        ignore: vi.fn(),
-      }),
-    });
-
-    scene.input = mockDeep<typeof scene.input>();
-    scene.add = mockDeep<typeof scene.add>({
-      graphics: vi.fn().mockReturnValue({
-        setDepth: vi.fn(),
-        clear: vi.fn(),
-        lineStyle: vi.fn(),
-        fillStyle: vi.fn(),
-        lineBetween: vi.fn(),
-        fillTriangle: vi.fn(),
-      }),
-    });
-
-    scene.cameras.main.width = 1920;
-    scene.cameras.main.height = 1080;
-    scene.cameras.main.scrollX = 0;
-    scene.cameras.main.scrollY = 0;
-    scene.cameras.main.zoom = 1;
-
-    mockCursors = {
-      left: { isDown: false },
-      right: { isDown: false },
-      up: { isDown: false },
-      down: { isDown: false },
-    };
-
-    scene.input.keyboard!.createCursorKeys = vi
-      .fn()
-      .mockReturnValue(mockCursors);
-
-    scene.scene = mockPartial<typeof scene.scene>({
-      launch: vi.fn(),
-    });
-
-    scene.events = mockPartial<typeof scene.events>({
-      once: vi.fn(),
-    });
-
-    scene.time = mockPartial<typeof scene.time>({
-      delayedCall: vi.fn(),
-    });
   });
 
   describe("create()", () => {
+
+    beforeEach(() => {
+      vi.clearAllMocks();
+
+      scene = new GameScene();
+
+      scene.cameras = mockDeep<typeof scene.cameras>({
+        main: {
+          centerX: 500,
+          centerY: 500,
+          width: 1920,
+          height: 1080,
+        },
+        add: vi.fn().mockReturnValue({
+          setScroll: vi.fn(),
+          setZoom: vi.fn(),
+          ignore: vi.fn(),
+        }),
+      });
+
+      scene.input = mockDeep<typeof scene.input>();
+
+      scene.scene = mockPartial<typeof scene.scene>({
+        launch: vi.fn(),
+        pause: vi.fn(),
+        bringToTop: vi.fn(),
+        resume: vi.fn(),
+      });
+
+      scene.add = mockDeep<typeof scene.add>({
+        graphics: vi.fn().mockReturnValue({
+          setDepth: vi.fn(),
+          clear: vi.fn(),
+          lineStyle: vi.fn(),
+          fillStyle: vi.fn(),
+          lineBetween: vi.fn(),
+          fillTriangle: vi.fn(),
+        }),
+      });
+
+      scene.events = mockPartial<typeof scene.events>({
+        once: vi.fn(),
+      });
+
+      scene.time = mockPartial<typeof scene.time>({
+        delayedCall: vi.fn(),
+      });
+    });
+
     it("configures bounds to 1 screen left and 3 screens wide", () => {
       scene.create();
 
@@ -399,52 +398,221 @@ describe("GameScene Camera System", () => {
     });
   });
 
-  describe("update()", () => {
-    it("scrolls camera up when up arrow is pressed", () => {
-      scene.create();
+  it('zooms camera on wheel event', () => {
+    const scene = new GameScene()
+    let wheelCallback!: Function
 
-      mockCursors.up.isDown = true;
-      scene.cameras.main.scrollY = 0;
+    const mockCam = {
+      zoom: 1.0,
+      setZoom: vi.fn(function (val) {
+        mockCam.zoom = Number(val.toFixed(2))
+      }),
+    }
 
-      scene.update();
+    scene.input = {
+      on: vi.fn((event, cb) => {
+        if (event === 'wheel') wheelCallback = cb
+      }),
+    } as any
 
-      expect(scene.cameras.main.scrollY).toBeLessThan(0);
-    });
+    scene.setupCameraZoom(mockCam as any)
 
-    it("scrolls camera down when down arrow is pressed", () => {
-      scene.create();
+    wheelCallback(null, [], 0, -100)
+    expect(mockCam.setZoom).toHaveBeenCalledWith(1.1)
 
-      mockCursors.down.isDown = true;
-      scene.cameras.main.scrollY = 0;
+    wheelCallback(null, [], 0, 100)
+    expect(mockCam.setZoom).toHaveBeenCalledWith(1.0)
+  })
 
-      scene.update();
+  describe('updateCamera', () => {
+    let scene: GameScene
+    let mockCam: { scrollX: number; scrollY: number }
 
-      expect(scene.cameras.main.scrollY).toBeGreaterThan(0);
-    });
+    const setCursors = (state: {
+      left?: boolean
+      right?: boolean
+      up?: boolean
+      down?: boolean
+    }) => {
+      ; (scene as any).cursors = {
+        left: { isDown: state.left ?? false },
+        right: { isDown: state.right ?? false },
+        up: { isDown: state.up ?? false },
+        down: { isDown: state.down ?? false },
+      }
+    }
 
-    it("scrolls camera left when left arrow is pressed", () => {
-      scene.create();
+    beforeEach(() => {
+      scene = new GameScene()
+      mockCam = {
+        scrollX: 100,
+        scrollY: 100,
+      }
+      setCursors({})
+    })
 
-      mockCursors.left.isDown = true;
-      scene.cameras.main.scrollX = 0;
+    it('does not scroll camera when no keys are pressed', () => {
+      scene.updateCamera(mockCam as any)
 
-      scene.update();
+      expect(mockCam.scrollX).toBe(100)
+      expect(mockCam.scrollY).toBe(100)
+    })
 
-      expect(scene.cameras.main.scrollX).toBeLessThan(0);
-    });
+    describe('Horizontal movement', () => {
+      it('moves left by speed (10) when left cursor is down', () => {
+        setCursors({ left: true })
+        scene.updateCamera(mockCam as any)
 
-    it("scrolls camera right when right arrow is pressed", () => {
-      scene.create();
+        expect(mockCam.scrollX).toBe(90)
+        expect(mockCam.scrollY).toBe(100)
+      })
 
-      mockCursors.right.isDown = true;
-      scene.cameras.main.scrollY = 0;
+      it('moves right by speed (10) when right cursor is down', () => {
+        setCursors({ right: true })
+        scene.updateCamera(mockCam as any)
 
-      scene.update();
+        expect(mockCam.scrollX).toBe(110)
+        expect(mockCam.scrollY).toBe(100)
+      })
 
-      expect(scene.cameras.main.scrollX).toBeGreaterThan(0);
-    });
-  });
+    })
+
+    describe('Vertical movement', () => {
+      it('moves up by speed (10) when up cursor is down', () => {
+        setCursors({ up: true })
+        scene.updateCamera(mockCam as any)
+
+        expect(mockCam.scrollX).toBe(100)
+        expect(mockCam.scrollY).toBe(90)
+      })
+
+      it('moves down by speed (10) when down cursor is down', () => {
+        setCursors({ down: true })
+        scene.updateCamera(mockCam as any)
+
+        expect(mockCam.scrollX).toBe(100)
+        expect(mockCam.scrollY).toBe(110)
+      })
+
+    })
+  })
+
+  describe('setupCameraDrag', () => {
+    let scene: GameScene
+    let mockCam: { scrollX: number; scrollY: number; zoom: number }
+    let mockMouse: { disableContextMenu: ReturnType<typeof vi.fn> }
+    let handlers: Record<string, (pointer: any) => void>
+
+    // Helper to generate pointer event states
+    const createPointer = (options: {
+      x: number
+      y: number
+      rightDown?: boolean
+      rightReleased?: boolean
+    }) => ({
+      x: options.x,
+      y: options.y,
+      rightButtonDown: () => options.rightDown ?? false,
+      rightButtonReleased: () => options.rightReleased ?? false,
+    })
+
+    beforeEach(() => {
+      scene = new GameScene()
+      handlers = {}
+
+      mockCam = {
+        scrollX: 100,
+        scrollY: 100,
+        zoom: 1.0,
+      }
+
+      mockMouse = {
+        disableContextMenu: vi.fn(),
+      }
+
+      scene.input = {
+        mouse: mockMouse,
+        on: vi.fn((event: string, cb: (pointer: any) => void) => {
+          handlers[event] = cb
+        }),
+      } as any
+
+      scene.setupCameraDrag(mockCam as any)
+    })
+
+    it('disables right-click context menu', () => {
+      expect(mockMouse.disableContextMenu).toHaveBeenCalledTimes(1)
+    })
+
+    it('scrolls the camera opposite to drag direction when dragging with right click', () => {
+      handlers['pointerdown'](createPointer({ x: 200, y: 200, rightDown: true }))
+
+      handlers['pointermove'](createPointer({ x: 250, y: 230 }))
+
+      expect(mockCam.scrollX).toBe(50)
+      expect(mockCam.scrollY).toBe(70)
+    })
+
+    it('updates drag origin incrementally during multiple moves', () => {
+      handlers['pointerdown'](createPointer({ x: 100, y: 100, rightDown: true }))
+
+      handlers['pointermove'](createPointer({ x: 120, y: 110 }))
+      expect(mockCam.scrollX).toBe(80)
+      expect(mockCam.scrollY).toBe(90)
+
+      handlers['pointermove'](createPointer({ x: 130, y: 120 }))
+      expect(mockCam.scrollX).toBe(70)
+      expect(mockCam.scrollY).toBe(80)
+    })
+
+    it('scales distance according to camera zoom', () => {
+      mockCam.zoom = 2.0
+
+      handlers['pointerdown'](createPointer({ x: 100, y: 100, rightDown: true }))
+      handlers['pointermove'](createPointer({ x: 200, y: 200 }))
+
+      expect(mockCam.scrollX).toBe(50) // 100 - 50
+      expect(mockCam.scrollY).toBe(50) // 100 - 50
+    })
+
+    it('does not pan if moving without dragging active', () => {
+      handlers['pointermove'](createPointer({ x: 300, y: 300 }))
+
+      expect(mockCam.scrollX).toBe(100)
+      expect(mockCam.scrollY).toBe(100)
+    })
+
+    it('does not initiate drag if button down is not right click', () => {
+      handlers['pointerdown'](createPointer({ x: 200, y: 200, rightDown: false }))
+      handlers['pointermove'](createPointer({ x: 250, y: 250 }))
+
+      expect(mockCam.scrollX).toBe(100)
+      expect(mockCam.scrollY).toBe(100)
+    })
+
+    it('stops dragging when right button is released', () => {
+      handlers['pointerdown'](createPointer({ x: 100, y: 100, rightDown: true }))
+      handlers['pointermove'](createPointer({ x: 150, y: 150 }))
+      expect(mockCam.scrollX).toBe(50)
+
+      handlers['pointerup'](createPointer({ x: 150, y: 150, rightReleased: true }))
+
+      handlers['pointermove'](createPointer({ x: 200, y: 200 }))
+      expect(mockCam.scrollX).toBe(50)
+      expect(mockCam.scrollY).toBe(50)
+    })
+
+    it('ignores release events from non-right buttons while dragging', () => {
+      handlers['pointerdown'](createPointer({ x: 100, y: 100, rightDown: true }))
+
+      handlers['pointerup'](createPointer({ x: 100, y: 100, rightReleased: false }))
+
+      handlers['pointermove'](createPointer({ x: 150, y: 100 }))
+      expect(mockCam.scrollX).toBe(50)
+    })
+  })
 });
+
 describe("GameScene interactions", () => {
   let scene: GameScene;
   let permanentArrows: any;
@@ -508,7 +676,7 @@ describe("GameScene interactions", () => {
     vi.mocked(getRelation).mockReturnValue({
       value: 1,
       mult: 1,
-     });
+    });
 
     const first = organism("tree");
     const second = organism("shroom", 300, 250);
@@ -528,7 +696,7 @@ describe("GameScene interactions", () => {
     vi.mocked(getRelation).mockReturnValue({
       value: -1,
       mult: 1,
-     });
+    });
     (scene as any).arrowColorValue = false;
     const first = organism("tree");
     const second = organism("ant");
@@ -543,7 +711,7 @@ describe("GameScene interactions", () => {
     vi.mocked(getRelation).mockReturnValue({
       value: 1,
       mult: 1,
-     });
+    });
 
     const first = organism("tree");
     const second = organism("shroom");
@@ -584,7 +752,7 @@ describe("GameScene interactions", () => {
     vi.mocked(getRelation).mockReturnValue({
       value: 1,
       mult: 1,
-     });
+    });
 
     const first = organism("tree");
     const second = organism("shroom");

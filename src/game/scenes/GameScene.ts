@@ -26,47 +26,47 @@ export default class GameScene extends Phaser.Scene {
   private async interactionPulse(startingOrganism: Organism, initialRelation: number) {
     const visited = new Set<string>();
     const queue: { id: string; pulse: number }[] = [];
-  
+
     visited.add(startingOrganism.organismData.id);
     queue.push({
       id: startingOrganism.organismData.id,
       pulse: initialRelation,
     });
-  
+
     while (queue.length > 0) {
       const current = queue.shift();
-  
+
       if (!current) {
         continue;
       }
-  
+
       const neighbours = this.interactions
         .filter((relation) => relation.from === current.id)
         .map((relation) => relation.to);
-  
+
       for (const element of neighbours) {
         if (!visited.has(element)) {
           const relationData = getRelation(current.id, element);
           const edgeRelation = relationData.value;
           const edgeMultiplier = relationData.mult;
-  
+
           const newPulse = current.pulse * edgeRelation;
-  
+
           visited.add(element);
           queue.push({
             id: element,
             pulse: newPulse,
           });
-  
+
           const nodeOrganism = this.organismMap.get(current.id)!;
           const neighbourOrganism = this.organismMap.get(element)!;
-  
+
           if (!nodeOrganism || !neighbourOrganism) {
             continue;
           }
-  
+
           await new Promise(resolve => setTimeout(resolve, 100));
-  
+
           neighbourOrganism.changeHealth(newPulse, edgeMultiplier, nodeOrganism.HP);
         }
       }
@@ -174,7 +174,7 @@ export default class GameScene extends Phaser.Scene {
       );
       //(source = { source: "tree", target: "shroom" })
       for (const relation of sourceRelations) {
-      
+
         if (ids.some((x) => x === relation.target)) {
           this.rightConnections.push({
             from: relation.source,
@@ -257,33 +257,12 @@ export default class GameScene extends Phaser.Scene {
   }
 
   create() {
-    const cam = this.cameras.main;
-    const screenW = cam.width;
-    const screenH = cam.height;
-
-    cam.setBounds(-screenW, -screenH, screenW * 3, screenH * 3);
-    cam.scrollX = 0;
-    cam.scrollY = 0;
+    
+    this.setupCameras(this.cameras)
+    this.setupCameraZoom(this.cameras.main)
+    this.setupCameraDrag(this.cameras.main)
 
     this.cursors = this.input.keyboard!.createCursorKeys();
-
-    //Mouse wheel zoom event
-    this.input.on(
-      "wheel",
-      (
-        _pointer: Phaser.Input.Pointer,
-        _over: Phaser.GameObjects.GameObject[],
-        _dx: number,
-        dy: number,
-      ) => {
-        const zoomChange = dy > 0 ? -0.1 : 0.1;
-        cam.zoom = Phaser.Math.Clamp(cam.zoom + zoomChange, 0.5, 2.0);
-      },
-    );
-
-    this.uiCamera = this.cameras.add(0, 0, screenW, screenH);
-    this.uiCamera.setScroll(0, 0);
-    this.uiCamera.setZoom(1);
 
     const centerX = this.cameras.main.centerX;
     const centerY = this.cameras.main.centerY;
@@ -307,16 +286,20 @@ export default class GameScene extends Phaser.Scene {
       },
     );
 
+    // Pause the game scene when menu is up
+    this.scene.pause();
     this.scene.launch("MenuScene");
+    this.scene.bringToTop('MenuScene');
+
     const infobutton = new InfoButton(this, 40, 40);
 
     const greenButton = new ArrowButtons(this, 60, centerY - 50, "greenbutton");
     const redButton = new ArrowButtons(this, 60, centerY + 50, "redbutton");
 
     // Make main camera ignore the button so it stays fixed
-    cam.ignore(infobutton);
-    cam.ignore(greenButton);
-    cam.ignore(redButton);
+    this.cameras.main.ignore(infobutton);
+    this.cameras.main.ignore(greenButton);
+    this.cameras.main.ignore(redButton);
 
     infobutton.on("infoButtonClicked", () => {
       this.scene.launch("TutorialScene");
@@ -334,9 +317,76 @@ export default class GameScene extends Phaser.Scene {
     this.createOrganism(centerX, centerY - 200, "acacia");
 
     this.events.once("menuClosed", () => {
+      // Resume game scene
+      this.scene.resume()
       this.time.delayedCall(3000, () => {
         this.createOrganism(centerX, centerY + 200, "amf");
       });
+    });
+  }
+
+  setupCameras(cameras: Phaser.Cameras.Scene2D.CameraManager) {
+    const cam = cameras.main
+    const screenW = cam.width;
+    const screenH = cam.height;
+
+    cam.setBounds(-screenW, -screenH, screenW * 3, screenH * 3);
+    cam.scrollX = 0;
+    cam.scrollY = 0;
+
+    this.uiCamera = cameras.add(0, 0, screenW, screenH);
+    this.uiCamera.setScroll(0, 0);
+    this.uiCamera.setZoom(1);
+  }
+
+  setupCameraZoom(cam: Phaser.Cameras.Scene2D.Camera) {
+    //Mouse wheel zoom event
+    this.input.on(
+      "wheel",
+      (
+        _pointer: Phaser.Input.Pointer,
+        _over: Phaser.GameObjects.GameObject[],
+        _dx: number,
+        dy: number,
+      ) => {
+        const zoomChange = dy > 0 ? -0.1 : 0.1;
+        cam.setZoom(Phaser.Math.Clamp(cam.zoom + zoomChange, 0.5, 2.0));
+      },
+    );
+  }
+
+  setupCameraDrag(cam: Phaser.Cameras.Scene2D.Camera) {
+    // Right mouse button for dragging the scene
+    this.input.mouse?.disableContextMenu();
+    let isDragging = false;
+    let dragStartX = 0;
+    let dragStartY = 0;
+
+    this.input.on('pointerdown', (pointer: Phaser.Input.Pointer) => {
+      if (pointer.rightButtonDown()) {
+        isDragging = true;
+        dragStartX = pointer.x;
+        dragStartY = pointer.y;
+      }
+    });
+
+    this.input.on('pointerup', (pointer: Phaser.Input.Pointer) => {
+      if (pointer.rightButtonReleased()) {
+        isDragging = false;
+      }
+    });
+
+    this.input.on('pointermove', (pointer: Phaser.Input.Pointer) => {
+      if (isDragging) {
+        const dx = pointer.x - dragStartX;
+        const dy = pointer.y - dragStartY;
+
+        cam.scrollX -= dx / cam.zoom;
+        cam.scrollY -= dy / cam.zoom;
+
+        dragStartX = pointer.x;
+        dragStartY = pointer.y;
+      }
     });
   }
 
@@ -370,7 +420,12 @@ export default class GameScene extends Phaser.Scene {
         2,
       );
     }
-    const cam = this.cameras.main;
+
+    this.updateCamera(this.cameras.main);
+
+  }
+
+  updateCamera(cam: Phaser.Cameras.Scene2D.Camera) {
     const speed = 10;
     if (this.cursors.left.isDown) {
       cam.scrollX -= speed;
