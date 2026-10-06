@@ -9,7 +9,7 @@ metadata:
 spec:
   host: eliopeli-staging.ext.ocp-test-0.k8s.it.helsinki.fi 
   port:
-    targetPort: 4173 
+    targetPort: 4173 #change to 80 so it targets nginx proxy port
   to:
     kind: Service
     name: eliopeli-staging-svc
