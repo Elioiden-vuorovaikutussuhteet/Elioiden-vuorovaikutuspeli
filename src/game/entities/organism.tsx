@@ -75,8 +75,20 @@ export default class Organism extends Phaser.GameObjects.Sprite {
   }
 
   public changeScale() {
-    const newScale = this.baseScale * (this.HP / 100)
-    this.setScale(newScale)
+    const newScale = this.baseScale * (this.HP / 100);
+  
+    this.scene.tweens.add({
+      targets: this,
+      scale: newScale,
+      duration: 500,
+      ease: "Sine.easeInOut",
+      onUpdate: () => {
+        this.nameText.setPosition(
+          this.x,
+          this.y + this.displayHeight / 2 + 20
+        );
+      },
+    });
   }
 
   public changeHealth(relation: number, multiplier: number, originOrgHealth: number) {
