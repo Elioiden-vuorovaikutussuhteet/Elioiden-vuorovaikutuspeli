@@ -22,10 +22,16 @@ export default class Organism extends Phaser.GameObjects.Sprite {
 
   private baseScale = 1;
 
+  private duplicates: Phaser.GameObjects.Sprite[] = [];
+  private duplicateContainer: Phaser.GameObjects.Container;
+  private breakpoint = 20;
+
   constructor(scene: Phaser.Scene, x: number, y: number, type = "acacia") {
     super(scene, x, y, getOrganismData(type).texture);
     
     const organismData = getOrganismData(type);
+
+    this.duplicateContainer = scene.add.container(x, y);
 
     this.organismData = organismData;
 
@@ -78,7 +84,7 @@ export default class Organism extends Phaser.GameObjects.Sprite {
     const newScale = this.baseScale * (this.HP / 100);
   
     this.scene.tweens.add({
-      targets: this,
+      targets: [this, this.duplicateContainer],
       scale: newScale,
       duration: 500,
       ease: "Sine.easeInOut",
@@ -91,10 +97,32 @@ export default class Organism extends Phaser.GameObjects.Sprite {
     });
   }
 
+  private addDuplicate() {
+    if (this.HP > (100 + this.breakpoint)) {
+      const duplicate = this.scene.add.sprite(
+        Phaser.Math.Between(-200, 200),
+        Phaser.Math.Between(-200, 200),
+        this.organismData.texture
+      );
+
+      duplicate.setScale(this.baseScale * 0.5);
+
+      this.duplicateContainer.add(duplicate);
+      this.duplicates.push(duplicate);
+      this.breakpoint *= 2;
+    }
+  }
+
+
   public changeHealth(relation: number, multiplier: number, originOrgHealth: number) {
     const newHP = this.HP + (relation*(this.HP * multiplier * (originOrgHealth / 100)));
     this.HP = newHP;
-    this.changeScale();
+    if (this.organismData.growth_types.includes("multiply")) {
+      this.addDuplicate();
+    }
+    if (this.organismData.growth_types.includes("grow")) {
+      this.changeScale();
+    }
   }
   update() {}
 }
