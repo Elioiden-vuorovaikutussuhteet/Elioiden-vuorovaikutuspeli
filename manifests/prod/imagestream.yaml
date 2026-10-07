@@ -11,7 +11,7 @@ spec:
     - name: latest
       from:
         kind: DockerImage
-        name: eliopeli/eliopeli:latest #name: ghcr.io/Elioiden-vuorovaikutussuhteet/Elioiden-vuorovaikutuspeli:latest
+        name: ghcr.io/Elioiden-vuorovaikutussuhteet/Elioiden-vuorovaikutuspeli:latest
       importPolicy:
         scheduled: true
       referencePolicy:

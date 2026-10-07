@@ -11,7 +11,7 @@ spec:
     - name: staging
       from:
         kind: DockerImage
-        name: eliopeli/eliopeli:staging # name: ghcr.io/Elioiden-vuorovaikutussuhteet/Elioiden-vuorovaikutuspeli:staging
+        name: ghcr.io/Elioiden-vuorovaikutussuhteet/Elioiden-vuorovaikutuspeli:staging
       importPolicy:
         scheduled: true
       referencePolicy:
