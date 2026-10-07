@@ -1,12 +1,13 @@
 import Phaser from "phaser";
 import Organism from "../entities/organism";
-import ArrowButtons from "../entities/arrowbuttons";
+//import ArrowButtons from "../entities/arrowbuttons";
 import InfoButton from "../entities/infobutton";
 import { getRelation } from "../RelationsService";
 import { relations } from "../data/relations";
 import type { organismsRelations } from "../data/relations";
 
 import CameraManager from "../managers/CameraManager";
+import ArrowManager from "../managers/ArrowManager";
 
 export default class GameScene extends Phaser.Scene {
  // private cursors!: Phaser.Types.Input.Keyboard.CursorKeys;
@@ -16,13 +17,15 @@ export default class GameScene extends Phaser.Scene {
   private cameraManager!: CameraManager;
   private uiCamera!: Phaser.Cameras.Scene2D.Camera;
 
+  private arrowManager!:  ArrowManager;
+
   private organisms: Organism[] = [];
   private interactions: { from: string; to: string }[] = [];
   private rightConnections: { from: string; to: string }[] = [];
   private selectedOrganism: Organism | null = null;
-  private permanentArrows!: Phaser.GameObjects.Graphics;
-  private previewArrow!: Phaser.GameObjects.Graphics;
-  private arrowColorValue: boolean = true;
+//  private permanentArrows!: Phaser.GameObjects.Graphics;
+//  private previewArrow!: Phaser.GameObjects.Graphics;
+ // private arrowColorValue: boolean = true;
   private organismMap = new Map<string, Organism>();
   private antsSpawned = false;
   private sapotaSpawned = false;
@@ -90,6 +93,8 @@ export default class GameScene extends Phaser.Scene {
     const relation = relationData["value"];
     const multiplier = relationData["mult"];
 
+    const arrowColorValue = this.arrowManager.getArrowColorValue();
+
     if (first.organismData.id === second.organismData.id) {
       return;
     }
@@ -103,9 +108,9 @@ export default class GameScene extends Phaser.Scene {
       )
     ) {
       // relation is positive = green(0x064f15), bad = red(0xed0924)
-      if (relation === 1 && this.arrowColorValue === true) {
-        this.drawArrow(
-          this.permanentArrows,
+      if (relation === 1 && arrowColorValue === true) {
+        this.arrowManager.drawArrow(
+          this.arrowManager.getPermanentArrows(),
           first.x,
           first.y,
           this.input.activePointer.worldX,
@@ -119,9 +124,9 @@ export default class GameScene extends Phaser.Scene {
         });
         second.changeHealth(relation, multiplier, first.HP);
         this.interactionPulse(second, relation);
-      } else if (relation === -1 && this.arrowColorValue === false) {
-        this.drawArrow(
-          this.permanentArrows,
+      } else if (relation === -1 && arrowColorValue === false) {
+        this.arrowManager.drawArrow(
+          this.arrowManager.getPermanentArrows(),
           first.x,
           first.y,
           this.input.activePointer.worldX,
@@ -138,7 +143,7 @@ export default class GameScene extends Phaser.Scene {
       }
     }
 
-    this.previewArrow.clear();
+    this.arrowManager.clearPreview();
 
     console.log(first.organismData.id, first.x, first.y, relation);
     console.log(second.organismData.id, second.x, second.y, relation);
@@ -208,43 +213,43 @@ export default class GameScene extends Phaser.Scene {
       return false;
     }
   }
-  private drawArrow(
-    graphics: Phaser.GameObjects.Graphics,
-    x1: number,
-    y1: number,
-    x2: number,
-    y2: number,
-    color: number,
-    thickness: number,
-  ) {
-    const dx = x2 - x1;
-    const dy = y2 - y1;
+//  private drawArrow(
+ //   graphics: Phaser.GameObjects.Graphics,
+//    x1: number,
+ //   y1: number,
+//    x2: number,
+ //   y2: number,
+ //   color: number,
+ //   thickness: number,
+ // ) {
+ //   const dx = x2 - x1;
+  //  const dy = y2 - y1;
 
-    const lineLength = Math.sqrt(dx * dx + dy * dy);
+  //  const lineLength = Math.sqrt(dx * dx + dy * dy);
 
     // Line unit vector
-    const udx = dx / lineLength;
-    const udy = dy / lineLength;
+//    const udx = dx / lineLength;
+  //  const udy = dy / lineLength;
 
     // Perpendicular unit vector
-    const pdx = -udy;
-    const pdy = udx;
+ //   const pdx = -udy;
+  //  const pdy = udx;
 
     // Arrowhead base vertices
-    const x3 = x2 - 20 * udx + 15 * pdx;
-    const y3 = y2 - 20 * udy + 15 * pdy;
-    const x4 = x2 - 20 * udx - 15 * pdx;
-    const y4 = y2 - 20 * udy - 15 * pdy;
+  //  const x3 = x2 - 20 * udx + 15 * pdx;
+  //  const y3 = y2 - 20 * udy + 15 * pdy;
+ //   const x4 = x2 - 20 * udx - 15 * pdx;
+//    const y4 = y2 - 20 * udy - 15 * pdy;
 
-    this.uiCamera.ignore(this.previewArrow);
-    this.uiCamera.ignore(this.permanentArrows);
+ //   this.uiCamera.ignore(this.previewArrow);
+ //   this.uiCamera.ignore(this.permanentArrows);
 
-    graphics.lineStyle(thickness, color);
-    graphics.fillStyle(color, 1);
+ //   graphics.lineStyle(thickness, color);
+ //   graphics.fillStyle(color, 1);
 
-    graphics.lineBetween(x1, y1, x2 - 15 * udx, y2 - 15 * udy);
-    graphics.fillTriangle(x2, y2, x3, y3, x4, y4);
-  }
+//    graphics.lineBetween(x1, y1, x2 - 15 * udx, y2 - 15 * udy);
+//    graphics.fillTriangle(x2, y2, x3, y3, x4, y4);
+//  }
 
   constructor() {
     super("GameScene");
@@ -275,10 +280,13 @@ export default class GameScene extends Phaser.Scene {
     const centerX = this.cameras.main.centerX;
     const centerY = this.cameras.main.centerY;
 
-    this.permanentArrows = this.add.graphics();
-    this.previewArrow = this.add.graphics();
-    this.permanentArrows.setDepth(100);
-    this.previewArrow.setDepth(100);
+    this.arrowManager = new ArrowManager(this, this.uiCamera)
+    this.arrowManager.createArrowButtons(centerY)
+
+ //   this.permanentArrows = this.add.graphics();
+ //   this.previewArrow = this.add.graphics();
+ //   this.permanentArrows.setDepth(100);
+ //   this.previewArrow.setDepth(100);
 
     //Eventlistener for: If players clicks on empty space, preview arrow disappears
     this.input.on(
@@ -289,7 +297,7 @@ export default class GameScene extends Phaser.Scene {
       ) => {
         if (currentlyOver.length === 0) {
           this.selectedOrganism = null;
-          this.previewArrow.clear();
+          this.arrowManager.clearPreview();
         }
       },
     );
@@ -301,26 +309,26 @@ export default class GameScene extends Phaser.Scene {
 
     const infobutton = new InfoButton(this, 40, 40);
 
-    const greenButton = new ArrowButtons(this, 60, centerY - 50, "greenbutton");
-    const redButton = new ArrowButtons(this, 60, centerY + 50, "redbutton");
+//    const greenButton = new ArrowButtons(this, 60, centerY - 50, "greenbutton");
+//    const redButton = new ArrowButtons(this, 60, centerY + 50, "redbutton");
 
     // Make main camera ignore the button so it stays fixed
     this.cameras.main.ignore(infobutton);
-    this.cameras.main.ignore(greenButton);
-    this.cameras.main.ignore(redButton);
+//    this.cameras.main.ignore(greenButton);
+//    this.cameras.main.ignore(redButton);
 
     infobutton.on("infoButtonClicked", () => {
       this.scene.launch("TutorialScene");
     });
 
-    greenButton.on("arrowButtonClicked", () => {
-      this.arrowColorValue = true;
-      console.log(this.arrowColorValue);
-    });
-    redButton.on("arrowButtonClicked", () => {
-      this.arrowColorValue = false;
-      console.log(this.arrowColorValue);
-    });
+//    greenButton.on("arrowButtonClicked", () => {
+ //     this.arrowColorValue = true;
+ //     console.log(this.arrowColorValue);
+ //   });
+  //  redButton.on("arrowButtonClicked", () => {
+  //    this.arrowColorValue = false;
+ //     console.log(this.arrowColorValue);
+ //   });
 
     this.createOrganism(centerX, centerY - 200, "acacia");
 
@@ -401,36 +409,37 @@ export default class GameScene extends Phaser.Scene {
   update() {
 
     this.cameraManager.update();
+    this.arrowManager.update(this.selectedOrganism);
 
     //This creates preview arrow when you click an organism
     // arrowcolor true/false is a placeholder that tells which button player pressed in UI
-    if (this.selectedOrganism !== null && this.arrowColorValue === false) {
-      this.previewArrow.clear();
+//    if (this.selectedOrganism !== null && this.arrowColorValue === false) {
+ //     this.previewArrow.clear();
 
-      this.drawArrow(
-        this.previewArrow,
-        this.selectedOrganism.x,
-        this.selectedOrganism.y,
-        this.input.activePointer.worldX,
-        this.input.activePointer.worldY,
-        0xed0924,
-        2,
-      );
-    }
+ //     this.drawArrow(
+ //       this.previewArrow,
+ //       this.selectedOrganism.x,
+  //      this.selectedOrganism.y,
+  //      this.input.activePointer.worldX,
+  //      this.input.activePointer.worldY,
+   //     0xed0924,
+    //    2,
+  //    );
+   // }
 
-    if (this.selectedOrganism !== null && this.arrowColorValue === true) {
-      this.previewArrow.clear();
+  //  if (this.selectedOrganism !== null && this.arrowColorValue === true) {
+  //    this.previewArrow.clear();
 
-      this.drawArrow(
-        this.previewArrow,
-        this.selectedOrganism.x,
-        this.selectedOrganism.y,
-        this.input.activePointer.worldX,
-        this.input.activePointer.worldY,
-        0x064f15,
-        2,
-      );
-    }
+//      this.drawArrow(
+  //      this.previewArrow,
+    //    this.selectedOrganism.x,
+//        this.selectedOrganism.y,
+ //       this.input.activePointer.worldX,
+   //     this.input.activePointer.worldY,
+  //      0x064f15,
+   //     2,
+  //    );
+  //  }
 
   //  this.updateCamera(this.cameras.main);
  // updateCamera(cam: Phaser.Cameras.Scene2D.Camera) {
