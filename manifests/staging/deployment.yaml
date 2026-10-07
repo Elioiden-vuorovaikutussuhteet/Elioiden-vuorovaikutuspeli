@@ -31,16 +31,3 @@ spec:
               memory: "50Mi"
               cpu: "50m"
         
-        - name: nginx
-          image: nginx:latest
-          ports:
-            - containerPort: 80
-          volumeMounts:
-            - name: nginx-config
-              mountPath: /etc/nginx/conf.d/default.conf
-              subPath: default.conf
-
-      volumes:
-        - name: nginx-config
-          configMap:
-            name: nginx-config
