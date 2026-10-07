@@ -21,7 +21,7 @@ export default class GameScene extends Phaser.Scene {
   private organismMap = new Map<string, Organism>();
   private antsSpawned = false;
   private sapotaSpawned = false;
-
+  private popupNotShown = 1
 
   private async interactionPulse(startingOrganism: Organism, initialRelation: number) {
     const visited = new Set<string>();
@@ -131,6 +131,11 @@ export default class GameScene extends Phaser.Scene {
         second.changeHealth(relation, multiplier, first.HP);
         this.interactionPulse(second, relation);
       }
+      //give popup related to arrow
+      
+      if(this.popupNotShown === 1)
+      this.scene.launch("PopupScene");
+      // some type of check popup has been given once already
     }
 
     this.previewArrow.clear();
