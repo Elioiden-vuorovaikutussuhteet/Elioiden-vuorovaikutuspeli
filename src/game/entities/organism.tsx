@@ -97,7 +97,7 @@ export default class Organism extends Phaser.GameObjects.Sprite {
     });
   }
 
-  private addDuplicate() {
+  private updateDuplicates() {
     if (this.HP > (100 + this.breakpoint)) {
       const duplicate = this.scene.add.sprite(
         Phaser.Math.Between(-200, 200),
@@ -109,7 +109,21 @@ export default class Organism extends Phaser.GameObjects.Sprite {
 
       this.duplicateContainer.add(duplicate);
       this.duplicates.push(duplicate);
+
       this.breakpoint *= 2;
+    }
+
+    while (
+      this.duplicates.length > 0 &&
+      this.HP <= (100 + this.breakpoint / 2)
+    ) {
+      const duplicate = this.duplicates.pop();
+
+      if (duplicate) {
+        duplicate.destroy();
+      }
+
+      this.breakpoint /= 2;
     }
   }
 
@@ -118,7 +132,7 @@ export default class Organism extends Phaser.GameObjects.Sprite {
     const newHP = this.HP + (relation*(this.HP * multiplier * (originOrgHealth / 100)));
     this.HP = newHP;
     if (this.organismData.growth_types.includes("multiply")) {
-      this.addDuplicate();
+      this.updateDuplicates();
     }
     if (this.organismData.growth_types.includes("grow")) {
       this.changeScale();
