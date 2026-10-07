@@ -6,9 +6,14 @@ import { getRelation } from "../RelationsService";
 import { relations } from "../data/relations";
 import type { organismsRelations } from "../data/relations";
 
-export default class GameScene extends Phaser.Scene {
-  private cursors!: Phaser.Types.Input.Keyboard.CursorKeys;
+import CameraManager from "../managers/CameraManager";
 
+export default class GameScene extends Phaser.Scene {
+ // private cursors!: Phaser.Types.Input.Keyboard.CursorKeys;
+
+ // private uiCamera!: Phaser.Cameras.Scene2D.Camera;
+
+  private cameraManager!: CameraManager;
   private uiCamera!: Phaser.Cameras.Scene2D.Camera;
 
   private organisms: Organism[] = [];
@@ -258,11 +263,14 @@ export default class GameScene extends Phaser.Scene {
 
   create() {
     
-    this.setupCameras(this.cameras)
-    this.setupCameraZoom(this.cameras.main)
-    this.setupCameraDrag(this.cameras.main)
+ //   this.setupCameras(this.cameras)
+  //  this.setupCameraZoom(this.cameras.main)
+ //   this.setupCameraDrag(this.cameras.main)
 
-    this.cursors = this.input.keyboard!.createCursorKeys();
+  //  this.cursors = this.input.keyboard!.createCursorKeys();
+
+    this.cameraManager = new CameraManager(this);
+    this.uiCamera = this.cameraManager.getUICamera();
 
     const centerX = this.cameras.main.centerX;
     const centerY = this.cameras.main.centerY;
@@ -325,72 +333,75 @@ export default class GameScene extends Phaser.Scene {
     });
   }
 
-  setupCameras(cameras: Phaser.Cameras.Scene2D.CameraManager) {
-    const cam = cameras.main
-    const screenW = cam.width;
-    const screenH = cam.height;
+//  setupCameras(cameras: Phaser.Cameras.Scene2D.CameraManager) {
+ //   const cam = cameras.main
+  //  const screenW = cam.width;
+ //   const screenH = cam.height;
 
-    cam.setBounds(-screenW, -screenH, screenW * 3, screenH * 3);
-    cam.scrollX = 0;
-    cam.scrollY = 0;
+//    cam.setBounds(-screenW, -screenH, screenW * 3, screenH * 3);
+ //   cam.scrollX = 0;
+  //  cam.scrollY = 0;
 
-    this.uiCamera = cameras.add(0, 0, screenW, screenH);
-    this.uiCamera.setScroll(0, 0);
-    this.uiCamera.setZoom(1);
-  }
+ //   this.uiCamera = cameras.add(0, 0, screenW, screenH);
+ //   this.uiCamera.setScroll(0, 0);
+ //   this.uiCamera.setZoom(1);
+ // }
 
-  setupCameraZoom(cam: Phaser.Cameras.Scene2D.Camera) {
+//  setupCameraZoom(cam: Phaser.Cameras.Scene2D.Camera) {
     //Mouse wheel zoom event
-    this.input.on(
-      "wheel",
-      (
-        _pointer: Phaser.Input.Pointer,
-        _over: Phaser.GameObjects.GameObject[],
-        _dx: number,
-        dy: number,
-      ) => {
-        const zoomChange = dy > 0 ? -0.1 : 0.1;
-        cam.setZoom(Phaser.Math.Clamp(cam.zoom + zoomChange, 0.5, 2.0));
-      },
-    );
-  }
+  //  this.input.on(
+ //     "wheel",
+  //    (
+  //      _pointer: Phaser.Input.Pointer,
+   //     _over: Phaser.GameObjects.GameObject[],
+  //      _dx: number,
+  //      dy: number,
+   //   ) => {
+ //       const zoomChange = dy > 0 ? -0.1 : 0.1;
+  //      cam.setZoom(Phaser.Math.Clamp(cam.zoom + zoomChange, 0.5, 2.0));
+   //   },
+  //  );
+  //}
 
-  setupCameraDrag(cam: Phaser.Cameras.Scene2D.Camera) {
+//  setupCameraDrag(cam: Phaser.Cameras.Scene2D.Camera) {
     // Right mouse button for dragging the scene
-    this.input.mouse?.disableContextMenu();
-    let isDragging = false;
-    let dragStartX = 0;
-    let dragStartY = 0;
+ //   this.input.mouse?.disableContextMenu();
+ //   let isDragging = false;
+ //   let dragStartX = 0;
+  //  let dragStartY = 0;
 
-    this.input.on('pointerdown', (pointer: Phaser.Input.Pointer) => {
-      if (pointer.rightButtonDown()) {
-        isDragging = true;
-        dragStartX = pointer.x;
-        dragStartY = pointer.y;
-      }
-    });
+ //   this.input.on('pointerdown', (pointer: Phaser.Input.Pointer) => {
+   //   if (pointer.rightButtonDown()) {
+    //    isDragging = true;
+   //     dragStartX = pointer.x;
+    //    dragStartY = pointer.y;
+    //  }
+  //  });
 
-    this.input.on('pointerup', (pointer: Phaser.Input.Pointer) => {
-      if (pointer.rightButtonReleased()) {
-        isDragging = false;
-      }
-    });
+//    this.input.on('pointerup', (pointer: Phaser.Input.Pointer) => {
+ //     if (pointer.rightButtonReleased()) {
+  //      isDragging = false;
+  //    }
+  //  });
 
-    this.input.on('pointermove', (pointer: Phaser.Input.Pointer) => {
-      if (isDragging) {
-        const dx = pointer.x - dragStartX;
-        const dy = pointer.y - dragStartY;
+//    this.input.on('pointermove', (pointer: Phaser.Input.Pointer) => {
+ //     if (isDragging) {
+  //      const dx = pointer.x - dragStartX;
+   //     const dy = pointer.y - dragStartY;
 
-        cam.scrollX -= dx / cam.zoom;
-        cam.scrollY -= dy / cam.zoom;
+//        cam.scrollX -= dx / cam.zoom;
+  //      cam.scrollY -= dy / cam.zoom;
 
-        dragStartX = pointer.x;
-        dragStartY = pointer.y;
-      }
-    });
-  }
+//        dragStartX = pointer.x;
+  //      dragStartY = pointer.y;
+ //     }
+ //   });
+  //}
 
   update() {
+
+    this.cameraManager.update();
+
     //This creates preview arrow when you click an organism
     // arrowcolor true/false is a placeholder that tells which button player pressed in UI
     if (this.selectedOrganism !== null && this.arrowColorValue === false) {
@@ -421,22 +432,20 @@ export default class GameScene extends Phaser.Scene {
       );
     }
 
-    this.updateCamera(this.cameras.main);
+  //  this.updateCamera(this.cameras.main);
+ // updateCamera(cam: Phaser.Cameras.Scene2D.Camera) {
+  //  const speed = 10;
+ //   if (this.cursors.left.isDown) {
+ //     cam.scrollX -= speed;
+ //   } else if (this.cursors.right.isDown) {
+   //   cam.scrollX += speed;
+//    }
 
-  }
-
-  updateCamera(cam: Phaser.Cameras.Scene2D.Camera) {
-    const speed = 10;
-    if (this.cursors.left.isDown) {
-      cam.scrollX -= speed;
-    } else if (this.cursors.right.isDown) {
-      cam.scrollX += speed;
-    }
-
-    if (this.cursors.up.isDown) {
-      cam.scrollY -= speed;
-    } else if (this.cursors.down.isDown) {
-      cam.scrollY += speed;
-    }
-  }
+   // if (this.cursors.up.isDown) {
+  //    cam.scrollY -= speed;
+  //  } else if (this.cursors.down.isDown) {
+   //   cam.scrollY += speed;
+ //   }
+  //}
+}
 }
