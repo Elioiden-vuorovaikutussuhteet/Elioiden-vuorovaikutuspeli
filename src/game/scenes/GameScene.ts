@@ -81,7 +81,7 @@ export default class GameScene extends Phaser.Scene {
     }
   }
 
-  private getStartEndOrganisms(organism: Organism) {
+  private arrowChecker(organism: Organism) {
     if (this.selectedOrganism === null) {
       this.selectedOrganism = organism;
       return;
@@ -164,7 +164,7 @@ export default class GameScene extends Phaser.Scene {
   private createOrganism(x: number, y: number, type: string) {
     const organism = new Organism(this, x, y, type);
 
-    organism.on("organismSelected", this.getStartEndOrganisms, this);
+    organism.on("organismSelected", this.arrowChecker, this);
 
     this.organisms.push(organism);
     this.organismMap.set(organism.organismData.id, organism);
