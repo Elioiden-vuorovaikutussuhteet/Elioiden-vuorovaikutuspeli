@@ -30,4 +30,16 @@ export const organisms: OrganismData[] = [
     texture: "ants_sprite",
     default_scale: 1,
   },
+  {
+    id: "glomeromycetes",
+    name: "Glomeromycetes",
+    texture: "glomeromycetes_sprite",
+    default_scale: 1,
+  },
+  {
+    id: "diazotroph",
+    name: "Diazotrophic bacteria",
+    texture: "diazotroph_sprite",
+    default_scale: 1,
+  },
 ];
