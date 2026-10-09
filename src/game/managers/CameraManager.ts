@@ -1,5 +1,5 @@
 import Phaser from "phaser";
-
+//camera code here
 export default class CameraManager {
     private scene: Phaser.Scene;
     private cursors!: Phaser.Types.Input.Keyboard.CursorKeys;

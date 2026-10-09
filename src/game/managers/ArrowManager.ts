@@ -1,16 +1,39 @@
 import Phaser  from "phaser";
 import ArrowButtons from "../entities/arrowbuttons";
 import type Organism from "../entities/organism";
+import { getRelation } from "../services/RelationsService";
+import type { Connection } from "../types/Connection";
+import InteractionManager from "./InteractionManager";
+import ConnectionManager from "./ConnectionManager";
+import OrganismManager from "./OrganismManager";
 
-// arrow related code, drawing of arrows, arrow buttons
+// arrow related code, drawing of arrows, arrow buttons arrowChecker is old getStartEndOrganisms
 export default class ArrowManager {
     private scene: Phaser.Scene;
     private uiCamera: Phaser.Cameras.Scene2D.Camera;
+
+    private interactionManager!: InteractionManager;
+    private connectionManager!: ConnectionManager;
+    private organismManager!: OrganismManager;
+
     private permanentArrows!: Phaser.GameObjects.Graphics;
     private previewArrow!: Phaser.GameObjects.Graphics;
     private arrowColorValue: boolean = true;
+    private selectedOrganism: Organism | null = null;
+    private interactions: Connection[];
 
-    constructor(scene: Phaser.Scene, uiCamera: Phaser.Cameras.Scene2D.Camera,) {
+    private antsSpawned = false;
+    private sapotaSpawned = false;
+
+    constructor(
+        scene: Phaser.Scene,
+        uiCamera: Phaser.Cameras.Scene2D.Camera,
+        interactionManager: InteractionManager,
+        connectionManager: ConnectionManager,
+        organismManager: OrganismManager,
+        interactions: Connection[],
+
+    ) {
     this.scene = scene;
     this.uiCamera = uiCamera;
     
@@ -22,7 +45,93 @@ export default class ArrowManager {
 
     this.uiCamera.ignore(this.permanentArrows);
     this.uiCamera.ignore(this.previewArrow);
+
+    this.interactionManager = interactionManager;
+    this.connectionManager = connectionManager;
+    this.organismManager = organismManager;
+
+    this.interactions = interactions;
     }
+
+    public arrowChecker(organism: Organism) {
+        if (this.selectedOrganism === null) {
+          this.selectedOrganism = organism;
+          return;
+        }
+
+        const first = this.selectedOrganism;
+        const second = organism;
+        const relationData = getRelation(first.organismData.id, second.organismData.id);
+        const relation = relationData["value"];
+        const multiplier = relationData["mult"];
+
+        const arrowColorValue = this.getArrowColorValue();
+
+        if (first.organismData.id === second.organismData.id) {
+          return;
+        }
+
+        // Create arrow if it doesnt exist yet
+        if (
+          !this.interactions.some(
+            (interaction) =>
+              interaction.from === first.organismData.id &&
+              interaction.to === second.organismData.id,
+          )
+        ) {
+          // relation is positive = green(0x064f15), bad = red(0xed0924)
+          if (relation === 1 && arrowColorValue === true) {
+            this.drawArrow(
+              this.getPermanentArrows(),
+              first.x,
+              first.y,
+              this.scene.input.activePointer.worldX,
+              this.scene.input.activePointer.worldY,
+              0x064f15,
+              4,
+            );
+            this.interactions.push({
+              from: first.organismData.id,
+              to: second.organismData.id,
+            });
+            second.changeHealth(relation, multiplier, first.HP);
+            this.interactionManager.interactionPulse(second, relation,);
+          } else if (relation === -1 && arrowColorValue === false) {
+            this.drawArrow(
+              this.getPermanentArrows(),
+              first.x,
+              first.y,
+              this.scene.input.activePointer.worldX,
+              this.scene.input.activePointer.worldY,
+              0xed0924,
+              4,
+            );
+            this.interactions.push({
+              from: first.organismData.id,
+              to: second.organismData.id,
+            });
+            second.changeHealth(relation, multiplier, first.HP);
+            this.interactionManager.interactionPulse(second, relation);
+          }
+        }
+
+        this.clearPreview();
+
+        console.log(first.organismData.id, first.x, first.y, relation);
+        console.log(second.organismData.id, second.x, second.y, relation);
+
+        const allRelationsCorrect = this.connectionManager.checkConnections();
+
+        if (allRelationsCorrect && !this.antsSpawned) {
+          this.antsSpawned = true;
+          this.organismManager.createOrganism(600, 500, "ants");
+        } else if (allRelationsCorrect && !this.sapotaSpawned) {
+          this.sapotaSpawned = true;
+          this.organismManager.createOrganism(1300, 500, "sapota");
+        }
+
+        this.selectedOrganism = null;
+      }
 
     public drawArrow(
         graphics: Phaser.GameObjects.Graphics,
@@ -94,10 +203,10 @@ export default class ArrowManager {
         return this.permanentArrows;
     }
         
-    public update(selectedOrganism: Organism | null) {
+    public update() {
         this.previewArrow.clear();
 
-          if (selectedOrganism === null) {
+          if (this.selectedOrganism === null) {
             return;
         }
 
@@ -107,8 +216,8 @@ export default class ArrowManager {
 
           this.drawArrow(
             this.previewArrow,
-            selectedOrganism.x,
-            selectedOrganism.y,
+            this.selectedOrganism.x,
+            this.selectedOrganism.y,
             this.scene.input.activePointer.worldX,
             this.scene.input.activePointer.worldY,
             color,
