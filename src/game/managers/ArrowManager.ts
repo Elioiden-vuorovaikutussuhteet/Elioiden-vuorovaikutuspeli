@@ -195,6 +195,11 @@ export default class ArrowManager {
         return this.arrowColorValue;
     }
 
+// for testing
+    public setArrowColorValue(value: boolean) {
+        this.arrowColorValue = value;
+    }
+
     public clearPreview() {
         this.previewArrow.clear();
     }
