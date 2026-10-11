@@ -100,8 +100,8 @@ export default class Organism extends Phaser.GameObjects.Sprite {
   private updateDuplicates() {
     if (this.HP > (100 + this.breakpoint)) {
       const duplicate = this.scene.add.sprite(
-        Phaser.Math.Between(-200, 200),
-        Phaser.Math.Between(-200, 200),
+        0,
+        0,
         this.organismData.texture
       );
 
@@ -109,6 +109,8 @@ export default class Organism extends Phaser.GameObjects.Sprite {
 
       this.duplicateContainer.add(duplicate);
       this.duplicates.push(duplicate);
+
+      this.positionDuplicates();
 
       this.breakpoint *= 2;
     }
@@ -124,7 +126,23 @@ export default class Organism extends Phaser.GameObjects.Sprite {
       }
 
       this.breakpoint /= 2;
+      this.positionDuplicates();
     }
+  }
+
+  private positionDuplicates() {
+    const count = this.duplicates.length;
+
+    const radius = this.displayWidth * 0.8;
+  
+    this.duplicates.forEach((duplicate, index) => {
+      const angle = (index / count) * Math.PI * 2;
+
+      const x = Math.cos(angle) * radius;
+      const y = Math.sin(angle) * radius;
+
+      duplicate.setPosition(x, y);
+    });
   }
 
 
