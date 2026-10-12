@@ -59,15 +59,15 @@ export default class InteractionManager {
       }
     }
 
-    // Apply each incoming arrow for the connected organisms
+    // Get each incoming arrow for the connected organisms and store all changes in health for the organism
+    const healthChanges = new Map<string, number>();
+
     for (const [targetId] of pulses) {
-      const targetOrganism = this.organismMap.get(targetId);
-
-      if (!targetOrganism) continue;
-
       const incomingArrows = this.interactions.filter(
         (arrow) => arrow.to === targetId,
       );
+
+      let totalChange = 0;
 
       for (const arrow of incomingArrows) {
         const sourceOrganism = this.organismMap.get(arrow.from);
@@ -77,14 +77,25 @@ export default class InteractionManager {
 
         const relationData = getRelation(arrow.from, arrow.to);
 
-        await new Promise((resolve) => setTimeout(resolve, 100));
-
-        targetOrganism.changeHealth(
-          sourcePulse * relationData.value,
-          relationData.mult,
-          sourceOrganism.HP,
-        );
+        totalChange +=
+          sourcePulse *
+          relationData.value *
+          relationData.mult *
+          (sourceOrganism.HP / 100);
       }
+
+      healthChanges.set(targetId, totalChange);
+    }
+
+    // Call changehealth once to avoid wiggling
+    for (const [targetId, totalChange] of healthChanges) {
+      const targetOrganism = this.organismMap.get(targetId);
+
+      if (!targetOrganism) continue;
+
+      await new Promise((resolve) => setTimeout(resolve, 100));
+
+      targetOrganism.changeHealth(totalChange);
     }
   }
 }

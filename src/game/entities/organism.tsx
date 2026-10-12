@@ -24,7 +24,7 @@ export default class Organism extends Phaser.GameObjects.Sprite {
 
   private duplicates: Phaser.GameObjects.Sprite[] = [];
   private duplicateContainer: Phaser.GameObjects.Container;
-  private breakpoint = 10;
+  private breakpoint = 2;
 
   constructor(scene: Phaser.Scene, x: number, y: number, type = "acacia", uiCamera?: Phaser.Cameras.Scene2D.Camera,) {
     super(scene, x, y, getOrganismData(type).texture);
@@ -84,8 +84,12 @@ export default class Organism extends Phaser.GameObjects.Sprite {
   }
 
   public changeScale() {
-    const newScale = this.baseScale * (this.HP / 100);
-  
+    const sensitivity = 2;
+
+    const healthRatio = 1 + ((this.HP - 100) / 100) * sensitivity;
+
+    const newScale = this.baseScale * Math.max(0.1, healthRatio);
+
     this.scene.tweens.add({
       targets: [this, this.duplicateContainer],
       scale: newScale,
@@ -149,9 +153,9 @@ export default class Organism extends Phaser.GameObjects.Sprite {
   }
 
 
-  public changeHealth(relation: number, multiplier: number, originOrgHealth: number) {
-    const newHP = this.HP + (relation*(this.HP * multiplier * (originOrgHealth / 100)));
-    this.HP = newHP;
+  public changeHealth(totalChange: number) {
+    this.HP += totalChange;
+
     if (this.organismData.growth_types.includes("multiply")) {
       this.updateDuplicates();
     }
