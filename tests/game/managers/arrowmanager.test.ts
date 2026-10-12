@@ -135,6 +135,15 @@ describe("GameScene", () => {
         lineBetween: vi.fn(),
         fillTriangle: vi.fn(),
       }),
+
+      particles: vi.fn().mockReturnValue({
+        setDepth: vi.fn(),
+        setPosition: vi.fn(),
+        explode: vi.fn(),
+        start: vi.fn(),
+        stop: vi.fn(),
+        destroy: vi.fn(),
+      }),
     });
   });
 
@@ -161,7 +170,7 @@ describe("GameScene", () => {
     selectOrganism(1).call(scene, amf);
     selectOrganism(0).call(scene, acacia);
 
-    expect(Organism).toHaveBeenCalledWith(scene, 600, 500, "ants");
+    expect(Organism).toHaveBeenCalledWith(scene, 600, 500, "ants", expect.anything(), expect.any(Function));
 
     const ants = vi.mocked(Organism).mock.results[2].value;
 
@@ -170,7 +179,7 @@ describe("GameScene", () => {
     selectOrganism(2).call(scene, ants);
     selectOrganism(0).call(scene, acacia);
 
-    expect(Organism).toHaveBeenCalledWith(scene, 1300, 500, "sapota");
+    expect(Organism).toHaveBeenCalledWith(scene, 1300, 500, "sapota", expect.anything(), expect.any(Function));
   });
 
   it("logs to console after 2 organisms are selected", () => {
