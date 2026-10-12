@@ -2,7 +2,7 @@ import "vitest-canvas-mock";
 import { mockDeep } from "vitest-mock-extended";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import GameScene from "../../../src/game/scenes/GameScene";
-import CameraManager from "../../../src/game/managers/CameraManager";
+import CameraManager, { CAMERA_CONFIG } from '../../../src/game/managers/CameraManager';
 
 describe("GameScene Camera System", () => {
   let manager: CameraManager;
@@ -13,57 +13,57 @@ describe("GameScene Camera System", () => {
   let cursors: any;
 
   beforeEach(() => {
-  vi.clearAllMocks();
+    vi.clearAllMocks();
 
-  scene = new GameScene();
+    scene = new GameScene();
 
-  camera = {
-    width: 1920,
-    height: 1080,
-    scrollX: 0,
-    scrollY: 0,
-    zoom: 1,
-    setBounds: vi.fn(),
-    setZoom: vi.fn(function (value: number) {
-      camera.zoom = value;
-    }),
-    setScroll: vi.fn(),
-  };
+    camera = {
+      width: 1920,
+      height: 1080,
+      scrollX: 0,
+      scrollY: 0,
+      zoom: 1,
+      setBounds: vi.fn(),
+      setZoom: vi.fn(function (value: number) {
+        camera.zoom = value;
+      }),
+      setScroll: vi.fn(),
+    };
 
-  uiCamera = {
-    setScroll: vi.fn(),
-    setZoom: vi.fn(),
-    ignore: vi.fn(),
-  };
+    uiCamera = {
+      setScroll: vi.fn(),
+      setZoom: vi.fn(),
+      ignore: vi.fn(),
+    };
 
-  scene.cameras = {
-    main: camera,
-    add: vi.fn().mockReturnValue(uiCamera),
-  } as any;
+    scene.cameras = {
+      main: camera,
+      add: vi.fn().mockReturnValue(uiCamera),
+    } as any;
 
-  cursors = {
-    left: { isDown: false },
-    right: { isDown: false },
-    up: { isDown: false },
-    down: { isDown: false },
-  };
+    cursors = {
+      left: { isDown: false },
+      right: { isDown: false },
+      up: { isDown: false },
+      down: { isDown: false },
+    };
 
-  handlers = {};
+    handlers = {};
 
-  scene.input = {
-    keyboard: {
-      createCursorKeys: vi.fn().mockReturnValue(cursors),
-    },
-    mouse: {
-      disableContextMenu: vi.fn(),
-    },
-    on: vi.fn((event: string, callback: (...args: any[]) => void) => {
-      handlers[event] = callback;
-    }),
-  } as any;
+    scene.input = {
+      keyboard: {
+        createCursorKeys: vi.fn().mockReturnValue(cursors),
+      },
+      mouse: {
+        disableContextMenu: vi.fn(),
+      },
+      on: vi.fn((event: string, callback: (...args: any[]) => void) => {
+        handlers[event] = callback;
+      }),
+    } as any;
 
-  manager = new CameraManager(scene);
-});
+    manager = new CameraManager(scene);
+  });
 
   const mockPartial = <T,>(value: Partial<T>): T => value as T;
 
@@ -144,17 +144,19 @@ describe("GameScene Camera System", () => {
         expect.any(Function),
       );
     });
+
   });
 
-  it('zooms camera on wheel event', () => {
+  it('zooms camera on wheel event and scrolls toward the cursor', () => {
     const scene = new GameScene()
-    let wheelCallback!: Function
+    let wheelCallback!: (pointer: any, go: any[], dx: number, dy: number) => void
 
     const mockCam = {
       zoom: 1.0,
-      setZoom: vi.fn(function (val) {
-        mockCam.zoom = Number(val.toFixed(2))
-      }),
+      scrollX: 0,
+      scrollY: 0,
+      width: 800,
+      height: 600,
     }
 
     scene.input = {
@@ -164,14 +166,30 @@ describe("GameScene Camera System", () => {
     } as any
 
     const manager = Object.create(CameraManager.prototype) as CameraManager
-    ;(manager as any).scene = scene
-    ;(manager as any).setupCameraZoom(mockCam as any)
+      ; (manager as any).scene = scene
+      ; (manager as any).setupCameraZoom(mockCam as any)
 
-    wheelCallback(null, [], 0, -100)
-    expect(mockCam.setZoom).toHaveBeenCalledWith(1.1)
+    // 1. Zoom in with cursor at (600, 450)
+    wheelCallback({ x: 600, y: 450 }, [], 0, -100);
 
-    wheelCallback(null, [], 0, 100)
-    expect(mockCam.setZoom).toHaveBeenCalledWith(1.0)
+    const expectedZoomIn = 1.0 * CAMERA_CONFIG.ZOOM_IN_FACTOR;
+    const zoomInDelta = (1 / 1.0) - (1 / expectedZoomIn);
+
+    expect(mockCam.zoom).toBeCloseTo(expectedZoomIn);
+    expect(mockCam.scrollX).toBeCloseTo(200 * zoomInDelta);
+    expect(mockCam.scrollY).toBeCloseTo(150 * zoomInDelta);
+
+    // 2. Zoom out with cursor at center (400, 300)
+    const prevScrollX = mockCam.scrollX;
+    const prevScrollY = mockCam.scrollY;
+
+    const expectedZoomOut = mockCam.zoom * CAMERA_CONFIG.ZOOM_OUT_FACTOR; 
+
+    wheelCallback({ x: 400, y: 300 }, [], 0, 100);
+
+    expect(mockCam.zoom).toBeCloseTo(expectedZoomOut);
+    expect(mockCam.scrollX).toBeCloseTo(prevScrollX);
+    expect(mockCam.scrollY).toBeCloseTo(prevScrollY);
   })
 
   describe('updateCamera', () => {
@@ -203,8 +221,8 @@ describe("GameScene Camera System", () => {
 
     it('does not scroll camera when no keys are pressed', () => {
       const manager = Object.create(CameraManager.prototype) as CameraManager
-      ;(manager as any).cursors = (scene as any).cursors
-      ;(manager as any).updateCamera(mockCam as any)
+        ; (manager as any).cursors = (scene as any).cursors
+        ; (manager as any).updateCamera(mockCam as any)
 
       expect(mockCam.scrollX).toBe(100)
       expect(mockCam.scrollY).toBe(100)
@@ -214,8 +232,8 @@ describe("GameScene Camera System", () => {
       it('moves left by speed (10) when left cursor is down', () => {
         setCursors({ left: true })
         const manager = Object.create(CameraManager.prototype) as CameraManager
-        ;(manager as any).cursors = (scene as any).cursors
-        ;(manager as any).updateCamera(mockCam as any)
+          ; (manager as any).cursors = (scene as any).cursors
+          ; (manager as any).updateCamera(mockCam as any)
 
         expect(mockCam.scrollX).toBe(90)
         expect(mockCam.scrollY).toBe(100)
@@ -224,8 +242,8 @@ describe("GameScene Camera System", () => {
       it('moves right by speed (10) when right cursor is down', () => {
         setCursors({ right: true })
         const manager = Object.create(CameraManager.prototype) as CameraManager
-        ;(manager as any).cursors = (scene as any).cursors
-        ;(manager as any).updateCamera(mockCam as any)
+          ; (manager as any).cursors = (scene as any).cursors
+          ; (manager as any).updateCamera(mockCam as any)
 
         expect(mockCam.scrollX).toBe(110)
         expect(mockCam.scrollY).toBe(100)
@@ -237,8 +255,8 @@ describe("GameScene Camera System", () => {
       it('moves up by speed (10) when up cursor is down', () => {
         setCursors({ up: true })
         const manager = Object.create(CameraManager.prototype) as CameraManager
-        ;(manager as any).cursors = (scene as any).cursors
-        ;(manager as any).updateCamera(mockCam as any)
+          ; (manager as any).cursors = (scene as any).cursors
+          ; (manager as any).updateCamera(mockCam as any)
 
         expect(mockCam.scrollX).toBe(100)
         expect(mockCam.scrollY).toBe(90)
@@ -247,8 +265,8 @@ describe("GameScene Camera System", () => {
       it('moves down by speed (10) when down cursor is down', () => {
         setCursors({ down: true })
         const manager = Object.create(CameraManager.prototype) as CameraManager
-        ;(manager as any).cursors = (scene as any).cursors
-        ;(manager as any).updateCamera(mockCam as any)
+          ; (manager as any).cursors = (scene as any).cursors
+          ; (manager as any).updateCamera(mockCam as any)
 
         expect(mockCam.scrollX).toBe(100)
         expect(mockCam.scrollY).toBe(110)
@@ -298,8 +316,8 @@ describe("GameScene Camera System", () => {
       } as any
 
       const manager = Object.create(CameraManager.prototype) as CameraManager
-      ;(manager as any).scene = scene
-      ;(manager as any).setupCameraDrag(mockCam as any)
+        ; (manager as any).scene = scene
+        ; (manager as any).setupCameraDrag(mockCam as any)
     })
 
     it('disables right-click context menu', () => {
