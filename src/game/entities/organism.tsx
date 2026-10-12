@@ -24,7 +24,7 @@ export default class Organism extends Phaser.GameObjects.Sprite {
 
   private duplicates: Phaser.GameObjects.Sprite[] = [];
   private duplicateContainer: Phaser.GameObjects.Container;
-  private breakpoint = 20;
+  private breakpoint = 10;
 
   constructor(scene: Phaser.Scene, x: number, y: number, type = "acacia") {
     super(scene, x, y, getOrganismData(type).texture);
