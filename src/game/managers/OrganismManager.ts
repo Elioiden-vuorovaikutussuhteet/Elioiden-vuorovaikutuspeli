@@ -30,7 +30,7 @@ export default class OrganismManager {
     }
 
     public createOrganism(x: number, y: number, type: string) {
-        const organism = new Organism(this.scene, x, y, type);
+        const organism = new Organism(this.scene, x, y, type, this.uiCamera);
 
         organism.on("organismSelected", this.onOrganismSelected, this);
 

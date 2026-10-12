@@ -26,13 +26,16 @@ export default class Organism extends Phaser.GameObjects.Sprite {
   private duplicateContainer: Phaser.GameObjects.Container;
   private breakpoint = 10;
 
-  constructor(scene: Phaser.Scene, x: number, y: number, type = "acacia") {
+  constructor(scene: Phaser.Scene, x: number, y: number, type = "acacia", uiCamera?: Phaser.Cameras.Scene2D.Camera,) {
     super(scene, x, y, getOrganismData(type).texture);
     
     const organismData = getOrganismData(type);
 
     this.duplicateContainer = scene.add.container(x, y);
-
+    if (uiCamera) {
+      uiCamera.ignore(this.duplicateContainer);
+    }
+    
     this.organismData = organismData;
 
     this.baseScale = organismData.default_scale;
