@@ -1,5 +1,5 @@
-import { relations } from "./data/relations";
-import type { organismsRelations } from "./data/relations";
+import { relations } from "../data/relations";
+import type { organismsRelations } from "../data/relations";
 
 type RelationValue = organismsRelations["value"];
 type RelationMult = organismsRelations["mult"];
