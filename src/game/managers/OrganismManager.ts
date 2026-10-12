@@ -15,22 +15,34 @@ export default class OrganismManager {
 
     private onOrganismSelected: (organism: Organism) => void;
 
+    private onHealthChanged?: (
+        x: number,
+        y: number,
+        amount: number
+    ) => void;
+
     constructor(
         scene: Phaser.Scene,
         uiCamera: Phaser.Cameras.Scene2D.Camera,
         organismMap = new Map<string, Organism>(),
         rightConnections: Connection[],
         onOrganismSelected: (organism: Organism) => void,
+        onHealthChanged?: (
+            x: number,
+            y: number,
+            amount: number
+        ) => void,
     ){
         this.scene = scene;
         this.uiCamera = uiCamera;
         this.organismMap = organismMap;
         this.rightConnections = rightConnections;
         this.onOrganismSelected = onOrganismSelected;
+        this.onHealthChanged = onHealthChanged;
     }
 
     public createOrganism(x: number, y: number, type: string) {
-        const organism = new Organism(this.scene, x, y, type, this.uiCamera);
+        const organism = new Organism(this.scene, x, y, type, this.uiCamera, this.onHealthChanged,);
 
         organism.on("organismSelected", this.onOrganismSelected, this);
 

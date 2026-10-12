@@ -1,4 +1,5 @@
 import Phaser from "phaser";
+import ParticleManager from "../managers/ParticleManager";
 import Organism from "../entities/organism";
 import InfoButton from "../entities/infobutton";
 import CameraManager from "../managers/CameraManager";
@@ -13,6 +14,7 @@ export default class GameScene extends Phaser.Scene {
   private uiCamera!: Phaser.Cameras.Scene2D.Camera;
 
   private arrowManager!:  ArrowManager;
+  private particleManager!: ParticleManager;
   private interactionManager!: InteractionManager;
   private organismManager!: OrganismManager;
   private connectionManager!: ConnectionManager;
@@ -30,6 +32,8 @@ export default class GameScene extends Phaser.Scene {
     this.load.image("infobutton_sprite", "altinfo.png");
     this.load.image("ants_sprite", "ants.png");
     this.load.image("sapota_sprite", "sapota.png");
+    this.load.image("pos_particle", "pos_particle.png");
+    this.load.image("neg_particle", "neg_particle.png");
   }
 
   create() {
@@ -43,13 +47,20 @@ export default class GameScene extends Phaser.Scene {
     const rightConnections: Connection[] = [];
     const organismMap = new Map<string, Organism>();
 
+    this.particleManager = new ParticleManager(
+      this,
+      this.uiCamera,
+    );
+
     this.organismManager = new OrganismManager(
       this,
       this.uiCamera,
       organismMap,
       rightConnections,
-      (organism) =>
+      (organism) => 
       this.arrowManager.arrowChecker(organism),
+      (x, y, amount) => 
+      this.particleManager.healthChanged(x, y, amount),
     )
     this.interactionManager = new InteractionManager(
       organismMap,

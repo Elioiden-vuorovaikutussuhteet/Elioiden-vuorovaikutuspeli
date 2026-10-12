@@ -26,10 +26,26 @@ export default class Organism extends Phaser.GameObjects.Sprite {
   private duplicateContainer: Phaser.GameObjects.Container;
   private breakpoint = 2;
 
-  constructor(scene: Phaser.Scene, x: number, y: number, type = "acacia", uiCamera?: Phaser.Cameras.Scene2D.Camera,) {
+  private onHealthChanged?: (
+    x: number,
+    y: number,
+    amount: number
+  ) => void;
+
+  constructor(
+    scene: Phaser.Scene,
+    x: number,
+    y: number,
+    type = "acacia",
+    uiCamera?: Phaser.Cameras.Scene2D.Camera,
+    onHealthChanged?: (x: number, y: number, amount: number) => void,
+    ) {
+
     super(scene, x, y, getOrganismData(type).texture);
     
     const organismData = getOrganismData(type);
+
+    this.onHealthChanged = onHealthChanged;
 
     this.duplicateContainer = scene.add.container(x, y);
     if (uiCamera) {
@@ -154,7 +170,20 @@ export default class Organism extends Phaser.GameObjects.Sprite {
 
 
   public changeHealth(totalChange: number) {
+    if (totalChange === 0) return;
+
     this.HP += totalChange;
+
+    const particleY =
+    totalChange > 0
+      ? this.y + this.displayHeight / 2
+      : this.y - this.displayHeight / 2;
+
+    this.onHealthChanged?.(
+      this.x,
+      particleY,
+      totalChange
+    );
 
     if (this.organismData.growth_types.includes("multiply")) {
       this.updateDuplicates();
@@ -162,6 +191,8 @@ export default class Organism extends Phaser.GameObjects.Sprite {
     if (this.organismData.growth_types.includes("grow")) {
       this.changeScale();
     }
+    console.count(`Particle callback: ${this.organismData.id}`);
+    console.log("Health change:", totalChange);
   }
   update() {}
 }
