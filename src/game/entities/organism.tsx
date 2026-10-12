@@ -22,11 +22,36 @@ export default class Organism extends Phaser.GameObjects.Sprite {
 
   private baseScale = 1;
 
-  constructor(scene: Phaser.Scene, x: number, y: number, type = "acacia") {
+  private duplicates: Phaser.GameObjects.Sprite[] = [];
+  private duplicateContainer: Phaser.GameObjects.Container;
+  private breakpoint = 2;
+
+  private onHealthChanged?: (
+    x: number,
+    y: number,
+    amount: number
+  ) => void;
+
+  constructor(
+    scene: Phaser.Scene,
+    x: number,
+    y: number,
+    type = "acacia",
+    uiCamera?: Phaser.Cameras.Scene2D.Camera,
+    onHealthChanged?: (x: number, y: number, amount: number) => void,
+    ) {
+
     super(scene, x, y, getOrganismData(type).texture);
     
     const organismData = getOrganismData(type);
 
+    this.onHealthChanged = onHealthChanged;
+
+    this.duplicateContainer = scene.add.container(x, y);
+    if (uiCamera) {
+      uiCamera.ignore(this.duplicateContainer);
+    }
+    
     this.organismData = organismData;
 
     this.baseScale = organismData.default_scale;
@@ -75,10 +100,14 @@ export default class Organism extends Phaser.GameObjects.Sprite {
   }
 
   public changeScale() {
-    const newScale = this.baseScale * (this.HP / 100);
-  
+    const sensitivity = 2;
+
+    const healthRatio = 1 + ((this.HP - 100) / 100) * sensitivity;
+
+    const newScale = this.baseScale * Math.max(0.1, healthRatio);
+
     this.scene.tweens.add({
-      targets: this,
+      targets: [this, this.duplicateContainer],
       scale: newScale,
       duration: 500,
       ease: "Sine.easeInOut",
@@ -91,10 +120,79 @@ export default class Organism extends Phaser.GameObjects.Sprite {
     });
   }
 
-  public changeHealth(relation: number, multiplier: number, originOrgHealth: number) {
-    const newHP = this.HP + (relation*(this.HP * multiplier * (originOrgHealth / 100)));
-    this.HP = newHP;
-    this.changeScale();
+  private updateDuplicates() {
+    if (this.HP > (100 + this.breakpoint)) {
+      const duplicate = this.scene.add.sprite(
+        0,
+        0,
+        this.organismData.texture
+      );
+
+      duplicate.setScale(this.baseScale * 0.5);
+
+      this.duplicateContainer.add(duplicate);
+      this.duplicates.push(duplicate);
+
+      this.positionDuplicates();
+
+      this.breakpoint *= 2;
+    }
+
+    while (
+      this.duplicates.length > 0 &&
+      this.HP <= (100 + this.breakpoint / 2)
+    ) {
+      const duplicate = this.duplicates.pop();
+
+      if (duplicate) {
+        duplicate.destroy();
+      }
+
+      this.breakpoint /= 2;
+      this.positionDuplicates();
+    }
+  }
+
+  private positionDuplicates() {
+    const count = this.duplicates.length;
+
+    const radius = this.displayWidth * 0.8;
+  
+    this.duplicates.forEach((duplicate, index) => {
+      const angle = (index / count) * Math.PI * 2;
+
+      const x = Math.cos(angle) * radius;
+      const y = Math.sin(angle) * radius;
+
+      duplicate.setPosition(x, y);
+    });
+  }
+
+
+  public changeHealth(totalChange: number) {
+    if (totalChange === 0) return;
+
+    this.HP += totalChange;
+
+    const particleY =
+    totalChange > 0
+      ? this.y + this.displayHeight / 2
+      : this.y - this.displayHeight / 2;
+
+    this.onHealthChanged?.(
+      this.x,
+      particleY,
+      totalChange
+    );
+
+    if (this.organismData.growth_types.includes("multiply")) {
+      this.updateDuplicates();
+    }
+    if (this.organismData.growth_types.includes("grow")) {
+      this.changeScale();
+    }
+    console.count(`Particle callback: ${this.organismData.id}`);
+    console.log("Health change:", totalChange);
   }
   update() {}
 }
