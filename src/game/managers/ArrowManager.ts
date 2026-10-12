@@ -97,6 +97,7 @@ export default class ArrowManager {
             const healthChange = relation * multiplier * (first.HP / 100);
             second.changeHealth(healthChange);
             this.interactionManager.interactionPulse(second, relation,);
+            this.scene.scene.launch("PopupScene");
           } else if (relation === -1 && arrowColorValue === false) {
             this.drawArrow(
               this.getPermanentArrows(),
@@ -114,6 +115,7 @@ export default class ArrowManager {
             const healthChange = relation * multiplier * (first.HP / 100);
             second.changeHealth(healthChange);
             this.interactionManager.interactionPulse(second, relation,);
+            this.scene.scene.launch("PopupScene");
           }
         }
 
