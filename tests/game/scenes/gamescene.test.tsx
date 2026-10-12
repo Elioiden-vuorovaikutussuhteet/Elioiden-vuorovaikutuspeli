@@ -132,6 +132,15 @@ describe("GameScene", () => {
         lineBetween: vi.fn(),
         fillTriangle: vi.fn(),
       }),
+
+      particles: vi.fn().mockReturnValue({
+        setDepth: vi.fn(),
+        setPosition: vi.fn(),
+        explode: vi.fn(),
+        start: vi.fn(),
+        stop: vi.fn(),
+        destroy: vi.fn(),
+      }),
     });
   });
 
@@ -158,7 +167,7 @@ describe("GameScene", () => {
 
     expect(scene.scene.launch).toHaveBeenCalledWith("MenuScene");
 
-    expect(Organism).toHaveBeenCalledWith(scene, 500, 300, "acacia");
+    expect(Organism).toHaveBeenCalledWith(scene, 500, 300, "acacia", expect.anything(), expect.any(Function));
   });
 
   it("creates an amf 3s after the menu closes", () => {
@@ -177,7 +186,7 @@ describe("GameScene", () => {
 
     delayedCallback();
 
-    expect(Organism).toHaveBeenCalledWith(scene, 500, 700, "amf");
+    expect(Organism).toHaveBeenCalledWith(scene, 500, 700, "amf", expect.anything(), expect.any(Function));
   });
 
 

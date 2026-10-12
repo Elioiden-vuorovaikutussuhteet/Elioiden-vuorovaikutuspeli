@@ -94,7 +94,7 @@ export default class ArrowManager {
               from: first.organismData.id,
               to: second.organismData.id,
             });
-            const healthChange = relation * relationData.mult * (first.HP / 100);
+            const healthChange = relation * multiplier * (first.HP / 100);
             second.changeHealth(healthChange);
             this.interactionManager.interactionPulse(second, relation,);
           } else if (relation === -1 && arrowColorValue === false) {
@@ -111,7 +111,7 @@ export default class ArrowManager {
               from: first.organismData.id,
               to: second.organismData.id,
             });
-            const healthChange = relation * relationData.mult * (first.HP / 100);
+            const healthChange = relation * multiplier * (first.HP / 100);
             second.changeHealth(healthChange);
             this.interactionManager.interactionPulse(second, relation,);
           }
