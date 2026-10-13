@@ -96,10 +96,36 @@ export default class CameraManager {
 
   public setupCameraTouchControls(cam: Phaser.Cameras.Scene2D.Camera) {
     const input = this.scene.input;
+    let pinchStartDistance: number | null = null;
+
+    input.on('pointerup', () => {
+      pinchStartDistance = null;
+    });
 
     input.on('pointermove', (pointer: Phaser.Input.Pointer) => {
       const downPointers = input.manager.pointers.filter((p) => p.isDown);
+      if (downPointers.length >= 2) {
+        const [p1, p2] = downPointers;
+        const currentDistance = Phaser.Math.Distance.Between(p1.x, p1.y, p2.x, p2.y);
 
+        if (pinchStartDistance === null) {
+          pinchStartDistance = currentDistance;
+          return;
+        }
+
+        if (pinchStartDistance > 0 && currentDistance > 0) {
+          const ratio = currentDistance / pinchStartDistance;
+          pinchStartDistance = currentDistance;
+
+          cam.zoom = Phaser.Math.Clamp(
+            cam.zoom * ratio,
+            CAMERA_CONFIG.MIN_ZOOM,
+            CAMERA_CONFIG.MAX_ZOOM
+          );
+        }
+        return;
+      }
+      pinchStartDistance = null;
       if (downPointers.length === 1 && pointer.isDown) {
         const dx = pointer.x - pointer.prevPosition.x;
         const dy = pointer.y - pointer.prevPosition.y;
