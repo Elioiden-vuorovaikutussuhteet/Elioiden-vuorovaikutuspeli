@@ -18,7 +18,7 @@ export const organisms: OrganismData[] = [
     id: "amf",
     name: "Arbuscular Mycorrhizal Fungus",
     texture: "amf_sprite",
-    default_scale: 0.5,
+    default_scale: 1,
     growth_types: ["multiply"],
   },
   {
