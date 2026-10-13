@@ -89,5 +89,11 @@ export default class PopupScene extends Phaser.Scene {
         closeButton.on("closeButtonClicked", () => {
             this.scene.stop();
         });
+        // timed close for popup closing if needed
+        /*
+        this.time.delayedCall(10000, () => {
+            this.scene.stop();
+        });
+        */
     }
 }
