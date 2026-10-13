@@ -204,6 +204,7 @@ export default class ArrowManager {
 
     public clearPreview() {
         this.previewArrow.clear();
+        this.selectedOrganism = null;
     }
 
     public getPermanentArrows() {
