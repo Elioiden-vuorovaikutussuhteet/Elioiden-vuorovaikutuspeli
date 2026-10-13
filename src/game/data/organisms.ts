@@ -11,7 +11,7 @@ export const organisms: OrganismData[] = [
     id: "acacia",
     name: "Bullhorn Acacia",
     texture: "acacia_sprite",
-    default_scale: 1.3,
+    default_scale: 1,
     growth_types: ["grow"],
   },
   {
@@ -30,14 +30,14 @@ export const organisms: OrganismData[] = [
   },
   {
     id: "ants",
-    name: "Ants",
+    name: "Acacia Ants",
     texture: "ants_sprite",
     default_scale: 1,
     growth_types: ["multiply"],
   },
   {
     id: "antfootbacteria",
-    name: "Ant foot bacteria",
+    name: "Ant Foot Bacteria",
     texture: "antfootbacteria_sprite",
     default_scale: 1,
     growth_types: ["multiply"],
@@ -58,7 +58,7 @@ export const organisms: OrganismData[] = [
   },
   {
     id: "mycorrhizahelper",
-    name: "Mycorrhiza helper bacteria",
+    name: "Mycorrhiza Helper Bacteria",
     texture: "mycorrhizahelper_sprite",
     default_scale: 1,
     growth_types: ["multiply"],
