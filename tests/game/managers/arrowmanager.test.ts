@@ -84,7 +84,7 @@ vi.mock("../../../src/game/entities/arrowbuttons", () => ({
   default: MockArrowButtons,
 }));
 
-const mockPartial = <T,>(value: Partial<T>): T => value as T;
+const mockPartial = <T>(value: Partial<T>): T => value as T;
 
 describe("GameScene", () => {
   let scene: GameScene;
@@ -170,7 +170,14 @@ describe("GameScene", () => {
     selectOrganism(1).call(scene, amf);
     selectOrganism(0).call(scene, acacia);
 
-    expect(Organism).toHaveBeenCalledWith(scene, 600, 500, "ants", expect.anything(), expect.any(Function));
+    expect(Organism).toHaveBeenCalledWith(
+      scene,
+      240,
+      500,
+      "ants",
+      expect.anything(),
+      expect.any(Function),
+    );
 
     const ants = vi.mocked(Organism).mock.results[2].value;
 
@@ -179,12 +186,19 @@ describe("GameScene", () => {
     selectOrganism(2).call(scene, ants);
     selectOrganism(0).call(scene, acacia);
 
-    expect(Organism).toHaveBeenCalledWith(scene, 1300, 500, "sapota", expect.anything(), expect.any(Function));
+    expect(Organism).toHaveBeenCalledWith(
+      scene,
+      760,
+      500,
+      "sapota",
+      expect.anything(),
+      expect.any(Function),
+    );
   });
 
   it("logs to console after 2 organisms are selected", () => {
     // edit this test once arrow making function is called instead of log
-    const consoleLogSpy = vi.spyOn(console, "log").mockImplementation(() => { });
+    const consoleLogSpy = vi.spyOn(console, "log").mockImplementation(() => {});
 
     vi.mocked(getRelation).mockReturnValue({
       value: 1,
@@ -211,15 +225,15 @@ describe("GameScene", () => {
     firstSelectionCallback.call(scene, firstOrganism);
     secondSelectionCallback.call(scene, secondOrganism);
 
-    expect(consoleLogSpy).toHaveBeenNthCalledWith(1, "acacia", 500, 300, 1);
+    expect(consoleLogSpy).toHaveBeenNthCalledWith(1, "acacia", 500, 240, 1);
 
-    expect(consoleLogSpy).toHaveBeenNthCalledWith(2, "amf", 500, 700, 1);
+    expect(consoleLogSpy).toHaveBeenNthCalledWith(2, "amf", 500, 760, 1);
 
     consoleLogSpy.mockRestore();
   });
 
   it("does nothing when the same organism is selected twice", () => {
-    const consoleLogSpy = vi.spyOn(console, "log").mockImplementation(() => { });
+    const consoleLogSpy = vi.spyOn(console, "log").mockImplementation(() => {});
 
     scene.create();
 
@@ -242,7 +256,6 @@ describe("GameScene", () => {
 
     consoleLogSpy.mockRestore();
   });
-
 
   it("creates green and red arrow buttons", () => {
     scene.create();
@@ -282,21 +295,21 @@ describe("ArrowManager interactions", () => {
     scene = new GameScene();
 
     permanentArrows = {
-        setDepth: vi.fn(),
-        clear: vi.fn(),
-        lineStyle: vi.fn(),
-        fillStyle: vi.fn(),
-        lineBetween: vi.fn(),
-        fillTriangle: vi.fn(),
+      setDepth: vi.fn(),
+      clear: vi.fn(),
+      lineStyle: vi.fn(),
+      fillStyle: vi.fn(),
+      lineBetween: vi.fn(),
+      fillTriangle: vi.fn(),
     };
 
     previewArrow = {
-        setDepth: vi.fn(),
-        clear: vi.fn(),
-        lineStyle: vi.fn(),
-        fillStyle: vi.fn(),
-        lineBetween: vi.fn(),
-        fillTriangle: vi.fn(),
+      setDepth: vi.fn(),
+      clear: vi.fn(),
+      lineStyle: vi.fn(),
+      fillStyle: vi.fn(),
+      lineBetween: vi.fn(),
+      fillTriangle: vi.fn(),
     };
 
     (scene as any).permanentArrows = permanentArrows;
@@ -309,13 +322,14 @@ describe("ArrowManager interactions", () => {
     };
 
     (scene as any).add = {
-        graphics: vi.fn()
+      graphics: vi
+        .fn()
         .mockReturnValueOnce(permanentArrows)
         .mockReturnValueOnce(previewArrow),
     };
 
     uiCamera = {
-        ignore: vi.fn(),
+      ignore: vi.fn(),
     };
 
     interactionManager = {
@@ -331,7 +345,8 @@ describe("ArrowManager interactions", () => {
     } as unknown as OrganismManager;
 
     interactions = [];
-    arrowManager = new ArrowManager(scene,
+    arrowManager = new ArrowManager(
+      scene,
       uiCamera,
       interactionManager,
       connectionManager,
@@ -363,7 +378,7 @@ describe("ArrowManager interactions", () => {
     arrowManager.update();
 
     expect(previewArrow.lineBetween).toHaveBeenCalled();
-    });
+  });
 
   it("luo positiivisen vuorovaikutuksen", () => {
     vi.mocked(getRelation).mockReturnValue({
@@ -377,9 +392,7 @@ describe("ArrowManager interactions", () => {
     arrowManager.arrowChecker(first);
     arrowManager.arrowChecker(second);
 
-    expect(interactions).toEqual([
-      { from: "tree", to: "shroom" },
-    ]);
+    expect(interactions).toEqual([{ from: "tree", to: "shroom" }]);
     expect(permanentArrows.lineBetween).toHaveBeenCalled();
     expect(permanentArrows.fillTriangle).toHaveBeenCalled();
     expect((scene as any).selectedOrganism).toBeNull();
@@ -435,17 +448,17 @@ describe("ArrowManager interactions", () => {
     const second = organism("shroom");
 
     vi.mocked(getRelation).mockReturnValue({
-        value: 1,
-        mult: 1,
+      value: 1,
+      mult: 1,
     });
 
     arrowManager.arrowChecker(first);
     arrowManager.arrowChecker(second);
 
     expect(connectionManager.checkConnections).toHaveBeenCalled();
-});
+  });
 
-// make and move to connectionmanager.test.ts
+  // make and move to connectionmanager.test.ts
   it("hylkää puuttuvan yhteyden", () => {
     (scene as any).rightConnections = [{ from: "tree", to: "shroom" }];
     (scene as any).interactions = [];

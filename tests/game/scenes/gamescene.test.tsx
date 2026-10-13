@@ -13,7 +13,7 @@ const {
   MockArrowButtons,
 } = vi.hoisted(() => {
   const mockOrganismOn = vi.fn();
-  const mockInfoButtonOn = vi.fn()
+  const mockInfoButtonOn = vi.fn();
   const mockArrowButtonsOn = vi.fn();
 
   const MockOrganism = vi.fn(function (
@@ -53,7 +53,6 @@ const {
       on: mockArrowButtonsOn,
     };
   });
-
 
   return {
     MockOrganism,
@@ -167,7 +166,14 @@ describe("GameScene", () => {
 
     expect(scene.scene.launch).toHaveBeenCalledWith("MenuScene");
 
-    expect(Organism).toHaveBeenCalledWith(scene, 500, 300, "acacia", expect.anything(), expect.any(Function));
+    expect(Organism).toHaveBeenCalledWith(
+      scene,
+      500,
+      240,
+      "acacia",
+      expect.anything(),
+      expect.any(Function),
+    );
   });
 
   it("creates an amf 3s after the menu closes", () => {
@@ -186,9 +192,15 @@ describe("GameScene", () => {
 
     delayedCallback();
 
-    expect(Organism).toHaveBeenCalledWith(scene, 500, 700, "amf", expect.anything(), expect.any(Function));
+    expect(Organism).toHaveBeenCalledWith(
+      scene,
+      500,
+      760,
+      "amf",
+      expect.anything(),
+      expect.any(Function),
+    );
   });
-
 
   it("launches the tutorial scene when the info button is clicked", () => {
     scene.create();
@@ -202,10 +214,9 @@ describe("GameScene", () => {
     expect(scene.scene.launch).toHaveBeenCalledWith("TutorialScene");
   });
 
-  it('pauses properly on game start', () => {
-    scene.create()
+  it("pauses properly on game start", () => {
+    scene.create();
     expect(scene.scene.pause).toHaveBeenCalledTimes(1);
-    expect(scene.scene.launch).toHaveBeenCalledWith('MenuScene');
+    expect(scene.scene.launch).toHaveBeenCalledWith("MenuScene");
   });
-
 });

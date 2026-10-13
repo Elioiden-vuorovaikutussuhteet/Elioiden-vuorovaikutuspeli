@@ -9,7 +9,12 @@ export default class ParticleManager {
         emitting: false,
         tint: 0x48AB1D,
       
-        speedX: { min: -100, max: 100 },
+        emitZone: {
+          type: "edge",
+          source: new Phaser.Geom.Line(-50, 0, 50, 0),
+          quantity: 4,
+        },
+        speedX: 0,
         speedY: { min: -180, max: -80 },
       
         scale: { start: 0.05, end: 0 },
@@ -23,7 +28,12 @@ export default class ParticleManager {
         emitting: false,
         tint: 0x8F1C00,
       
-        speedX: { min: -100, max: 100 },
+        emitZone: {
+          type: "edge",
+          source: new Phaser.Geom.Line(-50, 0, 50, 0),
+          quantity: 4,
+        },
+        speedX: 0,
         speedY: { min: 80, max: 180 },
       
         scale: { start: 0.05, end: 0 },
