@@ -6,6 +6,7 @@ import type { Connection } from "../types/Connection";
 import InteractionManager from "./InteractionManager";
 import ConnectionManager from "./ConnectionManager";
 import OrganismManager from "./OrganismManager";
+import { getInteractionId } from "../data/popupTexts";
 
 // arrow related code, drawing of arrows, arrow buttons arrowChecker is old getStartEndOrganisms
 export default class ArrowManager {
@@ -97,7 +98,10 @@ export default class ArrowManager {
             const healthChange = relation * multiplier * (first.HP / 100);
             second.changeHealth(healthChange);
             this.interactionManager.interactionPulse(second, relation,);
-            this.scene.scene.launch("PopupScene");
+            
+            //finds popup text from data/popuptexts.ts and launches the window
+            const textId = getInteractionId(first.organismData.id, second.organismData.id);
+            this.scene.scene.launch("PopupScene", {textId});
           } else if (relation === -1 && arrowColorValue === false) {
             this.drawArrow(
               this.getPermanentArrows(),
@@ -115,7 +119,10 @@ export default class ArrowManager {
             const healthChange = relation * multiplier * (first.HP / 100);
             second.changeHealth(healthChange);
             this.interactionManager.interactionPulse(second, relation,);
-            this.scene.scene.launch("PopupScene");
+
+            //finds popup text from data/popuptexts.ts and launches the window
+            const textId = getInteractionId(first.organismData.id, second.organismData.id);
+            this.scene.scene.launch("PopupScene", {textId});
           }
         }
 
