@@ -3,6 +3,13 @@ import { defineConfig } from 'vitest/config'
 
 //vite.dev/config/
 export default defineConfig({
+  define: {
+    __BUILD_DATE__: JSON.stringify(
+      new Date().toLocaleString('sv-SE', {
+        timeZone: 'Europe/Helsinki',
+      })
+    ),
+  },
   plugins: [react()],
   server: {
     proxy: {
