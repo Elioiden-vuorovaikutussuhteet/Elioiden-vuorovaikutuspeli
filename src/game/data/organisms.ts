@@ -36,6 +36,13 @@ export const organisms: OrganismData[] = [
     growth_types: ["multiply"],
   },
   {
+    id: "antfootbacteria",
+    name: "Ant foot bacteria",
+    texture: "antfootbacteria_sprite",
+    default_scale: 1,
+    growth_types: ["multiply"],
+  },
+  {
     id: "glomeromycetes",
     name: "Glomeromycetes",
     texture: "glomeromycetes_sprite",
@@ -46,6 +53,13 @@ export const organisms: OrganismData[] = [
     id: "diazotroph",
     name: "Diazotrophic bacteria",
     texture: "diazotroph_sprite",
+    default_scale: 1,
+    growth_types: ["multiply"],
+  },
+  {
+    id: "mycorrhizahelper",
+    name: "Mycorrhiza helper bacteria",
+    texture: "mycorrhizahelper_sprite",
     default_scale: 1,
     growth_types: ["multiply"],
   },
