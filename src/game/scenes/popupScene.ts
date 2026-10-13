@@ -30,9 +30,9 @@ export default class PopupScene extends Phaser.Scene {
         const { width, height } = this.cameras.main;
 
         const menuWidth = Math.min(width * 0.3, 450);
-        const menuHeight = Math.min(height * 0.7, 600);
+        const menuHeight = Math.min(height * 0.85, 700);
 
-        const rightMargin = width * 0.05;
+        const rightMargin = width * 0.025;
 
         const menuX = width - menuWidth - rightMargin;
         const menuY = (height - menuHeight) / 4;

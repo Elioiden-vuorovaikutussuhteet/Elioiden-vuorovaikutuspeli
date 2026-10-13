@@ -11,11 +11,11 @@ export function getInteractionId(
 
 export const popupTexts: Record<string, PopupText> = {
     "acacia-amf": {
-        description: "Bullhorn acacia provides the arbuscular mycorrhizal symbiosis forming glomeromycete fungi with high energy carbohydrates."
+        description: "NODATA"
     },
 
     "amf-acacia": {
-        description: "Fungi belonging to the taxa Glomeromycota form arbuscular mycorrhizal symbiosis with acacia trees and provide Bullhorn acacias with water and nutrients, phosphorus in particular. "
+        description: "NODATA"
     },
 
     "acacia-ants": {
@@ -37,4 +37,48 @@ export const popupTexts: Record<string, PopupText> = {
     "acacia-sapota": {
         description: "Bullhorn acacia competes for nutrients and light with Sapodilla tree. "
     },
+    "ants-antfootbacteria": {
+        description: "Acacia ants provide a good living space as well as food for surface bacteria belonging to genera such as Bacillus, Lactococcus, Pantoea and Burkholderia. "
+    },
+    "antfootbacteria-ants": {
+        description: "NODATA"
+    },
+    "diazotroph-acacia": {
+        description: "Root nodule forming nitrogen fixing bacteria belonging to genera such as Rhizobium, Bradyrhizobium and Mesorhizobium transform biologically inactive nitrogen molecules from atmosphere to biologically active ammonium ions. This provides the plant with nitrogen, which is often a limiting factor for plant growth. "
+    },
+    "acacia-diazotroph": {
+        description: "Root nodule forming nitrogen fixing bacteria belonging to genera such as Rhizobium, Bradyrhizobium and Mesorhizobium receive high energy carbohydrates from the plant as well as protected living space in the specialized root nodules. Acacia also produces oxygen binding leghemoglobin to the root nodules to assist in nitrogen fixation. "
+    },
+    "glomeromycetes-acacia": {
+        description: "Fungi belonging to the taxa Glomeromycota form arbuscular mycorrhizal symbiosis with acacia trees and provide Bullhorn acacias with water and nutrients, phosphorus in particular. "
+    },
+    "acacia-glomeromycetes": {
+        description: "Bullhorn acacia provides the arbuscular mycorrhizal symbiosis forming glomeromycete fungi with high energy carbohydrates. "
+    },
+    "glomeromycetes-sapota": {
+        description: "Fungi belonging to the taxa Glomeromycota form arbuscular mycorrhizal symbiosis provide Sapodilla trees with water and nutrients, particularly phosphorus and nitrogen. "
+    },
+    "glomeromycetes-mycorrhizahelper": {
+        description: "Arbuscular mycorrhizal symbiosis forming glomeromycetes provide mycorrhiza helper bacteria with a place to grow as well as organic acids and other molecules for food. "
+    },
+    "mycorrhizahelper-glomeromycetes": {
+        description: "Mycorrhiza helper bacteria help arbuscular mycorrhizal symbiosis forming glomeromycetes to gather phosphorus and iron from soil as well as promote mycorrhizal symbiosis with plant by stimulating fungal and root growth and establishment of symbiotic structures. They also defend both fungi and plant roots against pathogens. "
+    },
+    "mycorrhizahelper-acacia": {
+        description: "Mycorrhiza helper bacteria defend the tree mycorrhizosphere against pathogens. "
+    },
+    "mycorrhizahelper-sapota": {
+        description: "Mycorrhiza helper bacteria defend the tree mycorrhizosphere against pathogens. "
+    },
+    "ants-sapota": {
+        description: "NODATA"
+    },
+
+
+
+
+    
+
+
+    
 };
