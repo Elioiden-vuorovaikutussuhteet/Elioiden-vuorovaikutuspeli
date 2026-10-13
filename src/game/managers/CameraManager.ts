@@ -14,15 +14,15 @@ export default class CameraManager {
   private cursors!: Phaser.Types.Input.Keyboard.CursorKeys;
   private uiCamera!: Phaser.Cameras.Scene2D.Camera;
 
-
-
   constructor(scene: Phaser.Scene) {
     this.scene = scene;
     this.cursors = this.scene.input.keyboard!.createCursorKeys();
+    this.scene.input.addPointer(1);
 
     this.setupCameras(this.scene.cameras)
     this.setupCameraZoom(this.scene.cameras.main)
     this.setupCameraDrag(this.scene.cameras.main)
+    this.setupCameraTouchControls(this.scene.cameras.main)
   }
 
   private setupCameras(cameras: Phaser.Cameras.Scene2D.CameraManager) {
@@ -90,6 +90,21 @@ export default class CameraManager {
 
         dragStartX = pointer.x;
         dragStartY = pointer.y;
+      }
+    });
+  }
+
+  public setupCameraTouchControls(cam: Phaser.Cameras.Scene2D.Camera) {
+    const input = this.scene.input;
+
+    input.on('pointermove', (pointer: Phaser.Input.Pointer) => {
+      const downPointers = input.manager.pointers.filter((p) => p.isDown);
+
+      if (downPointers.length === 1 && pointer.isDown) {
+        const dx = pointer.x - pointer.prevPosition.x;
+        const dy = pointer.y - pointer.prevPosition.y;
+        cam.scrollX -= dx / cam.zoom;
+        cam.scrollY -= dy / cam.zoom;
       }
     });
   }
