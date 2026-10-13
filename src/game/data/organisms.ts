@@ -3,6 +3,7 @@ export interface OrganismData {
   name: string;
   texture: string;
   default_scale: number;
+  growth_types: string[];
 }
 
 export const organisms: OrganismData[] = [
