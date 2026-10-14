@@ -11,11 +11,11 @@ export function getInteractionId(
 
 export const popupTexts: Record<string, PopupText> = {
     "acacia-amf": {
-        description: "NODATA"
+        description: "Bullhorn acacia provides the arbuscular mycorrhizal symbiosis forming glomeromycete fungi with high energy carbohydrates."
     },
 
     "amf-acacia": {
-        description: "NODATA"
+        description: "All arbuscular mycorrhizal fungi belong to the taxa Glomeromycota. They form symbiosis with acacia trees and provide Bullhorn acacias with water and nutrients, phosphorus in particular."
     },
 
     "acacia-ants": {
@@ -41,7 +41,7 @@ export const popupTexts: Record<string, PopupText> = {
         description: "Acacia ants provide a good living space as well as food for surface bacteria belonging to genera such as Bacillus, Lactococcus, Pantoea and Burkholderia. "
     },
     "antfootbacteria-ants": {
-        description: "NODATA"
+        description: "Ant foot bacteria secrete antimicrobial metabolites to kill both bacterial and fungal pathogens."
     },
     "diazotroph-acacia": {
         description: "Root nodule forming nitrogen fixing bacteria belonging to genera such as Rhizobium, Bradyrhizobium and Mesorhizobium transform biologically inactive nitrogen molecules from atmosphere to biologically active ammonium ions. This provides the plant with nitrogen, which is often a limiting factor for plant growth. "
@@ -71,7 +71,7 @@ export const popupTexts: Record<string, PopupText> = {
         description: "Mycorrhiza helper bacteria defend the tree mycorrhizosphere against pathogens. "
     },
     "ants-sapota": {
-        description: "NODATA"
+        description: "Remove Sapodilla branches which might shade the bullhorn acacia tree as well as sapodilla seedlings close to the acacia."
     },
 
 
