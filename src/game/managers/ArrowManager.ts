@@ -6,6 +6,7 @@ import type { Connection } from "../types/Connection";
 import InteractionManager from "./InteractionManager";
 import ConnectionManager from "./ConnectionManager";
 import OrganismManager from "./OrganismManager";
+import { getInteractionId } from "../data/popupTexts";
 
 export interface OrganismSpawn {
   type: string;
@@ -113,6 +114,11 @@ export default class ArrowManager {
           from: first.organismData.id,
           to: second.organismData.id,
         });
+
+        //finds popup text from data/popuptexts.ts and launches the window
+        const textId = getInteractionId(first.organismData.id, second.organismData.id);
+        this.scene.scene.launch("PopupScene", {textId});
+        
         const healthChange = relation * multiplier * (first.HP / 100);
         second.changeHealth(healthChange);
         this.interactionManager.interactionPulse(second, relation);
@@ -130,6 +136,11 @@ export default class ArrowManager {
           from: first.organismData.id,
           to: second.organismData.id,
         });
+
+        //finds popup text from data/popuptexts.ts and launches the window
+        const textId = getInteractionId(first.organismData.id, second.organismData.id);
+        this.scene.scene.launch("PopupScene", {textId});
+
         const healthChange = relation * multiplier * (first.HP / 100);
         second.changeHealth(healthChange);
         this.interactionManager.interactionPulse(second, relation);
