@@ -93,9 +93,10 @@ export default class InteractionManager {
 
       if (!targetOrganism) continue;
 
-      await new Promise((resolve) => setTimeout(resolve, 100));
-
-      targetOrganism.changeHealth(totalChange);
+      await new Promise((resolve) => setTimeout(resolve, 700));
+      if (targetId !== startingId) {
+        targetOrganism.changeHealth(totalChange);
+      }
     }
   }
 }
