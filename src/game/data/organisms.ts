@@ -32,7 +32,7 @@ export const organisms: OrganismData[] = [
     id: "ants",
     name: "Acacia Ants",
     texture: "ants_sprite",
-    default_scale: 1,
+    default_scale: 0.8,
     growth_types: ["multiply"],
   },
   {
