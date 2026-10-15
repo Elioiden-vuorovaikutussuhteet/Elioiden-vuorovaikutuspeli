@@ -34,7 +34,6 @@ export default class GameScene extends Phaser.Scene {
     this.load.image("antfootbacteria_sprite", "antfootbacteria.png");
     this.load.image("sapota_sprite", "sapota.png");
     this.load.image("diazotroph_sprite", "diazotroph.png");
-    this.load.image("glomeromycetes_sprite", "glomeromycetes.png");
     this.load.image("mycorrhizahelper_sprite", "mycorrhizabacteria.png");
     this.load.image("pos_particle", "pos_particle.png");
     this.load.image("neg_particle", "neg_particle.png");
@@ -50,11 +49,6 @@ export default class GameScene extends Phaser.Scene {
     const organismPositions: Record<string, OrganismSpawn> = {
       acacia: { type: "acacia", x: centerX, y: centerY - 260 },
       diazotroph: { type: "diazotroph", x: centerX - 520, y: centerY - 185 },
-      glomeromycetes: {
-        type: "glomeromycetes",
-        x: centerX + 520,
-        y: centerY - 185,
-      },
       ants: { type: "ants", x: centerX - 260, y: centerY },
       sapota: { type: "sapota", x: centerX + 260, y: centerY },
       antfootbacteria: {
@@ -75,7 +69,6 @@ export default class GameScene extends Phaser.Scene {
       organismPositions.sapota,
       organismPositions.antfootbacteria,
       organismPositions.diazotroph,
-      organismPositions.glomeromycetes,
       organismPositions.mycorrhizahelper,
     ];
 
