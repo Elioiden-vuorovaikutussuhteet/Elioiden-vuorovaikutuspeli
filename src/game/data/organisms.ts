@@ -43,13 +43,6 @@ export const organisms: OrganismData[] = [
     growth_types: ["multiply"],
   },
   {
-    id: "glomeromycetes",
-    name: "Glomeromycetes",
-    texture: "glomeromycetes_sprite",
-    default_scale: 1,
-    growth_types: ["multiply"],
-  },
-  {
     id: "diazotroph",
     name: "Diazotrophic bacteria",
     texture: "diazotroph_sprite",
