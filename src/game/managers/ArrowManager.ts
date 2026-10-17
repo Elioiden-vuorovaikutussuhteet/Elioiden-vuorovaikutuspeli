@@ -83,7 +83,6 @@ export default class ArrowManager {
       second.organismData.id,
     );
     const relation = relationData["value"];
-    const multiplier = relationData["mult"];
 
     const arrowColorValue = this.getArrowColorValue();
 
@@ -119,8 +118,6 @@ export default class ArrowManager {
         const textId = getInteractionId(first.organismData.id, second.organismData.id);
         this.scene.scene.launch("PopupScene", {textId});
         
-        const healthChange = 5 * multiplier * relation;
-        second.changeHealth(healthChange);
         this.interactionManager.interactionPulse(second, first);
       } else if (relation === -1 && arrowColorValue === false) {
         this.drawArrow(
@@ -141,8 +138,6 @@ export default class ArrowManager {
         const textId = getInteractionId(first.organismData.id, second.organismData.id);
         this.scene.scene.launch("PopupScene", {textId});
 
-        const healthChange = 5 * multiplier * relation;
-        second.changeHealth(healthChange);
         this.interactionManager.interactionPulse(second, first);
       }
     }

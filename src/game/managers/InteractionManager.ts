@@ -28,6 +28,12 @@ public async interactionPulse(startingOrganism: Organism, arrowOriginOrganism: O
     const outgoingArrowsByOrganism = new Map<string, Connection[]>();
     const pulseInteractions = [...this.interactions];
 
+    const initialRelationData = getRelation(arrowOriginOrganism.organismData.id, startingOrganism.organismData.id);
+    const initialHealthChange = 5 * initialRelationData.mult * initialRelationData.value;
+    // call pulse animation of initial arrow here
+    await new Promise((resolve) => setTimeout(resolve, this.pulseWaitTime));
+    startingOrganism.changeHealth(initialHealthChange);
+
     for (const arrow of pulseInteractions) {
       if (
         arrow.from === arrowOriginOrganism.organismData.id &&
@@ -77,16 +83,16 @@ public async interactionPulse(startingOrganism: Organism, arrowOriginOrganism: O
 
     /* 
     do health changes depth by depth for spreading pulse effect
-    possible change if this doesn't work as wanted: snapshot every organisms previousHP here instead of in changeHealth()
     this version means one organisms health can change multiple times during 1 pulse, 
     without arrow animations it can look a bit confusing
     commented out is a version where each organism changes health only once during the pulse, which without arrow animations 
     may look a bit nicer, and is closer to the original pulse implementation, but interaction wise makes less sense
+
+    possible change if this doesn't work exactly as wanted: snapshot every organisms previousHP here instead of in changeHealth()
     */
-    await new Promise((resolve) => setTimeout(resolve, this.pulseWaitTime));
-    
+
     // const hasChangedHealth = new Set<string>();
-    
+
     for (const organismIds of depthGroups.values()) {
       const healthChanges = new Map<string, number>();
 
@@ -105,10 +111,12 @@ public async interactionPulse(startingOrganism: Organism, arrowOriginOrganism: O
           const currentChange = healthChanges.get(arrow.to) ?? 0;
 
           healthChanges.set(arrow.to, currentChange + hpChange);
+          // once arrows are a referrable object, call its' pulse animation here
         }
       }
+      await new Promise((resolve) => setTimeout(resolve, this.pulseWaitTime));
+
       for (const [targetId, healthChange] of healthChanges) {
-        // if (targetId === startingId) continue;
         // if (hasChangedHealth.has(targetId)) continue;
 
         const targetOrganism = this.organismMap.get(targetId);
@@ -117,8 +125,6 @@ public async interactionPulse(startingOrganism: Organism, arrowOriginOrganism: O
         targetOrganism.changeHealth(healthChange);
         // hasChangedHealth.add(targetId);
       }
-
-      await new Promise((resolve) => setTimeout(resolve, this.pulseWaitTime));
     }
   }
 }
