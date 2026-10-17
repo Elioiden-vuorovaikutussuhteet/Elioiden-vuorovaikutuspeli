@@ -121,7 +121,7 @@ export default class ArrowManager {
         
         const healthChange = 5 * multiplier * relation;
         second.changeHealth(healthChange);
-        this.interactionManager.interactionPulse(second, relation);
+        this.interactionManager.interactionPulse(second, first);
       } else if (relation === -1 && arrowColorValue === false) {
         this.drawArrow(
           this.getPermanentArrows(),
@@ -143,7 +143,7 @@ export default class ArrowManager {
 
         const healthChange = 5 * multiplier * relation;
         second.changeHealth(healthChange);
-        this.interactionManager.interactionPulse(second, relation);
+        this.interactionManager.interactionPulse(second, first);
       }
     }
 

@@ -18,7 +18,7 @@ export default class InteractionManager {
     this.pulseWaitTime = 1000
   }
 
-public async interactionPulse(startingOrganism: Organism) {
+public async interactionPulse(startingOrganism: Organism, arrowOriginOrganism: Organism) {
     const visited = new Set<string>();
     const queue: { id: string; depth: number }[] = [];
     const depthGroups = new Map<number, string[]>();
@@ -29,11 +29,18 @@ public async interactionPulse(startingOrganism: Organism) {
     const pulseInteractions = [...this.interactions];
 
     for (const arrow of pulseInteractions) {
+      if (
+        arrow.from === arrowOriginOrganism.organismData.id &&
+        arrow.to === startingOrganism.organismData.id
+      ) {
+        continue;
+      }
+
       const arrows = outgoingArrowsByOrganism.get(arrow.from) ?? [];
 
       arrows.push(arrow);
       outgoingArrowsByOrganism.set(arrow.from, arrows);
-    }
+}
 
     visited.add(startingId);
 
@@ -80,7 +87,7 @@ public async interactionPulse(startingOrganism: Organism) {
     
     // const hasChangedHealth = new Set<string>();
     
-    for (const [depth, organismIds] of depthGroups) {
+    for (const organismIds of depthGroups.values()) {
       const healthChanges = new Map<string, number>();
 
       for (const sourceId of organismIds) {
@@ -101,7 +108,7 @@ public async interactionPulse(startingOrganism: Organism) {
         }
       }
       for (const [targetId, healthChange] of healthChanges) {
-        if (targetId === startingId) continue;
+        // if (targetId === startingId) continue;
         // if (hasChangedHealth.has(targetId)) continue;
 
         const targetOrganism = this.organismMap.get(targetId);
