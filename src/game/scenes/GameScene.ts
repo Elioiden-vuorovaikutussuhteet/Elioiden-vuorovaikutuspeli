@@ -7,6 +7,7 @@ import ArrowManager, { type OrganismSpawn } from "../managers/ArrowManager";
 import OrganismManager from "../managers/OrganismManager";
 import InteractionManager from "../managers/InteractionManager";
 import ConnectionManager from "../managers/ConnectionManager";
+import { ScoreManager } from "../managers/ScoreManager";
 import type { Connection } from "../types/Connection";
 
 export default class GameScene extends Phaser.Scene {
@@ -18,6 +19,7 @@ export default class GameScene extends Phaser.Scene {
   private interactionManager!: InteractionManager;
   private organismManager!: OrganismManager;
   private connectionManager!: ConnectionManager;
+  private scoreManager!: ScoreManager;
 
   constructor() {
     super("GameScene");
@@ -42,6 +44,7 @@ export default class GameScene extends Phaser.Scene {
   create() {
     this.cameraManager = new CameraManager(this);
     this.uiCamera = this.cameraManager.getUICamera();
+    this.scoreManager = this.scoreManager;
 
     const centerX = this.cameras.main.centerX;
     const centerY = this.cameras.main.centerY;
