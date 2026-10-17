@@ -7,96 +7,111 @@ export default class InteractionManager {
   private organismMap: Map<string, Organism>;
   private interactions: Connection[];
 
+  private pulseWaitTime: number;
+
   constructor(
     organismMap: Map<string, Organism>,
     interactions: Connection[],
   ) {
     this.organismMap = organismMap;
     this.interactions = interactions;
+    this.pulseWaitTime = 1000
   }
 
-  public async interactionPulse(
-    startingOrganism: Organism,
-    initialRelation: number,
-  ) {
+public async interactionPulse(startingOrganism: Organism) {
     const visited = new Set<string>();
-    const queue: { id: string; pulse: number }[] = [];
-    const pulses = new Map<string, number>();
+    const queue: { id: string; depth: number }[] = [];
+    const depthGroups = new Map<number, string[]>();
 
     const startingId = startingOrganism.organismData.id;
 
+    const outgoingArrowsByOrganism = new Map<string, Connection[]>();
+    const pulseInteractions = [...this.interactions];
+
+    for (const arrow of pulseInteractions) {
+      const arrows = outgoingArrowsByOrganism.get(arrow.from) ?? [];
+
+      arrows.push(arrow);
+      outgoingArrowsByOrganism.set(arrow.from, arrows);
+    }
+
     visited.add(startingId);
-    pulses.set(startingId, initialRelation);
 
     queue.push({
       id: startingId,
-      pulse: initialRelation,
+      depth: 0,
     });
 
-    // BFS to find all connected organisms
+    // organisms get grouped by their distance from starting organism with BFS
     while (queue.length > 0) {
       const current = queue.shift();
 
       if (!current) continue;
 
-      const outgoingArrows = this.interactions.filter(
-        (arrow) => arrow.from === current.id,
-      );
+      if (!depthGroups.has(current.depth)) {
+        depthGroups.set(current.depth, []);
+      }
+
+      depthGroups.get(current.depth)!.push(current.id);
+
+      const outgoingArrows = outgoingArrowsByOrganism.get(current.id) ?? [];
 
       for (const arrow of outgoingArrows) {
         if (visited.has(arrow.to)) continue;
 
-        const relationData = getRelation(arrow.from, arrow.to);
-        const newPulse = current.pulse * relationData.value;
-
         visited.add(arrow.to);
-        pulses.set(arrow.to, newPulse);
 
         queue.push({
           id: arrow.to,
-          pulse: newPulse,
+          depth: current.depth + 1,
         });
       }
     }
 
-    // Get each incoming arrow for the connected organisms and store all changes in health for the organism
-    const healthChanges = new Map<string, number>();
+    /* 
+    do health changes depth by depth for spreading pulse effect
+    possible change if this doesn't work as wanted: snapshot every organisms previousHP here instead of in changeHealth()
+    this version means one organisms health can change multiple times during 1 pulse, 
+    without arrow animations it can look a bit confusing
+    commented out is a version where each organism changes health only once during the pulse, which without arrow animations 
+    may look a bit nicer, and is closer to the original pulse implementation, but interaction wise makes less sense
+    */
+    await new Promise((resolve) => setTimeout(resolve, this.pulseWaitTime));
+    
+    // const hasChangedHealth = new Set<string>();
+    
+    for (const [depth, organismIds] of depthGroups) {
+      const healthChanges = new Map<string, number>();
 
-    for (const [targetId] of pulses) {
-      const incomingArrows = this.interactions.filter(
-        (arrow) => arrow.to === targetId,
-      );
+      for (const sourceId of organismIds) {
+        const sourceOrganism = this.organismMap.get(sourceId);
 
-      let totalChange = 0;
+        if (!sourceOrganism) continue;
 
-      for (const arrow of incomingArrows) {
-        const sourceOrganism = this.organismMap.get(arrow.from);
-        const sourcePulse = pulses.get(arrow.from);
+        const outgoingArrows = outgoingArrowsByOrganism.get(sourceId) ?? [];
 
-        if (!sourceOrganism || sourcePulse === undefined) continue;
+        for (const arrow of outgoingArrows) {
+          const relationData = getRelation(arrow.from, arrow.to);
+          const sourceHPChange = sourceOrganism.hp - sourceOrganism.previousHP;
+          const hpChange = sourceHPChange * relationData.mult * relationData.value;
+          
+          const currentChange = healthChanges.get(arrow.to) ?? 0;
 
-        const relationData = getRelation(arrow.from, arrow.to);
+          healthChanges.set(arrow.to, currentChange + hpChange);
+        }
+      }
+      for (const [targetId, healthChange] of healthChanges) {
+        if (targetId === startingId) continue;
+        // if (hasChangedHealth.has(targetId)) continue;
 
-        totalChange +=
-          sourcePulse *
-          relationData.value *
-          relationData.mult *
-          (sourceOrganism.HP / 100);
+        const targetOrganism = this.organismMap.get(targetId);
+        if (!targetOrganism) continue;
+
+        targetOrganism.changeHealth(healthChange);
+        // hasChangedHealth.add(targetId);
       }
 
-      healthChanges.set(targetId, totalChange);
-    }
-
-    // Call changehealth once to avoid wiggling
-    for (const [targetId, totalChange] of healthChanges) {
-      const targetOrganism = this.organismMap.get(targetId);
-
-      if (!targetOrganism) continue;
-
-      await new Promise((resolve) => setTimeout(resolve, 700));
-      if (targetId !== startingId) {
-        targetOrganism.changeHealth(totalChange);
-      }
+      await new Promise((resolve) => setTimeout(resolve, this.pulseWaitTime));
     }
   }
 }

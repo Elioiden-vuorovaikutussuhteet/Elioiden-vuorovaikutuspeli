@@ -119,7 +119,7 @@ export default class ArrowManager {
         const textId = getInteractionId(first.organismData.id, second.organismData.id);
         this.scene.scene.launch("PopupScene", {textId});
         
-        const healthChange = relation * multiplier * (first.HP / 100);
+        const healthChange = 5 * multiplier * relation;
         second.changeHealth(healthChange);
         this.interactionManager.interactionPulse(second, relation);
       } else if (relation === -1 && arrowColorValue === false) {
@@ -141,7 +141,7 @@ export default class ArrowManager {
         const textId = getInteractionId(first.organismData.id, second.organismData.id);
         this.scene.scene.launch("PopupScene", {textId});
 
-        const healthChange = relation * multiplier * (first.HP / 100);
+        const healthChange = 5 * multiplier * relation;
         second.changeHealth(healthChange);
         this.interactionManager.interactionPulse(second, relation);
       }

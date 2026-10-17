@@ -18,8 +18,8 @@ export default class Organism extends Phaser.GameObjects.Sprite {
 
   public readonly nameText: Phaser.GameObjects.Text;
 
-  public HP = 100;
-
+  public hp = 100;
+  public previousHP = this.hp;
   private baseScale = 1;
 
   private duplicates: Phaser.GameObjects.Sprite[] = [];
@@ -102,7 +102,7 @@ export default class Organism extends Phaser.GameObjects.Sprite {
   public changeScale() {
     const sensitivity = 2;
 
-    const healthRatio = 1 + ((this.HP - 100) / 100) * sensitivity;
+    const healthRatio = 1 + ((this.hp - 100) / 100) * sensitivity;
 
     const newScale = this.baseScale * Math.max(0.1, healthRatio);
 
@@ -121,7 +121,7 @@ export default class Organism extends Phaser.GameObjects.Sprite {
   }
 
   private updateDuplicates() {
-    if (this.HP > (100 + this.breakpoint)) {
+    if (this.hp > (100 + this.breakpoint)) {
       const duplicate = this.scene.add.sprite(
         0,
         0,
@@ -140,7 +140,7 @@ export default class Organism extends Phaser.GameObjects.Sprite {
 
     while (
       this.duplicates.length > 0 &&
-      this.HP <= (100 + this.breakpoint / 2)
+      this.hp <= (100 + this.breakpoint / 2)
     ) {
       const duplicate = this.duplicates.pop();
 
@@ -172,7 +172,8 @@ export default class Organism extends Phaser.GameObjects.Sprite {
   public changeHealth(totalChange: number) {
     if (totalChange === 0) return;
 
-    this.HP += totalChange;
+    this.previousHP = this.hp
+    this.hp += totalChange;
 
     const particleY =
     totalChange > 0
@@ -191,8 +192,6 @@ export default class Organism extends Phaser.GameObjects.Sprite {
     if (this.organismData.growth_types.includes("grow")) {
       this.changeScale();
     }
-    console.count(`Particle callback: ${this.organismData.id}`);
-    console.log("Health change:", totalChange);
   }
   update() {}
 }
