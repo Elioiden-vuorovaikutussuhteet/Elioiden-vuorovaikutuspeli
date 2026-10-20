@@ -29,7 +29,12 @@ public async interactionPulse(startingOrganism: Organism, arrowOriginOrganism: O
     const pulseInteractions = [...this.interactions];
 
     const initialRelationData = getRelation(arrowOriginOrganism.organismData.id, startingOrganism.organismData.id);
-    const initialHealthChange = 5 * initialRelationData.mult * initialRelationData.value;
+    const initialHealthChange = 
+    5 
+    * initialRelationData.mult 
+    * initialRelationData.value 
+    * Math.sqrt(Math.max(0, arrowOriginOrganism.hp) / 100);
+    
     // call pulse animation of initial arrow here
     await new Promise((resolve) => setTimeout(resolve, this.pulseWaitTime));
     startingOrganism.changeHealth(initialHealthChange);
@@ -106,7 +111,11 @@ public async interactionPulse(startingOrganism: Organism, arrowOriginOrganism: O
         for (const arrow of outgoingArrows) {
           const relationData = getRelation(arrow.from, arrow.to);
           const sourceHPChange = sourceOrganism.hp - sourceOrganism.previousHP;
-          const hpChange = sourceHPChange * relationData.mult * relationData.value;
+          const hpChange = 
+          sourceHPChange 
+          * relationData.mult 
+          * relationData.value 
+          * Math.sqrt(Math.max(0, sourceOrganism.hp) / 100);
           
           const currentChange = healthChanges.get(arrow.to) ?? 0;
 
