@@ -44,7 +44,7 @@ export const organisms: OrganismData[] = [
   },
   {
     id: "diazotroph",
-    name: "Diazotrophic bacteria",
+    name: "Diazotrophic Bacteria",
     texture: "diazotroph_sprite",
     default_scale: 1,
     growth_types: ["multiply"],
