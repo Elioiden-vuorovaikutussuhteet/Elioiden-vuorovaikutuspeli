@@ -44,10 +44,21 @@ export default class GameScene extends Phaser.Scene {
   create() {
     this.cameraManager = new CameraManager(this);
     this.uiCamera = this.cameraManager.getUICamera();
-    this.scoreManager = this.scoreManager;
+    this.scoreManager = new ScoreManager(this, 1000);
 
     const centerX = this.cameras.main.centerX;
     const centerY = this.cameras.main.centerY;
+
+
+    //delete!!!!!
+    console.log(this.scoreManager.money);
+    this.scoreManager.getMoney();
+    console.log(this.scoreManager.money);
+    this.scoreManager.getMoney();
+    console.log(this.scoreManager.money);
+    this.scoreManager.loseMoney();
+    console.log(this.scoreManager.money);
+
 
     const organismPositions: Record<string, OrganismSpawn> = {
       acacia: { type: "acacia", x: centerX, y: centerY - 260 },
