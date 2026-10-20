@@ -2,18 +2,15 @@ import type { Connection } from "../types/Connection";
 //this one just checks connections
 
 export default class ConnectionManager {
-    private rightConnections: Connection[];
-    private interactions: Connection[];
+  private rightConnections: Connection[];
+  private interactions: Connection[];
 
-    constructor(
-        rightConnections: Connection[],
-        interactions: Connection[],
-    ){
-        this.rightConnections = rightConnections;
-        this.interactions = interactions;
-    }
+  constructor(rightConnections: Connection[], interactions: Connection[]) {
+    this.rightConnections = rightConnections;
+    this.interactions = interactions;
+  }
 
-    public checkConnections() {
+  public checkConnections() {
     //if every right connection is found in current interactions list returns true else false
     console.log(
       this.rightConnections.every((connection) =>
@@ -32,5 +29,13 @@ export default class ConnectionManager {
     }
   }
 
-
+  // returns missing right connections from interactions added by user
+  public getMissingConnections(): Connection[] {
+    return this.rightConnections.filter(
+      (right) =>
+        !this.interactions.some(
+          (y) => y.from === right.from && y.to === right.to,
+        ),
+    );
+  }
 }
