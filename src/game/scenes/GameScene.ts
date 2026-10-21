@@ -49,17 +49,6 @@ export default class GameScene extends Phaser.Scene {
     const centerX = this.cameras.main.centerX;
     const centerY = this.cameras.main.centerY;
 
-
-    //delete!!!!!
-    console.log(this.scoreManager.money);
-    this.scoreManager.getMoney();
-    console.log(this.scoreManager.money);
-    this.scoreManager.getMoney();
-    console.log(this.scoreManager.money);
-    this.scoreManager.loseMoney();
-    console.log(this.scoreManager.money);
-
-
     const organismPositions: Record<string, OrganismSpawn> = {
       acacia: { type: "acacia", x: centerX, y: centerY - 260 },
       diazotroph: { type: "diazotroph", x: centerX - 520, y: centerY - 185 },
@@ -113,6 +102,7 @@ export default class GameScene extends Phaser.Scene {
       this.interactionManager,
       this.connectionManager,
       this.organismManager,
+      this.scoreManager,
       interactions,
       organismSpawnOrder,
     );

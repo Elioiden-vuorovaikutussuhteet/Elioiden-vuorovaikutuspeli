@@ -6,6 +6,7 @@ import type { Connection } from "../types/Connection";
 import InteractionManager from "./InteractionManager";
 import ConnectionManager from "./ConnectionManager";
 import OrganismManager from "./OrganismManager";
+import { ScoreManager } from "./ScoreManager";
 import { getInteractionId } from "../data/popupTexts";
 
 export interface OrganismSpawn {
@@ -22,6 +23,7 @@ export default class ArrowManager {
   private interactionManager!: InteractionManager;
   private connectionManager!: ConnectionManager;
   private organismManager!: OrganismManager;
+  private scoreManager!: ScoreManager;
 
   private permanentArrows!: Phaser.GameObjects.Graphics;
   private previewArrow!: Phaser.GameObjects.Graphics;
@@ -47,6 +49,7 @@ export default class ArrowManager {
     interactionManager: InteractionManager,
     connectionManager: ConnectionManager,
     organismManager: OrganismManager,
+    scoreManager: ScoreManager,
     interactions: Connection[],
     organismSpawnOrder: OrganismSpawn[] = this.defaultOrganismSpawnOrder,
   ) {
@@ -65,6 +68,7 @@ export default class ArrowManager {
     this.interactionManager = interactionManager;
     this.connectionManager = connectionManager;
     this.organismManager = organismManager;
+    this.scoreManager = scoreManager;
 
     this.interactions = interactions;
     this.organismSpawnOrder = organismSpawnOrder;
@@ -118,7 +122,8 @@ export default class ArrowManager {
         //finds popup text from data/popuptexts.ts and launches the window
         const textId = getInteractionId(first.organismData.id, second.organismData.id);
         this.scene.scene.launch("PopupScene", {textId});
-        
+        this.scoreManager.getMoney();
+
         const healthChange = relation * multiplier * (first.HP / 100);
         second.changeHealth(healthChange);
         this.interactionManager.interactionPulse(second, relation);
@@ -140,10 +145,14 @@ export default class ArrowManager {
         //finds popup text from data/popuptexts.ts and launches the window
         const textId = getInteractionId(first.organismData.id, second.organismData.id);
         this.scene.scene.launch("PopupScene", {textId});
+        this.scoreManager.getMoney();
 
         const healthChange = relation * multiplier * (first.HP / 100);
         second.changeHealth(healthChange);
         this.interactionManager.interactionPulse(second, relation);
+      } else {
+        // lose money if wrong guess
+        this.scoreManager.loseMoney();
       }
     }
 

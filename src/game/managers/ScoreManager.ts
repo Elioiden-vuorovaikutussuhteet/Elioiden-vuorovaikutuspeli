@@ -22,20 +22,17 @@ export class ScoreManager {
         )
         this.scene.cameras.main.ignore(this.moneyText);
     }
- //rightGuess
+
     getMoney(): void {
         this.money += 10;
         this.updateText();
     }
-//wrongQuess
+
     loseMoney(): void{
         this.money -= 20;
         this.updateText();
     }
-//  useHint(): void{
-//      this.money -= 75;
-//      this.update.Text();
-//}
+
     private updateText(): void {
         this.moneyText.setText(this.money.toString())
     }
