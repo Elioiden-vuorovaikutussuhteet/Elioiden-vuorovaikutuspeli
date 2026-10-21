@@ -36,4 +36,4 @@ export class ScoreManager {
         this.moneyText.setText(this.money.toString())
     }
 }
-}
+
