@@ -16,7 +16,10 @@ https://eliopeli-staging.ext.ocp-test-0.k8s.it.helsinki.fi/
 
 ## Docker image
 
-https://hub.docker.com/r/eliopeli/eliopeli
+https://github.com/orgs/Elioiden-vuorovaikutussuhteet/packages/container/package/elioiden-vuorovaikutuspeli
+
+## Run with Docker
+Docker-ohjeet tähän
 
 ## Local
 
