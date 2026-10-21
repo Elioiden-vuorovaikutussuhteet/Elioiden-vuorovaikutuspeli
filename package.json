@@ -18,7 +18,8 @@
   "dependencies": {
     "phaser": "^4.2.1",
     "react": "^19.2.8",
-    "react-dom": "^19.2.8"
+    "react-dom": "^19.2.8",
+    "d3-force": "^3.0.0"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
@@ -39,6 +40,7 @@
     "vite": "^8.2.2",
     "vitest": "^5.0.0",
     "vitest-canvas-mock": "^1.2.0",
-    "vitest-mock-extended": "^5.1.1"
+    "vitest-mock-extended": "^5.1.1",
+    "@types/d3-force": "^3.0.10"
   }
 }
