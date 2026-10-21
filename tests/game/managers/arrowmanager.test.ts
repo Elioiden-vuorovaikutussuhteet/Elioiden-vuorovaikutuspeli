@@ -9,6 +9,7 @@ import ArrowManager from "../../../src/game/managers/ArrowManager";
 import InteractionManager from "../../../src/game/managers/InteractionManager";
 import ConnectionManager from "../../../src/game/managers/ConnectionManager";
 import OrganismManager from "../../../src/game/managers/OrganismManager";
+import { ScoreManager } from "../../../src/game/managers/ScoreManager";
 
 const {
   MockOrganism,
@@ -143,6 +144,13 @@ describe("GameScene", () => {
         start: vi.fn(),
         stop: vi.fn(),
         destroy: vi.fn(),
+      }),
+
+      text: vi.fn().mockReturnValue({
+      setText: vi.fn(),
+      setOrigin: vi.fn(),
+      setDepth: vi.fn(),
+      destroy: vi.fn(),
       }),
     });
   });
@@ -285,6 +293,7 @@ describe("ArrowManager interactions", () => {
   let interactionManager: InteractionManager;
   let connectionManager: ConnectionManager;
   let organismManager: OrganismManager;
+  let scoreManager: ScoreManager;
   let interactions: any[];
   let permanentArrows: any;
   let previewArrow: any;
@@ -347,6 +356,12 @@ describe("ArrowManager interactions", () => {
       createOrganism: vi.fn(),
     } as unknown as OrganismManager;
 
+    scoreManager = {
+      money: 1000,
+      getMoney: vi.fn(),
+      loseMoney: vi.fn(),
+    } as unknown as ScoreManager;
+
     interactions = [];
     arrowManager = new ArrowManager(
       scene,
@@ -354,6 +369,7 @@ describe("ArrowManager interactions", () => {
       interactionManager,
       connectionManager,
       organismManager,
+      scoreManager,
       interactions,
     );
 

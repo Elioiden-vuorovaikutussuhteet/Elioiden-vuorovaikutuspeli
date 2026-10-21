@@ -102,6 +102,7 @@ export default class GameScene extends Phaser.Scene {
       this.interactionManager,
       this.connectionManager,
       this.organismManager,
+      this.scoreManager,
       interactions,
       organismSpawnOrder,
     );
