@@ -320,6 +320,9 @@ describe("ArrowManager interactions", () => {
     (scene as any).uiCamera = {
       ignore: vi.fn(),
     };
+    (scene as any).scene = {
+      launch: vi.fn(),
+    };
 
     (scene as any).add = {
       graphics: vi
@@ -396,6 +399,10 @@ describe("ArrowManager interactions", () => {
     expect(permanentArrows.lineBetween).toHaveBeenCalled();
     expect(permanentArrows.fillTriangle).toHaveBeenCalled();
     expect((scene as any).selectedOrganism).toBeNull();
+    expect((scene as any).scene.launch).toHaveBeenCalledWith(
+      "PopupScene",
+      { textId: "tree-shroom" },
+    );
   });
 
   it("luo negatiiviselle vuorovaikutukselle punaisen nuolen", () => {
@@ -411,6 +418,10 @@ describe("ArrowManager interactions", () => {
     arrowManager.arrowChecker(second);
 
     expect(permanentArrows.lineStyle).toHaveBeenCalledWith(4, 0xed0924);
+    expect((scene as any).scene.launch).toHaveBeenCalledWith(
+      "PopupScene",
+      { textId: "tree-ant" },
+    );
   });
 
   it("ei lisää samaa vuorovaikutusta kahdesti", () => {
