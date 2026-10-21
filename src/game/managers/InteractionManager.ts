@@ -51,7 +51,20 @@ public async interactionPulse(startingOrganism: Organism, arrowOriginOrganism: O
 
       arrows.push(arrow);
       outgoingArrowsByOrganism.set(arrow.from, arrows);
-}
+    }
+
+    // remove the initial opposing arrow if one exists
+    const initialOutgoingArrows = outgoingArrowsByOrganism.get(startingId);
+
+    if (initialOutgoingArrows) {
+      const index = initialOutgoingArrows.findIndex(
+        (arrow) => arrow.to === arrowOriginOrganism.organismData.id
+      );
+
+      if (index !== -1) {
+        initialOutgoingArrows.splice(index, 1);
+      }
+    }
 
     visited.add(startingId);
 
@@ -78,6 +91,19 @@ public async interactionPulse(startingOrganism: Organism, arrowOriginOrganism: O
         if (visited.has(arrow.to)) continue;
 
         visited.add(arrow.to);
+
+        // remove the opposing arrow if one exists
+        const reverseArrows = outgoingArrowsByOrganism.get(arrow.to);
+
+        if (reverseArrows) {
+          const reverseIndex = reverseArrows.findIndex(
+            (a) => a.to === current.id
+          );
+
+          if (reverseIndex !== -1) {
+            reverseArrows.splice(reverseIndex, 1);
+          }
+        }
 
         queue.push({
           id: arrow.to,
