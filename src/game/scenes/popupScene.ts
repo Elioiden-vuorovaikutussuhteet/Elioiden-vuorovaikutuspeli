@@ -62,16 +62,47 @@ export default class PopupScene extends Phaser.Scene {
             menuHeight,
             30,
         );
-
-
+        //Title text 
         this.add.text(
             menuX + menuWidth / 2,
-            menuY + menuHeight * 0.15,
-            this.popupData.description,
+            menuY + menuHeight * 0.05,
+            this.popupData.title,
             {
                 fontFamily: "monospace",
                 fontSize: `${Math.min(width * 0.015, 25)}px`,
                 fontStyle: "bold",
+                color: "#ffffff",
+                wordWrap: {
+                    width: menuWidth * 0.8,
+                },
+                align: "center",
+            },
+        ).setOrigin(0.5, 0)
+        //Relation text
+        this.add.text(
+            menuX + menuWidth / 2,
+            menuY + menuHeight * 0.15,
+            this.popupData.relation,
+            {
+                fontFamily: "monospace",
+                fontSize: `${Math.min(width * 0.015, 25)}px`,
+                fontStyle: "bold",
+                color: "#ffffff",
+                wordWrap: {
+                    width: menuWidth * 0.8,
+                },
+                align: "center",
+            },
+        ).setOrigin(0.5, 0)
+        //Description text
+        this.add.text(
+            menuX + menuWidth / 2,
+            menuY + menuHeight * 0.25,
+            this.popupData.description,
+            {
+                fontFamily: "monospace",
+                fontSize: `${Math.min(width * 0.015, 25)}px`,
+                fontStyle: "",
                 color: "#ffffff",
                 wordWrap: {
                     width: menuWidth * 0.8,
