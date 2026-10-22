@@ -110,8 +110,9 @@ export default class ArrowManager {
   private nextOrganismToSpawn = 0;
 
   // Dynamic d3-force state & configuration
-  private forceConfig: ForceLayoutConfig;
-  private simulation!: Simulation<ForceNode, ForceLink>;
+  private forceConfig: ForceLayoutConfig = { ...DEFAULT_FORCE_CONFIG };
+  private simulation: Simulation<ForceNode, ForceLink>;
+  private linkForce = forceLink<ForceNode, ForceLink>([]).id((d) => d.id);
   private forceNodes: ForceNode[] = [];
   private forceLinks: ForceLink[] = [];
   private knownOrganisms = new Map<string, Organism>();
@@ -128,7 +129,23 @@ export default class ArrowManager {
   ) {
     this.scene = scene;
     this.uiCamera = uiCamera;
+    this.interactionManager = interactionManager;
+    this.connectionManager = connectionManager;
+    this.organismManager = organismManager;
+    this.interactions = interactions;
+    this.organismSpawnOrder = organismSpawnOrder.map((o) => ({ ...o }));
 
+    this.initGraphics();
+
+    this.simulation = forceSimulation<ForceNode, ForceLink>([]).stop();
+    this.setForceConfig(forceConfig);
+
+    if (import.meta.env?.DEV && typeof window !== "undefined") {
+      (window as unknown as Record<string, unknown>).arrowManager = this;
+    }
+  }
+
+  private initGraphics() {
     this.permanentArrows = this.scene.add.graphics();
     this.previewArrow = this.scene.add.graphics();
 
@@ -137,93 +154,30 @@ export default class ArrowManager {
 
     this.uiCamera.ignore(this.permanentArrows);
     this.uiCamera.ignore(this.previewArrow);
-
-    this.interactionManager = interactionManager;
-    this.connectionManager = connectionManager;
-    this.organismManager = organismManager;
-
-    this.interactions = interactions;
-    this.organismSpawnOrder = organismSpawnOrder.map((o) => ({ ...o }));
-    this.forceConfig = { ...DEFAULT_FORCE_CONFIG, ...forceConfig };
-
-    this.initForceSimulation();
-
-    // Expose to browser console in dev mode for live tuning: window.arrowManager.setForceConfig({})
-    if (import.meta.env?.DEV && typeof window !== "undefined") {
-      (window as unknown as Record<string, unknown>).arrowManager = this;
-    }
-  }
-
-  private initForceSimulation() {
-    const cfg = this.forceConfig;
-
-    this.simulation = forceSimulation<ForceNode, ForceLink>([])
-      .force(
-        "link",
-        forceLink<ForceNode, ForceLink>([])
-          .id((d) => d.id)
-          .distance(cfg.linkDistance)
-          .strength(cfg.linkStrength),
-      )
-      .force("charge", forceManyBody<ForceNode>().strength(cfg.chargeStrength))
-      .force(
-        "center",
-        forceCenter<ForceNode>(cfg.centerX, cfg.centerY).strength(
-          cfg.centerStrength,
-        ),
-      )
-      .force(
-        "collide",
-        forceCollide<ForceNode>(cfg.collideRadius).strength(
-          cfg.collideStrength,
-        ),
-      )
-      .alphaDecay(cfg.alphaDecay)
-      .stop();
-
-    this.recalculateLayout();
   }
 
   /**
-   * Update force parameters at runtime and wake up the simulation so organisms adjust immediately.
+   * Apply force parameters and wake up the simulation.
    */
   public setForceConfig(newConfig: Partial<ForceLayoutConfig>) {
     this.forceConfig = { ...this.forceConfig, ...newConfig };
     const cfg = this.forceConfig;
 
-    const linkForce =
-      this.simulation.force<ReturnType<typeof forceLink<ForceNode, ForceLink>>>(
-        "link",
-      );
-    if (linkForce) {
-      linkForce.distance(cfg.linkDistance).strength(cfg.linkStrength);
-    }
+    this.linkForce.distance(cfg.linkDistance).strength(cfg.linkStrength);
 
-    const chargeForce =
-      this.simulation.force<ReturnType<typeof forceManyBody<ForceNode>>>(
-        "charge",
-      );
-    if (chargeForce) {
-      chargeForce.strength(cfg.chargeStrength);
-    }
-
-    const centerForce =
-      this.simulation.force<ReturnType<typeof forceCenter<ForceNode>>>(
+    this.simulation
+      .force("link", this.linkForce)
+      .force("charge", forceManyBody<ForceNode>().strength(cfg.chargeStrength))
+      .force(
         "center",
-      );
-    if (centerForce) {
-      centerForce.x(cfg.centerX).y(cfg.centerY).strength(cfg.centerStrength);
-    }
-
-    const collideForce =
-      this.simulation.force<ReturnType<typeof forceCollide<ForceNode>>>(
+        forceCenter<ForceNode>(cfg.centerX, cfg.centerY).strength(cfg.centerStrength),
+      )
+      .force(
         "collide",
-      );
-    if (collideForce) {
-      collideForce.radius(cfg.collideRadius).strength(cfg.collideStrength);
-    }
+        forceCollide<ForceNode>(cfg.collideRadius).strength(cfg.collideStrength),
+      )
+      .alphaDecay(cfg.alphaDecay);
 
-    this.simulation.alphaDecay(cfg.alphaDecay);
     this.recalculateLayout();
     this.redrawPermanentArrows();
   }
@@ -233,70 +187,62 @@ export default class ArrowManager {
   }
 
   /**
-   * Syncs active organisms and connections into d3-force and wakes up the physics loop.
+   * Sync active organisms and connections into d3-force 
    */
   public recalculateLayout() {
-    const activeOrganisms = this.getActiveOrganisms();
+    this.forceNodes = this.syncForceNodes();
+    this.forceLinks = this.buildForceLinks();
 
-    // Preserve velocity and position state for already-tracked organisms, add newly spawned ones
-    const existingNodeMap = new Map(this.forceNodes.map((n) => [n.id, n]));
-    this.forceNodes = activeOrganisms.map((org) => {
-      this.knownOrganisms.set(org.organismData.id, org);
-      const existing = existingNodeMap.get(org.organismData.id);
-      if (existing) {
-        existing.organism = org;
-        existing.x = org.x;
-        existing.y = org.y;
-        return existing;
-      }
-      return {
-        id: org.organismData.id,
-        organism: org,
-        x: org.x,
-        y: org.y,
-      };
+    this.simulation.nodes(this.forceNodes);
+    this.linkForce.links(this.forceLinks);
+    this.simulation.alpha(this.forceConfig.reheatAlpha);
+  }
+
+  private syncForceNodes(): ForceNode[] {
+    const existingById = new Map(this.forceNodes.map((n) => [n.id, n]));
+
+    return this.getActiveOrganisms().map((organism) => {
+      const id = organism.organismData.id;
+      const existing = existingById.get(id);
+
+      return existing
+        ? Object.assign(existing, { organism, x: organism.x, y: organism.y })
+        : { id, organism, x: organism.x, y: organism.y };
     });
+  }
 
-    // Build links from both drawn interactions AND valid relations between active organisms
-    this.forceLinks = [];
+  private buildForceLinks(): ForceLink[] {
+    const links: ForceLink[] = [];
+
     for (let i = 0; i < this.forceNodes.length; i++) {
       for (let j = i + 1; j < this.forceNodes.length; j++) {
         const idA = this.forceNodes[i].id;
         const idB = this.forceNodes[j].id;
 
-        const isConnected = this.interactions.some(
-          (conn) =>
-            (conn.from === idA && conn.to === idB) ||
-            (conn.from === idB && conn.to === idA),
-        );
-
-        const hasValidRelation =
-          (getRelation(idA, idB)?.value ?? 0) !== 0 ||
-          (getRelation(idB, idA)?.value ?? 0) !== 0;
-
-        if (isConnected || hasValidRelation) {
-          this.forceLinks.push({ source: idA, target: idB });
+        if (this.hasRelation(idA, idB)) {
+          links.push({ source: idA, target: idB });
         }
       }
     }
 
-    // Update simulation data and re-heat alpha (energy) so nodes glide smoothly
-    this.simulation.nodes(this.forceNodes);
-    const linkForce =
-      this.simulation.force<ReturnType<typeof forceLink<ForceNode, ForceLink>>>(
-        "link",
-      );
-    if (linkForce) {
-      linkForce.links(this.forceLinks);
-    }
+    return links;
+  }
 
-    this.simulation.alpha(this.forceConfig.reheatAlpha).restart();
-    this.simulation.stop(); // Keep tick control inside update()
+  private hasRelation(idA: string, idB: string): boolean {
+    return (
+      (getRelation(idA, idB)?.value ?? 0) !== 0 ||
+      (getRelation(idB, idA)?.value ?? 0) !== 0 ||
+      this.interactions.some(
+        (c) =>
+          (c.from === idA && c.to === idB) ||
+          (c.from === idB && c.to === idA),
+      )
+    );
   }
 
   /**
-   * Retrieves currently spawned Organism instances from OrganismManager,
-   * falling back to knownOrganisms so mocked unit tests still work .
+   * Retrieve currently spawned Organism instances from OrganismManager,
+   * falling back to knownOrganisms so mocked unit tests work .
    */
   private getActiveOrganisms(): Organism[] {
     const manager = this.organismManager as unknown as {
@@ -420,7 +366,7 @@ export default class ArrowManager {
       )?.value;
       const isPositive = relation === 1;
       const color = isPositive ? 0x064f15 : 0xed0924;
-      const thickness = isPositive ? 40 : 4;
+      const thickness = isPositive ? 8 : 4;
 
       const dx = second.x - first.x;
       const dy = second.y - first.y;
