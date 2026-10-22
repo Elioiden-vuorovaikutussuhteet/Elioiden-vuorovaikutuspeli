@@ -75,8 +75,6 @@ interface ForceNode extends SimulationNodeDatum {
   organism: Organism;
   x: number;
   y: number;
-  prevY?: number;
-  prevX?: number;
 }
 
 interface ForceLink extends SimulationLinkDatum<ForceNode> {
@@ -492,30 +490,10 @@ export default class ArrowManager {
           worldHeight - padding,
         );
 
-        //Calculate delta from the previous coordinate
-        const prevX = node.prevX ?? clampedX;
-        const prevY = node.prevY ?? clampedY;
-        const deltaX = clampedX - prevX;
-        const deltaY = clampedY - prevY;
-
         node.x = clampedX;
         node.y = clampedY;
-        node.prevX = clampedX;
-        node.prevY = clampedY;
-
-        //Move the organism
         node.organism.setPosition(clampedX, clampedY);
 
-        //Move the text and duplicates smoothly too from their previous position based on delta
-        const label = (node.organism as unknown as { nameText?: Phaser.GameObjects.Text }).nameText;
-        if (label) {
-          label.y += deltaY;
-          label.x = clampedX;
-        }
-        const duplicateContainer = node.organism.getDuplicateContainer();
-        duplicateContainer.x += deltaX
-        duplicateContainer.y += deltaY
-        
       }
     }
 
