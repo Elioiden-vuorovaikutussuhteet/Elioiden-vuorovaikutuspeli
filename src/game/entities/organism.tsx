@@ -168,6 +168,9 @@ export default class Organism extends Phaser.GameObjects.Sprite {
     });
   }
 
+  public getDuplicateContainer() {
+    return this.duplicateContainer;
+  }
 
   public changeHealth(totalChange: number) {
     if (totalChange === 0) return;
