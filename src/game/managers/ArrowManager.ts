@@ -54,18 +54,18 @@ export interface ForceLayoutConfig {
 
 // These can be edited for arrow force configuration
 export const DEFAULT_FORCE_CONFIG: ForceLayoutConfig = {
-  linkDistance: 380,
-  linkStrength: 0.6,
-  chargeStrength: -1500,
-  collideRadius: 160,
+  linkDistance: 260,
+  linkStrength: 0.9,
+  chargeStrength: -1000,
+  collideRadius: 180,
   collideStrength: 0.9,
   centerX: 800,
   centerY: 500,
   centerStrength: 0.08,
   alphaDecay: 0.03,
   reheatAlpha: 0.5,
-  worldWidth: 1600,
-  worldHeight: 1000,
+  worldWidth: 1920,
+  worldHeight: 1080,
   padding: 150,
   arrowTargetOffset: 65,
 };
@@ -366,7 +366,16 @@ export default class ArrowManager {
       )?.value;
       const isPositive = relation === 1;
       const color = isPositive ? 0x064f15 : 0xed0924;
-      const thickness = isPositive ? 8 : 4;
+      const thickness = isPositive ? 8 : 8;
+
+      // Check if there is an opposing arrow (B -> A)
+      const isBidirectional = this.interactions.some(
+        (other) =>
+          other.from === interaction.to && other.to === interaction.from,
+      );
+
+      // If bidirectional shift sideways by 25px
+      const lateralOffset = isBidirectional ? 25 : 0;
 
       const dx = second.x - first.x;
       const dy = second.y - first.y;
@@ -383,6 +392,7 @@ export default class ArrowManager {
         targetY,
         color,
         thickness,
+        lateralOffset, 
       );
     }
   }
@@ -395,6 +405,7 @@ export default class ArrowManager {
     y2: number,
     color: number,
     thickness: number,
+    lateralOffset: number = 0, // 0 = center line, >0 = shifted right
   ) {
     const dx = x2 - x1;
     const dy = y2 - y1;
@@ -410,11 +421,17 @@ export default class ArrowManager {
     const pdx = -udy;
     const pdy = udx;
 
+    // Apply lateral lane shift 
+    const sx1 = x1 + pdx * lateralOffset;
+    const sy1 = y1 + pdy * lateralOffset;
+    const sx2 = x2 + pdx * lateralOffset;
+    const sy2 = y2 + pdy * lateralOffset;
+
     // Arrowhead base vertices
-    const x3 = x2 - 20 * udx + 15 * pdx;
-    const y3 = y2 - 20 * udy + 15 * pdy;
-    const x4 = x2 - 20 * udx - 15 * pdx;
-    const y4 = y2 - 20 * udy - 15 * pdy;
+    const x3 = sx2 - 20 * udx + 15 * pdx;
+    const y3 = sy2 - 20 * udy + 15 * pdy;
+    const x4 = sx2 - 20 * udx - 15 * pdx;
+    const y4 = sy2 - 20 * udy - 15 * pdy;
 
     this.uiCamera.ignore(this.previewArrow);
     this.uiCamera.ignore(this.permanentArrows);
@@ -422,8 +439,8 @@ export default class ArrowManager {
     graphics.lineStyle(thickness, color);
     graphics.fillStyle(color, 1);
 
-    graphics.lineBetween(x1, y1, x2 - 15 * udx, y2 - 15 * udy);
-    graphics.fillTriangle(x2, y2, x3, y3, x4, y4);
+    graphics.lineBetween(sx1, sy1, sx2 - 15 * udx, sy2 - 15 * udy);
+    graphics.fillTriangle(sx2, sy2, x3, y3, x4, y4);
   }
 
   public createArrowButtons(centerY: number) {
