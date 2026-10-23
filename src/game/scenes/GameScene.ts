@@ -115,7 +115,8 @@ export default class GameScene extends Phaser.Scene {
     );
 
     this.scoreManager.outOfMoney = () => {
-      this.gameOver();
+      this.scene.pause()
+      this.scene.launch("GameOverScene");
     };
 
     //Eventlistener for: If players clicks on empty space, preview arrow disappears
@@ -162,8 +163,4 @@ export default class GameScene extends Phaser.Scene {
     this.cameraManager.update();
     this.arrowManager.update();
   }
-
-  gameOver(): void{
-    console.log("!! Game Over !!");
-  };
 }
