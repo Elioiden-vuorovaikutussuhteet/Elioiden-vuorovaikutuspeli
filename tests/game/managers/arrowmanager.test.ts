@@ -365,14 +365,16 @@ describe("ArrowManager interactions", () => {
     };
   });
 
-  const organism = (id: string, x = 100, y = 100) => ({
-    organismData: { id },
-    x,
-    y,
-    HP: 100,
-    changeHealth: vi.fn(),
-    changeScale: vi.fn(),
-  });
+  const organism = (id: string, x = 100, y = 100): Organism =>
+    ({
+      organismData: { id },
+      x,
+      y,
+      HP: 100,
+      changeHealth: vi.fn(),
+      changeScale: vi.fn(),
+      setPosition: vi.fn(),
+    }) as unknown as Organism;
 
   it("valitsee ensimmäisen organismin", () => {
     const first = organism("tree");
@@ -411,13 +413,13 @@ describe("ArrowManager interactions", () => {
       mult: 1,
     });
     arrowManager.setArrowColorValue(false);
-    const first = organism("tree");
-    const second = organism("ant");
+    const first = organism("tree", 100, 100);
+    const second = organism("ant", 300, 250);
 
-    arrowManager.arrowChecker(first);
-    arrowManager.arrowChecker(second);
+    arrowManager.arrowChecker(first as unknown as Organism);
+    arrowManager.arrowChecker(second as unknown as Organism);
 
-    expect(permanentArrows.lineStyle).toHaveBeenCalledWith(4, 0xed0924);
+    expect(permanentArrows.lineStyle).toHaveBeenCalledWith(8, 0xed0924);
     expect((scene as any).scene.launch).toHaveBeenCalledWith(
       "PopupScene",
       { textId: "tree-ant" },

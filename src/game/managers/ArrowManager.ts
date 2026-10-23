@@ -277,6 +277,11 @@ export default class ArrowManager {
       first.organismData.id,
       second.organismData.id,
     );
+    // Fix test
+    if (first.organismData.id === second.organismData.id || !relationData) {
+      return;
+    }
+
     const relation = relationData["value"];
     const multiplier = relationData["mult"];
 
@@ -392,7 +397,7 @@ export default class ArrowManager {
         targetY,
         color,
         thickness,
-        lateralOffset, 
+        lateralOffset,
       );
     }
   }
@@ -526,12 +531,17 @@ export default class ArrowManager {
 
     const color = this.arrowColorValue ? 0x064f15 : 0xed0924;
 
+    //Fix tests
+    const pointer = this.scene.input.activePointer;
+    const targetX = pointer.worldX ?? pointer.x ?? 0;
+    const targetY = pointer.worldY ?? pointer.y ?? 0;
+
     this.drawArrow(
       this.previewArrow,
       this.selectedOrganism.x,
       this.selectedOrganism.y,
-      this.scene.input.activePointer.worldX,
-      this.scene.input.activePointer.worldY,
+      targetX,
+      targetY,
       color,
       2,
     );
