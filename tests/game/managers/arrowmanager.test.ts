@@ -606,7 +606,7 @@ describe("ArrowManager interactions", () => {
     arrowManager.arrowChecker(second);
     arrowManager.arrowChecker(first);
 
-    expect(permanentArrows.lineBetween).toHaveBeenCalledTimes(2);
+    expect(permanentArrows.lineBetween).toHaveBeenCalledTimes(3);
 
     const [firstLaneCall, secondLaneCall] = permanentArrows.lineBetween.mock.calls;
     const lane1StartY = firstLaneCall[1];
