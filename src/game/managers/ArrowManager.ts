@@ -135,6 +135,7 @@ export default class ArrowManager {
     this.interactionManager = interactionManager;
     this.connectionManager = connectionManager;
     this.organismManager = organismManager;
+    this.scoreManager = scoreManager;
     this.interactions = interactions;
     this.organismSpawnOrder = organismSpawnOrder.map((o) => ({ ...o }));
 
@@ -180,11 +181,6 @@ export default class ArrowManager {
         forceCollide<ForceNode>(cfg.collideRadius).strength(cfg.collideStrength),
       )
       .alphaDecay(cfg.alphaDecay);
-    
-    this.interactionManager = interactionManager;
-    this.connectionManager = connectionManager;
-    this.organismManager = organismManager;
-    this.scoreManager = scoreManager;
 
     this.recalculateLayout();
     this.redrawPermanentArrows();
@@ -287,6 +283,7 @@ export default class ArrowManager {
     );
     // Fix test
     if (first.organismData.id === second.organismData.id || !relationData) {
+      this.clearPreview();
       return;
     }
 
@@ -296,6 +293,7 @@ export default class ArrowManager {
     const arrowColorValue = this.getArrowColorValue();
 
     if (first.organismData.id === second.organismData.id) {
+      this.selectedOrganism = null;
       return;
     }
 
@@ -308,10 +306,16 @@ export default class ArrowManager {
       )
     ) {
       // relation is positive = green(0x064f15), bad = red(0xed0924)
-      if (
-        (relation === 1 && arrowColorValue === true) ||
-        (relation === -1 && arrowColorValue === false)
-      ) {
+      if (relation === 1 && arrowColorValue === true) {
+        this.drawArrow(
+          this.getPermanentArrows(),
+          first.x,
+          first.y,
+          this.scene.input.activePointer.worldX,
+          this.scene.input.activePointer.worldY,
+          0x064f15,
+          4,
+        );
         this.interactions.push({
           from: first.organismData.id,
           to: second.organismData.id,
@@ -325,6 +329,8 @@ export default class ArrowManager {
         const healthChange = relation * multiplier * (first.HP / 100);
         second.changeHealth(healthChange);
         this.interactionManager.interactionPulse(second, relation);
+        this.recalculateLayout();
+
       } else if (relation === -1 && arrowColorValue === false) {
         this.drawArrow(
           this.getPermanentArrows(),
@@ -348,8 +354,8 @@ export default class ArrowManager {
         const healthChange = relation * multiplier * (first.HP / 100);
         second.changeHealth(healthChange);
         this.interactionManager.interactionPulse(second, relation);
-
-        this.recalculateLayout();
+        
+        
       } else {
         // lose money if wrong guess
         this.scoreManager.loseMoney();
