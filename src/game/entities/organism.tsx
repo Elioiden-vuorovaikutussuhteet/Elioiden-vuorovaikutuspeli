@@ -23,7 +23,7 @@ export default class Organism extends Phaser.GameObjects.Sprite {
   private baseScale = 1;
 
   private duplicates: Phaser.GameObjects.Sprite[] = [];
-  private duplicateContainer: Phaser.GameObjects.Container;
+  public duplicateContainer: Phaser.GameObjects.Container;
   private breakpoint = 2;
 
   private onHealthChanged?: (
