@@ -33,12 +33,30 @@ export default class GameOverScene extends Phaser.Scene {
     );
 
     this.add
-      .text(centerX, centerY, "GAME OVER", {
+      .text(centerX, centerY - 30, "GAME OVER", {
         fontFamily: "monospace",
         fontSize: "30px",
         fontStyle: "bold",
         color: "#ffffff",
       })
       .setOrigin(0.5);
+
+    const againButton = this.add
+      .zone(centerX, centerY + 30, menuWidth, menuHeight)
+      .setInteractive();
+
+    this.add
+      .text(centerX, centerY + 30, "Take another 1000 and try again", {
+        fontFamily: "monospace",
+        fontSize: "20px",
+        fontStyle: "bold",
+        color: "#fffff0",
+      })
+      .setOrigin(0.5);
+
+    againButton.on("pointerdown", () => {
+      this.scene.stop();
+      this.scene.start("GameScene")
+    });
   }
 }
