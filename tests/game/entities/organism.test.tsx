@@ -1,7 +1,5 @@
 import "vitest-canvas-mock";
-import { mockDeep } from "vitest-mock-extended";
-import { beforeEach, describe, expect, it, vi } from "vitest";
-import Phaser from "phaser";
+import {describe, expect, it, vi } from "vitest";
 import Organism, { getOrganismData } from "../../../src/game/entities/organism";
 
 describe("getOrganismData", () => {
@@ -21,7 +19,7 @@ describe("getOrganismData", () => {
 
 describe("Organism", () => {
   function createOrganismStub() {
-    // Create an Organism without calling its constructor.
+    // Create an Organism without calling its constructor
     const organism = Object.create(Organism.prototype) as Organism;
 
     const nameText = {
@@ -44,7 +42,7 @@ describe("Organism", () => {
       ignoreDestroy: true,
     });
 
-    // Avoid relying on Phaser's displayHeight calculation.
+    // Avoid relying on Phaser displayHeight calculation
     Object.defineProperty(organism, "displayHeight", {
       configurable: true,
       value: 100,
@@ -54,28 +52,20 @@ describe("Organism", () => {
   }
 
   it("updates nameText and duplicateContainer positions when setPosition is called", () => {
-    const { organism, nameText, duplicateContainer } =
-      createOrganismStub();
+    const { organism, nameText, duplicateContainer } = createOrganismStub();
 
     organism.setPosition(450, 600);
 
     expect(organism.x).toBe(450);
     expect(organism.y).toBe(600);
 
-    expect(duplicateContainer.setPosition).toHaveBeenCalledWith(
-      450,
-      600,
-    );
+    expect(duplicateContainer.setPosition).toHaveBeenCalledWith(450, 600);
 
-    expect(nameText.setPosition).toHaveBeenCalledWith(
-      450,
-      600 + organism.displayHeight / 2 + 20,
-    );
+    expect(nameText.setPosition).toHaveBeenCalledWith(450, 600 + organism.displayHeight / 2 + 20);
   });
 
   it("destroys nameText and duplicateContainer when destroyed", () => {
-    const { organism, nameText, duplicateContainer } =
-      createOrganismStub();
+    const { organism, nameText, duplicateContainer } = createOrganismStub();
 
     organism.destroy(true);
 
