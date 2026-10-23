@@ -3,14 +3,14 @@ import { organisms } from "../data/organisms";
 import type { OrganismData } from "../data/organisms";
 
 export function getOrganismData(type: string) {
-    const data = organisms.find((item) => item.id === type);
-    // Get the specific organisms data from organisms.ts based on the type used in constructor
-    
-    if (!data) {
-        throw new Error(`Organism type "${type}" not found`);
-    }
-    
-    return data;
+  const data = organisms.find((item) => item.id === type);
+  // Get the specific organisms data from organisms.ts based on the type used in constructor
+
+  if (!data) {
+    throw new Error(`Organism type "${type}" not found`);
+  }
+
+  return data;
 }
 
 export default class Organism extends Phaser.GameObjects.Sprite {
@@ -23,7 +23,7 @@ export default class Organism extends Phaser.GameObjects.Sprite {
   private baseScale = 1;
 
   private duplicates: Phaser.GameObjects.Sprite[] = [];
-  private duplicateContainer: Phaser.GameObjects.Container;
+  public duplicateContainer: Phaser.GameObjects.Container;
   private breakpoint = 2;
 
   private onHealthChanged?: (
@@ -39,10 +39,10 @@ export default class Organism extends Phaser.GameObjects.Sprite {
     type = "acacia",
     uiCamera?: Phaser.Cameras.Scene2D.Camera,
     onHealthChanged?: (x: number, y: number, amount: number) => void,
-    ) {
+  ) {
 
     super(scene, x, y, getOrganismData(type).texture);
-    
+
     const organismData = getOrganismData(type);
 
     this.onHealthChanged = onHealthChanged;
@@ -51,11 +51,11 @@ export default class Organism extends Phaser.GameObjects.Sprite {
     if (uiCamera) {
       uiCamera.ignore(this.duplicateContainer);
     }
-    
+
     this.organismData = organismData;
 
     this.baseScale = organismData.default_scale;
-    
+
     this.setScale(organismData.default_scale);
 
     this.setInteractive();
@@ -75,13 +75,13 @@ export default class Organism extends Phaser.GameObjects.Sprite {
       10,
       10
     );
-    
+
     glow.active = false;
-    
+
     this.on("pointerover", () => {
       glow.active = true;
     });
-    
+
     this.on("pointerout", () => {
       glow.active = false;
     });
@@ -97,6 +97,9 @@ export default class Organism extends Phaser.GameObjects.Sprite {
       })
       .setOrigin(0.5);
 
+    if (uiCamera) {
+      uiCamera.ignore(this.nameText);
+    }
   }
 
   public changeScale() {
@@ -157,7 +160,7 @@ export default class Organism extends Phaser.GameObjects.Sprite {
     const count = this.duplicates.length;
 
     const radius = this.displayWidth * 0.8;
-  
+
     this.duplicates.forEach((duplicate, index) => {
       const angle = (index / count) * Math.PI * 2;
 
@@ -168,6 +171,9 @@ export default class Organism extends Phaser.GameObjects.Sprite {
     });
   }
 
+  public getDuplicateContainer() {
+    return this.duplicateContainer;
+  }
 
   public changeHealth(totalChange: number) {
     if (totalChange === 0) return;
@@ -175,9 +181,9 @@ export default class Organism extends Phaser.GameObjects.Sprite {
     this.HP += totalChange;
 
     const particleY =
-    totalChange > 0
-      ? this.y + this.displayHeight / 2
-      : this.y - this.displayHeight / 2;
+      totalChange > 0
+        ? this.y + this.displayHeight / 2
+        : this.y - this.displayHeight / 2;
 
     this.onHealthChanged?.(
       this.x,
@@ -194,5 +200,38 @@ export default class Organism extends Phaser.GameObjects.Sprite {
     console.count(`Particle callback: ${this.organismData.id}`);
     console.log("Health change:", totalChange);
   }
-  update() {}
+  
+  // Move organism
+  public override setPosition(x: number, y?: number, z?: number, w?: number): this {
+    super.setPosition(x, y, z, w);
+
+    const currentX = this.x;
+    const currentY = this.y;
+
+    // Move the duplicate container to the organism's new position
+    if (this.duplicateContainer) {
+      this.duplicateContainer.setPosition(currentX, currentY);
+    }
+
+    // Keep name text aligned below the organism
+    if (this.nameText) {
+      const textOffsetY = this.displayHeight / 2 + 20;
+      this.nameText.setPosition(currentX, currentY + textOffsetY);
+    }
+
+    return this;
+  }
+
+  // Cleanup if organism is detroyed
+  public override destroy(fromScene?: boolean): void {
+    if (this.duplicateContainer) {
+      this.duplicateContainer.destroy(fromScene);
+    }
+    if (this.nameText) {
+      this.nameText.destroy(fromScene);
+    }
+    super.destroy(fromScene);
+  }
+
+  update() { }
 }

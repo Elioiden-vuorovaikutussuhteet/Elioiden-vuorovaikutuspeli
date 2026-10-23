@@ -206,7 +206,7 @@ describe("GameScene", () => {
 
   it("logs to console after 2 organisms are selected", () => {
     // edit this test once arrow making function is called instead of log
-    const consoleLogSpy = vi.spyOn(console, "log").mockImplementation(() => {});
+    const consoleLogSpy = vi.spyOn(console, "log").mockImplementation(() => { });
 
     vi.mocked(getRelation).mockReturnValue({
       value: 1,
@@ -241,7 +241,7 @@ describe("GameScene", () => {
   });
 
   it("does nothing when the same organism is selected twice", () => {
-    const consoleLogSpy = vi.spyOn(console, "log").mockImplementation(() => {});
+    const consoleLogSpy = vi.spyOn(console, "log").mockImplementation(() => { });
 
     scene.create();
 
@@ -381,14 +381,22 @@ describe("ArrowManager interactions", () => {
     };
   });
 
-  const organism = (id: string, x = 100, y = 100) => ({
-    organismData: { id },
-    x,
-    y,
-    HP: 100,
-    changeHealth: vi.fn(),
-    changeScale: vi.fn(),
-  });
+  const organism = (id: string, x = 100, y = 100): Organism => {
+    const org = {
+      organismData: { id, name: id, texture: `${id}_sprite`, default_scale: 1 },
+      x,
+      y,
+      HP: 100,
+      changeHealth: vi.fn(),
+      changeScale: vi.fn(),
+      setPosition: vi.fn((newX: number, newY: number) => {
+        org.x = newX;
+        org.y = newY;
+        return org;
+      }),
+    };
+    return org as unknown as Organism;
+  };
 
   it("valitsee ensimmäisen organismin", () => {
     const first = organism("tree");
@@ -427,13 +435,13 @@ describe("ArrowManager interactions", () => {
       mult: 1,
     });
     arrowManager.setArrowColorValue(false);
-    const first = organism("tree");
-    const second = organism("ant");
+    const first = organism("tree", 100, 100);
+    const second = organism("ant", 300, 250);
 
-    arrowManager.arrowChecker(first);
-    arrowManager.arrowChecker(second);
+    arrowManager.arrowChecker(first as unknown as Organism);
+    arrowManager.arrowChecker(second as unknown as Organism);
 
-    expect(permanentArrows.lineStyle).toHaveBeenCalledWith(4, 0xed0924);
+    expect(permanentArrows.lineStyle).toHaveBeenCalledWith(8, 0xed0924);
     expect((scene as any).scene.launch).toHaveBeenCalledWith(
       "PopupScene",
       { textId: "tree-ant" },
@@ -507,4 +515,107 @@ describe("ArrowManager interactions", () => {
 
     expect(previewArrow.clear).toHaveBeenCalled();
   });
+
+  it("updates and returns the right force configuration", () => {
+    arrowManager.setForceConfig({
+      linkDistance: 250,
+      chargeStrength: -900,
+      padding: 200,
+    });
+
+    const config = arrowManager.getForceConfig();
+
+    expect(config.linkDistance).toBe(250);
+    expect(config.chargeStrength).toBe(-900);
+    expect(config.padding).toBe(200);
+    expect(config.worldWidth).toBe(1920);
+  });
+
+  it("moves organisms with d3-force in update", () => {
+    vi.mocked(getRelation).mockReturnValue({ value: 1, mult: 1 });
+
+    const first = organism("tree", 200, 500);
+    const second = organism("shroom", 1100, 500);
+
+    arrowManager.arrowChecker(first);
+    arrowManager.arrowChecker(second);
+
+    arrowManager.update();
+
+    expect(first.setPosition).toHaveBeenCalled();
+    expect(second.setPosition).toHaveBeenCalled();
+    expect(first.x).toBeGreaterThan(200);
+    expect(second.x).toBeLessThan(1100);
+  });
+
+  it("clmaps organisms to the world bounds", () => {
+    vi.mocked(getRelation).mockReturnValue({ value: 1, mult: 1 });
+
+    const outOfBoundsOrg = organism("tree", 10, 2000);
+    const normalOrg = organism("shroom", 500, 500);
+
+    arrowManager.arrowChecker(outOfBoundsOrg);
+    arrowManager.arrowChecker(normalOrg);
+
+    arrowManager.update();
+
+    const { padding, worldWidth, worldHeight } = arrowManager.getForceConfig();
+
+    expect(outOfBoundsOrg.x).toBeGreaterThanOrEqual(padding);
+    expect(outOfBoundsOrg.x).toBeLessThanOrEqual(worldWidth - padding);
+    expect(outOfBoundsOrg.y).toBeGreaterThanOrEqual(padding);
+    expect(outOfBoundsOrg.y).toBeLessThanOrEqual(worldHeight - padding);
+  });
+
+  it("redraws permanent arrows when organisms move", () => {
+    vi.mocked(getRelation).mockReturnValue({ value: 1, mult: 1 });
+
+    const first = organism("tree", 200, 300);
+    const second = organism("shroom", 600, 300);
+
+    arrowManager.arrowChecker(first);
+    arrowManager.arrowChecker(second);
+
+    permanentArrows.clear.mockClear();
+    permanentArrows.lineBetween.mockClear();
+
+    first.x = 250;
+    first.y = 450;
+    arrowManager.update();
+
+    expect(permanentArrows.clear).toHaveBeenCalled();
+    expect(permanentArrows.lineBetween).toHaveBeenCalled();
+  });
+
+  it("offsets bidirectional arrows into parallel lanes", () => {
+    vi.mocked(getRelation).mockReturnValue({ value: 1, mult: 1 });
+
+    const first = organism("tree", 300, 500);
+    const second = organism("shroom", 700, 500);
+
+    arrowManager.arrowChecker(first);
+    arrowManager.arrowChecker(second);
+
+    const singleArrowCall = permanentArrows.lineBetween.mock.calls.at(-1)!;
+    const singleArrowStartY = singleArrowCall[1];
+
+    expect(singleArrowStartY).toBe(500);
+
+    permanentArrows.lineBetween.mockClear();
+
+    arrowManager.arrowChecker(second);
+    arrowManager.arrowChecker(first);
+
+    expect(permanentArrows.lineBetween).toHaveBeenCalledTimes(3);
+
+    const [firstLaneCall, secondLaneCall] = permanentArrows.lineBetween.mock.calls;
+    const lane1StartY = firstLaneCall[1];
+    const lane2StartY = secondLaneCall[1];
+
+    expect(lane1StartY).not.toBe(500);
+    expect(lane2StartY).not.toBe(500);
+    expect(lane1StartY).not.toBe(lane2StartY);
+  });
+
 });
+

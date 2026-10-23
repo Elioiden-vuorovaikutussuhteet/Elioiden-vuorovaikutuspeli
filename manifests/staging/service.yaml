@@ -11,5 +11,5 @@ spec:
   ports:
     - name: http
       port: 80         
-      targetPort: 4173 #80 for nginx
+      targetPort: 4173 
   type: ClusterIP
