@@ -6,6 +6,7 @@ import type { Connection } from "../types/Connection";
 import InteractionManager from "./InteractionManager";
 import ConnectionManager from "./ConnectionManager";
 import OrganismManager from "./OrganismManager";
+import { ScoreManager } from "./ScoreManager";
 import { getInteractionId } from "../data/popupTexts";
 import {
   forceSimulation,
@@ -90,6 +91,7 @@ export default class ArrowManager {
   private interactionManager!: InteractionManager;
   private connectionManager!: ConnectionManager;
   private organismManager!: OrganismManager;
+  private scoreManager!: ScoreManager;
 
   private permanentArrows!: Phaser.GameObjects.Graphics;
   private previewArrow!: Phaser.GameObjects.Graphics;
@@ -123,6 +125,7 @@ export default class ArrowManager {
     interactionManager: InteractionManager,
     connectionManager: ConnectionManager,
     organismManager: OrganismManager,
+    scoreManager: ScoreManager,
     interactions: Connection[],
     organismSpawnOrder: OrganismSpawn[] = this.defaultOrganismSpawnOrder,
     forceConfig: Partial<ForceLayoutConfig> = {},
@@ -177,6 +180,11 @@ export default class ArrowManager {
         forceCollide<ForceNode>(cfg.collideRadius).strength(cfg.collideStrength),
       )
       .alphaDecay(cfg.alphaDecay);
+    
+    this.interactionManager = interactionManager;
+    this.connectionManager = connectionManager;
+    this.organismManager = organismManager;
+    this.scoreManager = scoreManager;
 
     this.recalculateLayout();
     this.redrawPermanentArrows();
@@ -309,18 +317,42 @@ export default class ArrowManager {
           to: second.organismData.id,
         });
 
-        // finds popup text from data/popuptexts.ts and launches the window
-        const textId = getInteractionId(
-          first.organismData.id,
-          second.organismData.id,
+        //finds popup text from data/popuptexts.ts and launches the window
+        const textId = getInteractionId(first.organismData.id, second.organismData.id);
+        this.scene.scene.launch("PopupScene", {textId});
+        this.scoreManager.getMoney();
+
+        const healthChange = relation * multiplier * (first.HP / 100);
+        second.changeHealth(healthChange);
+        this.interactionManager.interactionPulse(second, relation);
+      } else if (relation === -1 && arrowColorValue === false) {
+        this.drawArrow(
+          this.getPermanentArrows(),
+          first.x,
+          first.y,
+          this.scene.input.activePointer.worldX,
+          this.scene.input.activePointer.worldY,
+          0xed0924,
+          4,
         );
-        this.scene.scene.launch("PopupScene", { textId });
+        this.interactions.push({
+          from: first.organismData.id,
+          to: second.organismData.id,
+        });
+
+        //finds popup text from data/popuptexts.ts and launches the window
+        const textId = getInteractionId(first.organismData.id, second.organismData.id);
+        this.scene.scene.launch("PopupScene", {textId});
+        this.scoreManager.getMoney();
 
         const healthChange = relation * multiplier * (first.HP / 100);
         second.changeHealth(healthChange);
         this.interactionManager.interactionPulse(second, relation);
 
         this.recalculateLayout();
+      } else {
+        // lose money if wrong guess
+        this.scoreManager.loseMoney();
       }
     }
 
