@@ -114,6 +114,10 @@ export default class GameScene extends Phaser.Scene {
       organismPositions.acacia.type,
     );
 
+    this.scoreManager.outOfMoney = () => {
+      this.gameOver();
+    };
+
     //Eventlistener for: If players clicks on empty space, preview arrow disappears
     this.input.on(
       "pointerdown",
@@ -158,4 +162,8 @@ export default class GameScene extends Phaser.Scene {
     this.cameraManager.update();
     this.arrowManager.update();
   }
+
+  gameOver(): void{
+    console.log("!! Game Over !!");
+  };
 }

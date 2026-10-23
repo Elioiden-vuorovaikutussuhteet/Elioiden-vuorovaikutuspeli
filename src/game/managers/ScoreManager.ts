@@ -4,6 +4,7 @@ export class ScoreManager {
     private scene: Phaser.Scene;
     public money: number;
     private moneyText: Phaser.GameObjects.Text;
+    public outOfMoney?: () => void;
 
     constructor(scene: Phaser.Scene, startingMoney: number) {
         this.scene = scene;
@@ -29,11 +30,16 @@ export class ScoreManager {
 
     loseMoney(): void{
         this.money -= 20;
+        if (this.money <= 0) {
+            this.outOfMoney?.();
+        }
         this.updateText();
     }
 
     private updateText(): void {
         this.moneyText.setText(this.money.toString())
     }
+
+
 }
 
