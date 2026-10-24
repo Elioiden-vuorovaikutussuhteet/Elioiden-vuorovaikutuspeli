@@ -6,6 +6,7 @@ import type { Connection } from "../types/Connection";
 import InteractionManager from "./InteractionManager";
 import ConnectionManager from "./ConnectionManager";
 import OrganismManager from "./OrganismManager";
+import PermanentArrow from "../entities/permanentarrow";
 import { ScoreManager } from "./ScoreManager";
 import { getInteractionId } from "../data/popupTexts";
 import {
@@ -81,14 +82,6 @@ interface ForceNode extends SimulationNodeDatum {
 interface ForceLink extends SimulationLinkDatum<ForceNode> {
   source: string | ForceNode;
   target: string | ForceNode;
-}
-
-interface PermanentArrow {
-  key: string;
-  fromId: string;
-  toId: string;
-
-  graphics: Phaser.GameObjects.Graphics;
 }
 
 // arrow related code, drawing of arrows, arrow buttons 
@@ -280,20 +273,21 @@ export default class ArrowManager {
   ): PermanentArrow {
     const key = this.getPermanentArrowKey(fromId, toId);
 
-    const graphics = this.scene.add.graphics();
-    graphics.setDepth(100);
-
-    this.uiCamera.ignore(graphics);
-
-    const arrow: PermanentArrow = {
-      key,
+    const arrow = new PermanentArrow(
+      this.scene,
+      this.uiCamera,
       fromId,
       toId,
-      graphics,
-    };
+      {
+        targetOffset: this.forceConfig.arrowTargetOffset,
+        color: getRelation(fromId, toId)?.value === 1
+          ? 0x064f15
+          : 0xed0924,
+        thickness: 8,
+      },
+    );
 
     this.permanentArrows.set(key, arrow);
-
     return arrow;
   }
 
@@ -409,7 +403,8 @@ export default class ArrowManager {
     this.selectedOrganism = null;
   }
 
-  public redrawPermanentArrows() {
+  
+  public redrawPermanentArrows(): void {
     const activeOrganisms = this.getActiveOrganisms();
 
     const organismsById = new Map(
@@ -428,66 +423,46 @@ export default class ArrowManager {
     // Remove arrows whose connections no longer exist.
     for (const [key, arrow] of this.permanentArrows) {
       if (!activeKeys.has(key)) {
-        arrow.graphics.destroy();
+        arrow.destroy();
         this.permanentArrows.delete(key);
       }
     }
 
-    // Create missing arrows and redraw existing ones.
-    for (const interaction of this.interactions) {
-      const { from, to } = interaction;
-
+    for (const { from, to } of this.interactions) {
       const first =
         organismsById.get(from) ?? this.knownOrganisms.get(from);
-
       const second =
         organismsById.get(to) ?? this.knownOrganisms.get(to);
 
       if (!first || !second) continue;
 
       const key = this.getPermanentArrowKey(from, to);
-
-      const arrow =
-        this.permanentArrows.get(key) ??
-        this.createArrow(from, to);
-
-      const relation = getRelation(from, to)?.value;
-      const color =
-        relation === 1 ? 0x064f15 : 0xed0924;
-
-      // Match the existing bidirectional-arrow behavior.
       const isBidirectional = this.interactions.some(
         (other) => other.from === to && other.to === from,
       );
 
-      const lateralOffset = isBidirectional ? 25 : 0;
+      const color =
+        getRelation(from, to)?.value === 1
+          ? 0x064f15
+          : 0xed0924;
 
-      const dx = second.x - first.x;
-      const dy = second.y - first.y;
-      const distance = Math.hypot(dx, dy) || 1;
+      let arrow = this.permanentArrows.get(key);
 
-      const targetOffset = this.forceConfig.arrowTargetOffset;
+      if (!arrow) {
+        arrow = this.createArrow(from, to);
+      }
 
-      const targetX =
-        second.x - (dx / distance) * targetOffset;
-
-      const targetY =
-        second.y - (dy / distance) * targetOffset;
-
-      arrow.graphics.clear();
-
-      this.drawArrow(
-        arrow.graphics,
-        first.x,
-        first.y,
-        targetX,
-        targetY,
+      arrow.setStyle({
+        targetOffset: this.forceConfig.arrowTargetOffset,
         color,
-        8,
-        lateralOffset,
-      );
+        thickness: 8,
+        lateralOffset: isBidirectional ? 25 : 0,
+      });
+
+      arrow.update(first, second);
     }
   }
+
 
   public drawArrow(
     graphics: Phaser.GameObjects.Graphics,
