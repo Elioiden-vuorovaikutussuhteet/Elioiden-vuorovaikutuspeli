@@ -83,6 +83,14 @@ interface ForceLink extends SimulationLinkDatum<ForceNode> {
   target: string | ForceNode;
 }
 
+interface PermanentArrow {
+  key: string;
+  fromId: string;
+  toId: string;
+
+  graphics: Phaser.GameObjects.Graphics;
+}
+
 // arrow related code, drawing of arrows, arrow buttons 
 export default class ArrowManager {
   private scene: Phaser.Scene;
@@ -93,7 +101,7 @@ export default class ArrowManager {
   private organismManager!: OrganismManager;
   private scoreManager!: ScoreManager;
 
-  private permanentArrows!: Phaser.GameObjects.Graphics;
+  private permanentArrows = new Map<string, PermanentArrow>();
   private previewArrow!: Phaser.GameObjects.Graphics;
   private arrowColorValue: boolean = true;
   private selectedOrganism: Organism | null = null;
@@ -110,6 +118,10 @@ export default class ArrowManager {
     { type: "mycorrhizahelper", x: 1300, y: 700 },
   ];
   private nextOrganismToSpawn = 0;
+
+  private getPermanentArrowKey(fromId: string, toId: string): string {
+    return JSON.stringify([fromId, toId]);
+  }
 
   // Dynamic d3-force state & configuration
   private forceConfig: ForceLayoutConfig = { ...DEFAULT_FORCE_CONFIG };
@@ -150,13 +162,8 @@ export default class ArrowManager {
   }
 
   private initGraphics() {
-    this.permanentArrows = this.scene.add.graphics();
     this.previewArrow = this.scene.add.graphics();
-
-    this.permanentArrows.setDepth(100);
     this.previewArrow.setDepth(100);
-
-    this.uiCamera.ignore(this.permanentArrows);
     this.uiCamera.ignore(this.previewArrow);
   }
 
@@ -267,6 +274,29 @@ export default class ArrowManager {
     return list.length > 0 ? list : Array.from(this.knownOrganisms.values());
   }
 
+  private createArrow(
+    fromId: string,
+    toId: string,
+  ): PermanentArrow {
+    const key = this.getPermanentArrowKey(fromId, toId);
+
+    const graphics = this.scene.add.graphics();
+    graphics.setDepth(100);
+
+    this.uiCamera.ignore(graphics);
+
+    const arrow: PermanentArrow = {
+      key,
+      fromId,
+      toId,
+      graphics,
+    };
+
+    this.permanentArrows.set(key, arrow);
+
+    return arrow;
+  }
+
   public arrowChecker(organism: Organism) {
     this.knownOrganisms.set(organism.organismData.id, organism);
 
@@ -307,55 +337,45 @@ export default class ArrowManager {
     ) {
       // relation is positive = green(0x064f15), bad = red(0xed0924)
       if (relation === 1 && arrowColorValue === true) {
-        this.drawArrow(
-          this.getPermanentArrows(),
-          first.x,
-          first.y,
-          this.scene.input.activePointer.worldX,
-          this.scene.input.activePointer.worldY,
-          0x064f15,
-          4,
-        );
         this.interactions.push({
           from: first.organismData.id,
           to: second.organismData.id,
         });
 
-        //finds popup text from data/popuptexts.ts and launches the window
-        const textId = getInteractionId(first.organismData.id, second.organismData.id);
-        this.scene.scene.launch("PopupScene", {textId});
+        const textId = getInteractionId(
+          first.organismData.id,
+          second.organismData.id,
+        );
+
+        this.scene.scene.launch("PopupScene", { textId });
         this.scoreManager.getMoney();
 
         const healthChange = relation * multiplier * (first.HP / 100);
         second.changeHealth(healthChange);
         this.interactionManager.interactionPulse(second, relation);
+
         this.recalculateLayout();
+      }
 
-      } else if (relation === -1 && arrowColorValue === false) {
-        this.drawArrow(
-          this.getPermanentArrows(),
-          first.x,
-          first.y,
-          this.scene.input.activePointer.worldX,
-          this.scene.input.activePointer.worldY,
-          0xed0924,
-          4,
-        );
+      else if (relation === -1 && arrowColorValue === false) {
         this.interactions.push({
           from: first.organismData.id,
           to: second.organismData.id,
         });
 
-        //finds popup text from data/popuptexts.ts and launches the window
-        const textId = getInteractionId(first.organismData.id, second.organismData.id);
-        this.scene.scene.launch("PopupScene", {textId});
+        const textId = getInteractionId(
+          first.organismData.id,
+          second.organismData.id,
+        );
+
+        this.scene.scene.launch("PopupScene", { textId });
         this.scoreManager.getMoney();
 
         const healthChange = relation * multiplier * (first.HP / 100);
         second.changeHealth(healthChange);
         this.interactionManager.interactionPulse(second, relation);
-        
-        
+
+        this.recalculateLayout();
       } else {
         // lose money if wrong guess
         this.scoreManager.loseMoney();
@@ -390,51 +410,80 @@ export default class ArrowManager {
   }
 
   public redrawPermanentArrows() {
-    this.permanentArrows.clear();
     const activeOrganisms = this.getActiveOrganisms();
 
+    const organismsById = new Map(
+      activeOrganisms.map((organism) => [
+        organism.organismData.id,
+        organism,
+      ]),
+    );
+
+    const activeKeys = new Set(
+      this.interactions.map(({ from, to }) =>
+        this.getPermanentArrowKey(from, to),
+      ),
+    );
+
+    // Remove arrows whose connections no longer exist.
+    for (const [key, arrow] of this.permanentArrows) {
+      if (!activeKeys.has(key)) {
+        arrow.graphics.destroy();
+        this.permanentArrows.delete(key);
+      }
+    }
+
+    // Create missing arrows and redraw existing ones.
     for (const interaction of this.interactions) {
+      const { from, to } = interaction;
+
       const first =
-        activeOrganisms.find((o) => o.organismData.id === interaction.from) ??
-        this.knownOrganisms.get(interaction.from);
+        organismsById.get(from) ?? this.knownOrganisms.get(from);
+
       const second =
-        activeOrganisms.find((o) => o.organismData.id === interaction.to) ??
-        this.knownOrganisms.get(interaction.to);
+        organismsById.get(to) ?? this.knownOrganisms.get(to);
 
       if (!first || !second) continue;
 
-      const relation = getRelation(
-        first.organismData.id,
-        second.organismData.id,
-      )?.value;
-      const isPositive = relation === 1;
-      const color = isPositive ? 0x064f15 : 0xed0924;
-      const thickness = isPositive ? 8 : 8;
+      const key = this.getPermanentArrowKey(from, to);
 
-      // Check if there is an opposing arrow (B -> A)
+      const arrow =
+        this.permanentArrows.get(key) ??
+        this.createArrow(from, to);
+
+      const relation = getRelation(from, to)?.value;
+      const color =
+        relation === 1 ? 0x064f15 : 0xed0924;
+
+      // Match the existing bidirectional-arrow behavior.
       const isBidirectional = this.interactions.some(
-        (other) =>
-          other.from === interaction.to && other.to === interaction.from,
+        (other) => other.from === to && other.to === from,
       );
 
-      // If bidirectional shift sideways by 25px
       const lateralOffset = isBidirectional ? 25 : 0;
 
       const dx = second.x - first.x;
       const dy = second.y - first.y;
-      const dist = Math.sqrt(dx * dx + dy * dy) || 1;
+      const distance = Math.hypot(dx, dy) || 1;
+
       const targetOffset = this.forceConfig.arrowTargetOffset;
-      const targetX = second.x - (dx / dist) * targetOffset;
-      const targetY = second.y - (dy / dist) * targetOffset;
+
+      const targetX =
+        second.x - (dx / distance) * targetOffset;
+
+      const targetY =
+        second.y - (dy / distance) * targetOffset;
+
+      arrow.graphics.clear();
 
       this.drawArrow(
-        this.permanentArrows,
+        arrow.graphics,
         first.x,
         first.y,
         targetX,
         targetY,
         color,
-        thickness,
+        8,
         lateralOffset,
       );
     }
@@ -476,8 +525,8 @@ export default class ArrowManager {
     const x4 = sx2 - 20 * udx - 15 * pdx;
     const y4 = sy2 - 20 * udy - 15 * pdy;
 
-    this.uiCamera.ignore(this.previewArrow);
-    this.uiCamera.ignore(this.permanentArrows);
+    // this.uiCamera.ignore(this.previewArrow);
+    // this.uiCamera.ignore(this.permanentArrows);
 
     graphics.lineStyle(thickness, color);
     graphics.fillStyle(color, 1);
@@ -528,8 +577,12 @@ export default class ArrowManager {
     this.selectedOrganism = null;
   }
 
-  public getPermanentArrows() {
+  public getArrows(): ReadonlyMap<string, PermanentArrow> {
     return this.permanentArrows;
+  }
+
+  public getArrow(fromId: string, toId: string): PermanentArrow | undefined {
+    return this.permanentArrows.get(this.getPermanentArrowKey(fromId, toId));
   }
 
   public update() {
