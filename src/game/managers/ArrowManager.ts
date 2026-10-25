@@ -116,6 +116,13 @@ export default class ArrowManager {
     return JSON.stringify([fromId, toId]);
   }
 
+  public pulseArrow(fromId: string, toId: string): void {
+    const key = this.getPermanentArrowKey(fromId, toId);
+    const arrow = this.permanentArrows.get(key);
+
+    arrow?.playPulse();
+  }
+
   // Dynamic d3-force state & configuration
   private forceConfig: ForceLayoutConfig = { ...DEFAULT_FORCE_CONFIG };
   private simulation: Simulation<ForceNode, ForceLink>;
@@ -312,7 +319,6 @@ export default class ArrowManager {
     }
 
     const relation = relationData["value"];
-    const multiplier = relationData["mult"];
 
     const arrowColorValue = this.getArrowColorValue();
 
@@ -344,9 +350,7 @@ export default class ArrowManager {
         this.scene.scene.launch("PopupScene", { textId });
         this.scoreManager.getMoney();
 
-        const healthChange = relation * multiplier * (first.HP / 100);
-        second.changeHealth(healthChange);
-        this.interactionManager.interactionPulse(second, relation);
+        this.interactionManager.interactionPulse(second, first);
 
         this.recalculateLayout();
       }
@@ -365,9 +369,7 @@ export default class ArrowManager {
         this.scene.scene.launch("PopupScene", { textId });
         this.scoreManager.getMoney();
 
-        const healthChange = relation * multiplier * (first.HP / 100);
-        second.changeHealth(healthChange);
-        this.interactionManager.interactionPulse(second, relation);
+        this.interactionManager.interactionPulse(second, first);
 
         this.recalculateLayout();
       } else {
@@ -403,7 +405,7 @@ export default class ArrowManager {
     this.selectedOrganism = null;
   }
 
-  
+
   public redrawPermanentArrows(): void {
     const activeOrganisms = this.getActiveOrganisms();
 
@@ -464,7 +466,7 @@ export default class ArrowManager {
   }
 
 
-  public drawArrow(
+  public drawPreviewArrow(
     graphics: Phaser.GameObjects.Graphics,
     x1: number,
     y1: number,
@@ -602,7 +604,7 @@ export default class ArrowManager {
     const targetX = pointer.worldX ?? pointer.x ?? 0;
     const targetY = pointer.worldY ?? pointer.y ?? 0;
 
-    this.drawArrow(
+    this.drawPreviewArrow(
       this.previewArrow,
       this.selectedOrganism.x,
       this.selectedOrganism.y,

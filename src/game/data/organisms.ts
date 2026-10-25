@@ -25,7 +25,7 @@ export const organisms: OrganismData[] = [
     id: "sapota",
     name: "Sapota",
     texture: "sapota_sprite",
-    default_scale: 1.1,
+    default_scale: 0.9,
     growth_types: ["grow"],
   },
   {

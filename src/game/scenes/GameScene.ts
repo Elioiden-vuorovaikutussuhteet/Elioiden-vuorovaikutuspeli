@@ -89,7 +89,13 @@ export default class GameScene extends Phaser.Scene {
       (organism) => this.arrowManager.arrowChecker(organism),
       (x, y, amount) => this.particleManager.healthChanged(x, y, amount),
     );
-    this.interactionManager = new InteractionManager(organismMap, interactions);
+    this.interactionManager = new InteractionManager(
+      organismMap,
+      interactions,
+      (fromId, toId) => {
+        this.arrowManager.pulseArrow(fromId, toId);
+      },
+    );
 
     this.connectionManager = new ConnectionManager(
       rightConnections,
