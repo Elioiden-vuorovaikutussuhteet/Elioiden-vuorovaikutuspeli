@@ -129,6 +129,7 @@ export default class PermanentArrow {
     const px = -uy;
     const py = ux;
 
+    // values used for animation
     this.fromX = from.x + px * this.lateralOffset;
     this.fromY = from.y + py * this.lateralOffset;
     this.toX = targetX + px * this.lateralOffset;
