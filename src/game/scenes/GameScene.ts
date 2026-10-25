@@ -3,6 +3,7 @@ import ParticleManager from "../managers/ParticleManager";
 import Organism from "../entities/organism";
 import { organisms } from "../data/organisms"; // adjust path
 import InfoButton from "../entities/infobutton";
+import HintButton from "../entities/hintbutton";
 import CameraManager from "../managers/CameraManager";
 import ArrowManager from "../managers/ArrowManager";
 import OrganismManager from "../managers/OrganismManager";
@@ -118,6 +119,14 @@ export default class GameScene extends Phaser.Scene {
 
     //Second organism is the second in organisms.ts
     const secondOrganism = organisms[1];
+    
+    const hintbutton = new HintButton(this, 240, 40);
+    this.cameras.main.ignore(hintbutton);
+
+    hintbutton.on("hintButtonClicked", () => {
+      const missing = this.connectionManager.getMissingConnections();
+      console.log("Missing connections:", missing);
+    });
 
     this.events.once("menuClosed", () => {
       // Resume game scene
