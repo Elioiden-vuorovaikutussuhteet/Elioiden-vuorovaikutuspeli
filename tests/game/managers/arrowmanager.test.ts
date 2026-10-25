@@ -16,10 +16,13 @@ const {
   mockOrganismOn,
   MockInfoButton,
   mockInfoButtonOn,
+  MockHintButton,
+  mockHintButtonOn,
   MockArrowButtons,
 } = vi.hoisted(() => {
   const mockOrganismOn = vi.fn();
   const mockInfoButtonOn = vi.fn();
+  const mockHintButtonOn = vi.fn();
   const mockArrowButtonsOn = vi.fn();
 
   const MockOrganism = vi.fn(function (
@@ -54,6 +57,12 @@ const {
     };
   });
 
+  const MockHintButton = vi.fn(function () {
+    return {
+      on: mockHintButtonOn,
+    };
+  });
+
   const MockArrowButtons = vi.fn(function () {
     return {
       on: mockArrowButtonsOn,
@@ -65,6 +74,8 @@ const {
     mockOrganismOn,
     MockInfoButton,
     mockInfoButtonOn,
+    MockHintButton,
+    mockHintButtonOn,
     MockArrowButtons,
     mockArrowButtonsOn,
   };
@@ -76,6 +87,10 @@ vi.mock("../../../src/game/entities/organism", () => ({
 
 vi.mock("../../../src/game/entities/infobutton", () => ({
   default: MockInfoButton,
+}));
+
+vi.mock("../../../src/game/entities/hintbutton", () => ({
+  default: MockHintButton,
 }));
 vi.mock("../../../src/game/services/RelationsService", () => ({
   getRelation: vi.fn(),
@@ -147,10 +162,10 @@ describe("GameScene", () => {
       }),
 
       text: vi.fn().mockReturnValue({
-      setText: vi.fn(),
-      setOrigin: vi.fn(),
-      setDepth: vi.fn(),
-      destroy: vi.fn(),
+        setText: vi.fn(),
+        setOrigin: vi.fn(),
+        setDepth: vi.fn(),
+        destroy: vi.fn(),
       }),
     });
   });
@@ -206,7 +221,7 @@ describe("GameScene", () => {
 
   it("logs to console after 2 organisms are selected", () => {
     // edit this test once arrow making function is called instead of log
-    const consoleLogSpy = vi.spyOn(console, "log").mockImplementation(() => { });
+    const consoleLogSpy = vi.spyOn(console, "log").mockImplementation(() => {});
 
     vi.mocked(getRelation).mockReturnValue({
       value: 1,
@@ -241,7 +256,7 @@ describe("GameScene", () => {
   });
 
   it("does nothing when the same organism is selected twice", () => {
-    const consoleLogSpy = vi.spyOn(console, "log").mockImplementation(() => { });
+    const consoleLogSpy = vi.spyOn(console, "log").mockImplementation(() => {});
 
     scene.create();
 
@@ -423,10 +438,9 @@ describe("ArrowManager interactions", () => {
     expect(permanentArrows.lineBetween).toHaveBeenCalled();
     expect(permanentArrows.fillTriangle).toHaveBeenCalled();
     expect((scene as any).selectedOrganism).toBeNull();
-    expect((scene as any).scene.launch).toHaveBeenCalledWith(
-      "PopupScene",
-      { textId: "tree-shroom" },
-    );
+    expect((scene as any).scene.launch).toHaveBeenCalledWith("PopupScene", {
+      textId: "tree-shroom",
+    });
   });
 
   it("luo negatiiviselle vuorovaikutukselle punaisen nuolen", () => {
@@ -442,10 +456,9 @@ describe("ArrowManager interactions", () => {
     arrowManager.arrowChecker(second as unknown as Organism);
 
     expect(permanentArrows.lineStyle).toHaveBeenCalledWith(8, 0xed0924);
-    expect((scene as any).scene.launch).toHaveBeenCalledWith(
-      "PopupScene",
-      { textId: "tree-ant" },
-    );
+    expect((scene as any).scene.launch).toHaveBeenCalledWith("PopupScene", {
+      textId: "tree-ant",
+    });
   });
 
   it("ei lisää samaa vuorovaikutusta kahdesti", () => {
@@ -499,6 +512,22 @@ describe("ArrowManager interactions", () => {
     (scene as any).interactions = [];
 
     expect(connectionManager.checkConnections()).toBe(false);
+  });
+
+  it("returns missing connections from ConnectionManager", () => {
+    const rightConnections = [
+      { from: "acacia", to: "amf" },
+      { from: "amf", to: "acacia" },
+    ];
+    const currentInteractions = [{ from: "acacia", to: "amf" }];
+    const realConnectionManager = new ConnectionManager(
+      rightConnections,
+      currentInteractions,
+    );
+
+    expect(realConnectionManager.getMissingConnections()).toEqual([
+      { from: "amf", to: "acacia" },
+    ]);
   });
 
   it("tyhjentää esikatselunuolen valinnan jälkeen", () => {
@@ -608,7 +637,8 @@ describe("ArrowManager interactions", () => {
 
     expect(permanentArrows.lineBetween).toHaveBeenCalledTimes(3);
 
-    const [firstLaneCall, secondLaneCall] = permanentArrows.lineBetween.mock.calls;
+    const [firstLaneCall, secondLaneCall] =
+      permanentArrows.lineBetween.mock.calls;
     const lane1StartY = firstLaneCall[1];
     const lane2StartY = secondLaneCall[1];
 
@@ -616,6 +646,4 @@ describe("ArrowManager interactions", () => {
     expect(lane2StartY).not.toBe(500);
     expect(lane1StartY).not.toBe(lane2StartY);
   });
-
 });
-
