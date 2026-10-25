@@ -41,8 +41,8 @@ export default class OrganismManager {
         this.onHealthChanged = onHealthChanged;
     }
 
-    public createOrganism(x: number, y: number, type: string) {
-        const organism = new Organism(this.scene, x, y, type, this.uiCamera, this.onHealthChanged,);
+    public createOrganism(x: number, y: number, id: string) {
+        const organism = new Organism(this.scene, id, x, y, this.uiCamera, this.onHealthChanged,);
 
         organism.on("organismSelected", this.onOrganismSelected, this);
 

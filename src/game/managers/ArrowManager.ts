@@ -1,6 +1,7 @@
 import Phaser from "phaser";
 import ArrowButtons from "../entities/arrowbuttons";
 import type Organism from "../entities/organism";
+import { organismDataMap } from "../data/organisms"; 
 import { getRelation } from "../services/RelationsService";
 import type { Connection } from "../types/Connection";
 import InteractionManager from "./InteractionManager";
@@ -20,12 +21,6 @@ import {
   type SimulationNodeDatum,
   type SimulationLinkDatum,
 } from "d3-force";
-
-export interface OrganismSpawn {
-  type: string;
-  x: number;
-  y: number;
-}
 
 export interface ForceLayoutConfig {
   /** Target length of arrows between connected organisms (px) */
@@ -107,16 +102,32 @@ export default class ArrowManager {
   private selectedOrganism: Organism | null = null;
   private interactions: Connection[];
 
-  private readonly organismSpawnOrder: OrganismSpawn[];
+  public getSpawnPosition(id: string): { x: number; y: number } {
+    const centerX = this.scene.scale.width / 2;
+    const centerY = this.scene.scale.height / 2;
 
-  private readonly defaultOrganismSpawnOrder: OrganismSpawn[] = [
-    { type: "ants", x: 600, y: 500 },
-    { type: "sapota", x: 1300, y: 500 },
-    { type: "antfootbacteria", x: 200, y: 700 },
-    { type: "diazotroph", x: 300, y: 500 },
-    { type: "glomeromycetes", x: 900, y: 300 },
-    { type: "mycorrhizahelper", x: 1300, y: 700 },
+    const data = organismDataMap.get(id);
+    if (!data) {
+      return { x: centerX, y: centerY };
+    }
+
+    return {
+      x: centerX + data.offsetX,
+      y: centerY + data.offsetY,
+    };
+  }
+
+  //Spawn order modified to be just strings of the id, spawn location is moved to data/organisms.ts. First 2 organisms are still spawned in gamescene
+  private readonly defaultOrganismSpawnOrder: readonly string[] = [
+    "ants",
+    "sapota",
+    "antfootbacteria",
+    "diazotroph",
+    "glomeromycetes",
+    "mycorrhizahelper",
   ];
+  public organismSpawnOrder: string[] = [];
+
   private nextOrganismToSpawn = 0;
 
   // Dynamic d3-force state & configuration
@@ -135,7 +146,6 @@ export default class ArrowManager {
     organismManager: OrganismManager,
     scoreManager: ScoreManager,
     interactions: Connection[],
-    organismSpawnOrder: OrganismSpawn[] = this.defaultOrganismSpawnOrder,
     forceConfig: Partial<ForceLayoutConfig> = {},
   ) {
 
@@ -146,7 +156,8 @@ export default class ArrowManager {
     this.organismManager = organismManager;
     this.scoreManager = scoreManager;
     this.interactions = interactions;
-    this.organismSpawnOrder = organismSpawnOrder.map((o) => ({ ...o }));
+
+    this.organismSpawnOrder = [...this.defaultOrganismSpawnOrder];
 
     this.initGraphics();
 
@@ -228,18 +239,18 @@ export default class ArrowManager {
 
     if (this.scene.scale.width > this.scene.scale.height) {
       this.simulation
-      // Weak X 
-      .force("x", forceX<ForceNode>(centerX).strength(0.005))
-      // Strong Y - organisms are pushed towards a horizontal line. 
-      .force("y", forceY<ForceNode>(centerY).strength(0.08));
+        // Weak X 
+        .force("x", forceX<ForceNode>(centerX).strength(0.005))
+        // Strong Y - organisms are pushed towards a horizontal line. 
+        .force("y", forceY<ForceNode>(centerY).strength(0.08));
     } else {
       this.simulation
-      // Strong X 
-      .force("x", forceX<ForceNode>(centerX).strength(0.08))
-      // Weak Y - organisms are pushed towards a vertical line.
-      .force("y", forceY<ForceNode>(centerY).strength(0.005));
+        // Strong X 
+        .force("x", forceX<ForceNode>(centerX).strength(0.08))
+        // Weak Y - organisms are pushed towards a vertical line.
+        .force("y", forceY<ForceNode>(centerY).strength(0.005));
     }
-    
+
 
     // Update the charge force with a max distance 
     this.simulation.force(
@@ -425,10 +436,11 @@ export default class ArrowManager {
 
     const nextOrganism = this.organismSpawnOrder[this.nextOrganismToSpawn];
     if (allRelationsCorrect && nextOrganism) {
+      const position = this.getSpawnPosition(nextOrganism);
       const created = this.organismManager.createOrganism(
-        nextOrganism.x,
-        nextOrganism.y,
-        nextOrganism.type,
+        position.x,
+        position.y,
+        nextOrganism,
       ) as Organism | void;
 
       if (created && created.organismData) {

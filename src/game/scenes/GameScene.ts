@@ -1,9 +1,10 @@
 import Phaser from "phaser";
 import ParticleManager from "../managers/ParticleManager";
 import Organism from "../entities/organism";
+import { organisms } from "../data/organisms"; // adjust path
 import InfoButton from "../entities/infobutton";
 import CameraManager from "../managers/CameraManager";
-import ArrowManager, { type OrganismSpawn } from "../managers/ArrowManager";
+import ArrowManager from "../managers/ArrowManager";
 import OrganismManager from "../managers/OrganismManager";
 import InteractionManager from "../managers/InteractionManager";
 import ConnectionManager from "../managers/ConnectionManager";
@@ -49,32 +50,6 @@ export default class GameScene extends Phaser.Scene {
     const centerX = this.cameras.main.centerX;
     const centerY = this.cameras.main.centerY;
 
-    const organismPositions: Record<string, OrganismSpawn> = {
-      acacia: { type: "acacia", x: centerX, y: centerY - 260 },
-      diazotroph: { type: "diazotroph", x: centerX - 520, y: centerY - 185 },
-      ants: { type: "ants", x: centerX - 260, y: centerY },
-      sapota: { type: "sapota", x: centerX + 260, y: centerY },
-      antfootbacteria: {
-        type: "antfootbacteria",
-        x: centerX - 520,
-        y: centerY + 185,
-      },
-      mycorrhizahelper: {
-        type: "mycorrhizahelper",
-        x: centerX + 520,
-        y: centerY + 185,
-      },
-      amf: { type: "amf", x: centerX, y: centerY + 260 },
-    };
-
-    const organismSpawnOrder = [
-      organismPositions.ants,
-      organismPositions.sapota,
-      organismPositions.antfootbacteria,
-      organismPositions.diazotroph,
-      organismPositions.mycorrhizahelper,
-    ];
-
     const interactions: Connection[] = [];
     const rightConnections: Connection[] = [];
     const organismMap = new Map<string, Organism>();
@@ -104,14 +79,14 @@ export default class GameScene extends Phaser.Scene {
       this.organismManager,
       this.scoreManager,
       interactions,
-      organismSpawnOrder,
     );
 
     this.arrowManager.createArrowButtons(centerY);
+    //First organism is the first in organisms.ts
+    const initialOrganism = organisms[0];
+
     this.organismManager.createOrganism(
-      organismPositions.acacia.x,
-      organismPositions.acacia.y,
-      organismPositions.acacia.type,
+      centerX + initialOrganism.offsetX, centerY + initialOrganism.offsetY, initialOrganism.id
     );
 
     //Eventlistener for: If players clicks on empty space, preview arrow disappears
@@ -141,14 +116,16 @@ export default class GameScene extends Phaser.Scene {
       this.scene.launch("TutorialScene");
     });
 
+    //Second organism is the second in organisms.ts
+    const secondOrganism = organisms[1];
+
     this.events.once("menuClosed", () => {
       // Resume game scene
       this.scene.resume();
       this.time.delayedCall(3000, () => {
+        console.log(secondOrganism)
         this.organismManager.createOrganism(
-          organismPositions.amf.x,
-          organismPositions.amf.y,
-          organismPositions.amf.type,
+          centerX + secondOrganism.offsetX, centerY + secondOrganism.offsetY, secondOrganism.id
         );
       });
     });
