@@ -2,6 +2,7 @@ import Phaser from "phaser";
 import ParticleManager from "../managers/ParticleManager";
 import Organism from "../entities/organism";
 import InfoButton from "../entities/infobutton";
+import HintButton from "../entities/hintbutton";
 import CameraManager from "../managers/CameraManager";
 import ArrowManager, { type OrganismSpawn } from "../managers/ArrowManager";
 import OrganismManager from "../managers/OrganismManager";
@@ -139,6 +140,14 @@ export default class GameScene extends Phaser.Scene {
 
     infobutton.on("infoButtonClicked", () => {
       this.scene.launch("TutorialScene");
+    });
+
+    const hintbutton = new HintButton(this, 240, 40);
+    this.cameras.main.ignore(hintbutton);
+
+    hintbutton.on("hintButtonClicked", () => {
+      const missing = this.connectionManager.getMissingConnections();
+      console.log("Missing connections:", missing);
     });
 
     this.events.once("menuClosed", () => {
