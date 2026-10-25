@@ -125,7 +125,13 @@ export default class GameScene extends Phaser.Scene {
 
     hintbutton.on("hintButtonClicked", () => {
       const missing = this.connectionManager.getMissingConnections();
-      console.log("Missing connections:", missing);
+      if (missing.length === 0) return;
+
+      this.scoreManager.loseMoney(100);
+
+      const hint = missing[0];
+      organismMap.get(hint.from)?.highlight();
+      organismMap.get(hint.to)?.highlight();
     });
 
     this.events.once("menuClosed", () => {

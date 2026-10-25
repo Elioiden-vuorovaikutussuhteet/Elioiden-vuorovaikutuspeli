@@ -27,8 +27,8 @@ export class ScoreManager {
         this.updateText();
     }
 
-    loseMoney(): void{
-        this.money -= 20;
+    loseMoney(amount = 20): void{
+        this.money -= amount;
         this.updateText();
     }
 
