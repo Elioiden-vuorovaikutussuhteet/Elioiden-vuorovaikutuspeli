@@ -93,7 +93,7 @@ export default class GameScene extends Phaser.Scene {
       organismMap,
       interactions,
       (fromId, toId) => {
-        this.arrowManager.pulseArrow(fromId, toId);
+        this.arrowManager.playArrowPulseAnimation(fromId, toId);
       },
     );
 

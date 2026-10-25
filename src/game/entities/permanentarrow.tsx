@@ -1,5 +1,6 @@
 import Phaser from "phaser";
 import type Organism from "./organism";
+import { drawArrow } from "../services/DrawArrowService";
 
 export interface PermanentArrowConfig {
   targetOffset?: number;
@@ -9,7 +10,7 @@ export interface PermanentArrowConfig {
 }
 
 export default class PermanentArrow {
-public readonly key: string;
+  public readonly key: string;
 	public readonly fromId: string;
   public readonly toId: string;
   public readonly graphics: Phaser.GameObjects.Graphics;
@@ -90,7 +91,7 @@ public readonly key: string;
 		this.pulseTween = this.scene.tweens.add({
 			targets: this,
 			pulseProgress: 1,
-			duration: 700,
+			duration: 1000,
 			ease: "Linear",
 			onComplete: () => {
 				this.pulse.setVisible(false);
@@ -110,6 +111,7 @@ public readonly key: string;
 		);
 	}
 
+
   public update(from: Organism, to: Organism): void {
     const dx = to.x - from.x;
     const dy = to.y - from.y;
@@ -122,56 +124,32 @@ public readonly key: string;
     const targetX = to.x - (dx / distance) * this.targetOffset;
     const targetY = to.y - (dy / distance) * this.targetOffset;
 
-    this.draw(
-      from.x,
-      from.y,
-      targetX,
-      targetY,
-    );
-
-		this.updatePulsePosition();
-  }
-
-  private draw(
-    x1: number,
-    y1: number,
-    x2: number,
-    y2: number,
-  ): void {
-    const dx = x2 - x1;
-    const dy = y2 - y1;
-    const length = Math.hypot(dx, dy);
-
-    if (length === 0) return;
-
-    const ux = dx / length;
-    const uy = dy / length;
+    const ux = dx / distance;
+    const uy = dy / distance;
     const px = -uy;
     const py = ux;
 
-    const sx1 = x1 + px * this.lateralOffset;
-    const sy1 = y1 + py * this.lateralOffset;
-    const sx2 = x2 + px * this.lateralOffset;
-    const sy2 = y2 + py * this.lateralOffset;
+    this.fromX = from.x + px * this.lateralOffset;
+    this.fromY = from.y + py * this.lateralOffset;
+    this.toX = targetX + px * this.lateralOffset;
+    this.toY = targetY + py * this.lateralOffset;
 
-    const x3 = sx2 - 20 * ux + 15 * px;
-    const y3 = sy2 - 20 * uy + 15 * py;
-    const x4 = sx2 - 20 * ux - 15 * px;
-    const y4 = sy2 - 20 * uy - 15 * py;
+    drawArrow(this.graphics, {
+      x1: from.x,
+      y1: from.y,
+      x2: targetX,
+      y2: targetY,
+      color: this.color,
+      thickness: this.thickness,
+      lateralOffset: this.lateralOffset,
+    });
 
-    this.graphics.lineStyle(this.thickness, this.color);
-    this.graphics.fillStyle(this.color, 1);
-
-    this.graphics.lineBetween(
-      sx1, sy1,
-      sx2 - 15 * ux,
-      sy2 - 15 * uy,
-    );
-
-    this.graphics.fillTriangle(sx2, sy2, x3, y3, x4, y4);
+    this.updatePulsePosition();
   }
 
   public destroy(): void {
+    this.pulseTween?.stop();
     this.graphics.destroy();
+    this.pulse.destroy();
   }
 }

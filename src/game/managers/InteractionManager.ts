@@ -2,7 +2,7 @@ import Organism from "../entities/organism";
 import { getRelation } from "../services/RelationsService";
 import type { Connection } from "../types/Connection";
 
-type ArrowPulseCallback = (
+type ArrowPulseAnimationCallback = (
   fromId: string,
   toId: string,
 ) => void;
@@ -11,18 +11,18 @@ type ArrowPulseCallback = (
 export default class InteractionManager {
   private organismMap: Map<string, Organism>;
   private interactions: Connection[];
-  private pulseArrow: ArrowPulseCallback;
+  private pulseAnimationCallback: ArrowPulseAnimationCallback;
 
   private pulseWaitTime: number;
 
   constructor(
     organismMap: Map<string, Organism>,
     interactions: Connection[],
-    pulseArrow: ArrowPulseCallback,
+    pulseAnimationCallback: ArrowPulseAnimationCallback,
   ) {
     this.organismMap = organismMap;
     this.interactions = interactions;
-    this.pulseArrow = pulseArrow;
+    this.pulseAnimationCallback = pulseAnimationCallback;
     this.pulseWaitTime = 1000
   }
 
@@ -43,7 +43,7 @@ public async interactionPulse(startingOrganism: Organism, arrowOriginOrganism: O
     * initialRelationData.value 
     * Math.sqrt(Math.max(0, arrowOriginOrganism.hp) / 100);
     
-    this.pulseArrow(
+    this.pulseAnimationCallback(
     arrowOriginOrganism.organismData.id,
     startingOrganism.organismData.id,
     );
@@ -132,7 +132,7 @@ public async interactionPulse(startingOrganism: Organism, arrowOriginOrganism: O
           const currentChange = healthChanges.get(arrow.to) ?? 0;
 
           healthChanges.set(arrow.to, currentChange + hpChange);
-          this.pulseArrow(arrow.from, arrow.to);
+          this.pulseAnimationCallback(arrow.from, arrow.to);
         }
       }
       await new Promise((resolve) => setTimeout(resolve, this.pulseWaitTime));

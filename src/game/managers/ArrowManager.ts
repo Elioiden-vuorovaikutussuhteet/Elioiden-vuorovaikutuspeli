@@ -7,6 +7,7 @@ import InteractionManager from "./InteractionManager";
 import ConnectionManager from "./ConnectionManager";
 import OrganismManager from "./OrganismManager";
 import PermanentArrow from "../entities/permanentarrow";
+import { drawArrow } from "../services/DrawArrowService";
 import { ScoreManager } from "./ScoreManager";
 import { getInteractionId } from "../data/popupTexts";
 import {
@@ -116,7 +117,7 @@ export default class ArrowManager {
     return JSON.stringify([fromId, toId]);
   }
 
-  public pulseArrow(fromId: string, toId: string): void {
+  public playArrowPulseAnimation(fromId: string, toId: string): void {
     const key = this.getPermanentArrowKey(fromId, toId);
     const arrow = this.permanentArrows.get(key);
 
@@ -315,17 +316,13 @@ export default class ArrowManager {
     // Fix test
     if (first.organismData.id === second.organismData.id || !relationData) {
       this.clearPreview();
+      this.selectedOrganism = null;
       return;
     }
 
     const relation = relationData["value"];
 
     const arrowColorValue = this.getArrowColorValue();
-
-    if (first.organismData.id === second.organismData.id) {
-      this.selectedOrganism = null;
-      return;
-    }
 
     // Create arrow if it doesnt exist yet
     if (
@@ -350,6 +347,7 @@ export default class ArrowManager {
         this.scene.scene.launch("PopupScene", { textId });
         this.scoreManager.getMoney();
 
+        this.redrawPermanentArrows();
         this.interactionManager.interactionPulse(second, first);
 
         this.recalculateLayout();
@@ -369,6 +367,7 @@ export default class ArrowManager {
         this.scene.scene.launch("PopupScene", { textId });
         this.scoreManager.getMoney();
 
+        this.redrawPermanentArrows();
         this.interactionManager.interactionPulse(second, first);
 
         this.recalculateLayout();
@@ -416,20 +415,6 @@ export default class ArrowManager {
       ]),
     );
 
-    const activeKeys = new Set(
-      this.interactions.map(({ from, to }) =>
-        this.getPermanentArrowKey(from, to),
-      ),
-    );
-
-    // Remove arrows whose connections no longer exist.
-    for (const [key, arrow] of this.permanentArrows) {
-      if (!activeKeys.has(key)) {
-        arrow.destroy();
-        this.permanentArrows.delete(key);
-      }
-    }
-
     for (const { from, to } of this.interactions) {
       const first =
         organismsById.get(from) ?? this.knownOrganisms.get(from);
@@ -463,53 +448,6 @@ export default class ArrowManager {
 
       arrow.update(first, second);
     }
-  }
-
-
-  public drawPreviewArrow(
-    graphics: Phaser.GameObjects.Graphics,
-    x1: number,
-    y1: number,
-    x2: number,
-    y2: number,
-    color: number,
-    thickness: number,
-    lateralOffset: number = 0, // 0 = center line, >0 = shifted right
-  ) {
-    const dx = x2 - x1;
-    const dy = y2 - y1;
-
-    const lineLength = Math.sqrt(dx * dx + dy * dy);
-    if (lineLength === 0) return;
-
-    // Line unit vector
-    const udx = dx / lineLength;
-    const udy = dy / lineLength;
-
-    // Perpendicular unit vector
-    const pdx = -udy;
-    const pdy = udx;
-
-    // Apply lateral lane shift 
-    const sx1 = x1 + pdx * lateralOffset;
-    const sy1 = y1 + pdy * lateralOffset;
-    const sx2 = x2 + pdx * lateralOffset;
-    const sy2 = y2 + pdy * lateralOffset;
-
-    // Arrowhead base vertices
-    const x3 = sx2 - 20 * udx + 15 * pdx;
-    const y3 = sy2 - 20 * udy + 15 * pdy;
-    const x4 = sx2 - 20 * udx - 15 * pdx;
-    const y4 = sy2 - 20 * udy - 15 * pdy;
-
-    // this.uiCamera.ignore(this.previewArrow);
-    // this.uiCamera.ignore(this.permanentArrows);
-
-    graphics.lineStyle(thickness, color);
-    graphics.fillStyle(color, 1);
-
-    graphics.lineBetween(sx1, sy1, sx2 - 15 * udx, sy2 - 15 * udy);
-    graphics.fillTriangle(sx2, sy2, x3, y3, x4, y4);
   }
 
   public createArrowButtons(centerY: number) {
@@ -604,14 +542,14 @@ export default class ArrowManager {
     const targetX = pointer.worldX ?? pointer.x ?? 0;
     const targetY = pointer.worldY ?? pointer.y ?? 0;
 
-    this.drawPreviewArrow(
-      this.previewArrow,
-      this.selectedOrganism.x,
-      this.selectedOrganism.y,
-      targetX,
-      targetY,
+    drawArrow(this.previewArrow, {
+      x1: this.selectedOrganism.x,
+      y1: this.selectedOrganism.y,
+      x2: targetX,
+      y2: targetY,
       color,
-      2,
-    );
+      thickness: 2,
+      lateralOffset: 0,
+    });
   }
 }
