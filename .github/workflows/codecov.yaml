@@ -26,6 +26,9 @@ jobs:
 
       - name: Run tests
         run: npx vitest run --coverage
+      
+      - name : Run playwright tests
+        run: npx playwright test
 
       - name: Upload results to Codecov
         uses: codecov/codecov-action@v5
