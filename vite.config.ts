@@ -27,9 +27,7 @@ export default defineConfig({
     restoreMocks: true,
     silent: false, 
     reporters: ['verbose'],
-    exclude: [
-      'tests/playwright/**',
-    ],
+    exclude: ['tests/playwright/**'],
     coverage: {
       provider: 'v8',
       reporter: ['text', 'html', 'lcov'],
