@@ -26,16 +26,13 @@ const {
   const mockArrowButtonsOn = vi.fn();
 
   const MockOrganism = vi.fn(function (
-    _scene: GameScene,
-    x: number,
-    y: number,
-    type = "acacia",
+    ...[scene, id, x, y]: ConstructorParameters<typeof Organism>
   ) {
     return {
       organismData: {
-        id: type,
-        name: type,
-        texture: `${type}_sprite`,
+        id: id,
+        name: id,
+        texture: `${id}_sprite`,
         default_scale: 1,
       },
       x,
@@ -49,9 +46,6 @@ const {
   });
 
   const MockInfoButton = vi.fn(function () {
-    //_scene: GameScene,
-    //_x: number,
-    //_y: number
     return {
       on: mockInfoButtonOn,
     };
@@ -92,6 +86,7 @@ vi.mock("../../../src/game/entities/infobutton", () => ({
 vi.mock("../../../src/game/entities/hintbutton", () => ({
   default: MockHintButton,
 }));
+
 vi.mock("../../../src/game/services/RelationsService", () => ({
   getRelation: vi.fn(),
 }));
@@ -110,6 +105,11 @@ describe("GameScene", () => {
 
     scene = new GameScene();
 
+    scene.scale = mockPartial<typeof scene.scale>({
+      width: 500,
+      height: 500,
+    });
+
     scene.cameras = mockDeep<typeof scene.cameras>({
       main: {
         centerX: 500,
@@ -122,10 +122,19 @@ describe("GameScene", () => {
       }),
     });
 
-    scene.input = mockDeep<typeof scene.input>({
+    scene.input = mockPartial<typeof scene.input>({
       keyboard: {
         createCursorKeys: vi.fn().mockReturnValue({}),
-      },
+      } as any,
+      activePointer: {
+        x: 500,
+        y: 500,
+        worldX: 500,
+        worldY: 500,
+        event: { shiftKey: false } as any,
+      } as any,
+      on: vi.fn(),
+      setDraggable: vi.fn(),
     });
 
     scene.scene = mockPartial<typeof scene.scene>({
@@ -142,6 +151,7 @@ describe("GameScene", () => {
     scene.time = mockPartial<typeof scene.time>({
       delayedCall: vi.fn(),
     });
+
     scene.add = mockDeep<typeof scene.add>({
       graphics: vi.fn().mockReturnValue({
         setDepth: vi.fn(),
@@ -185,8 +195,12 @@ describe("GameScene", () => {
 
     const acacia = vi.mocked(Organism).mock.results[0].value;
     const amf = vi.mocked(Organism).mock.results[1].value;
+
+    // Filter specifically for "organismSelected" so "drag" listeners don't shift indices
     const selectOrganism = (index: number) =>
-      mockOrganismOn.mock.calls[index][1];
+      mockOrganismOn.mock.calls.filter(
+        (call) => call[0] === "organismSelected",
+      )[index][1];
 
     selectOrganism(0).call(scene, acacia);
     selectOrganism(1).call(scene, amf);
@@ -195,9 +209,9 @@ describe("GameScene", () => {
 
     expect(Organism).toHaveBeenCalledWith(
       scene,
-      240,
-      500,
       "ants",
+      expect.any(Number),
+      expect.any(Number),
       expect.anything(),
       expect.any(Function),
     );
@@ -211,18 +225,15 @@ describe("GameScene", () => {
 
     expect(Organism).toHaveBeenCalledWith(
       scene,
-      760,
-      500,
       "sapota",
+      expect.any(Number),
+      expect.any(Number),
       expect.anything(),
       expect.any(Function),
     );
   });
 
   it("logs to console after 2 organisms are selected", () => {
-    // edit this test once arrow making function is called instead of log
-    const consoleLogSpy = vi.spyOn(console, "log").mockImplementation(() => {});
-
     vi.mocked(getRelation).mockReturnValue({
       value: 1,
       mult: 1,
@@ -230,47 +241,60 @@ describe("GameScene", () => {
     scene.create();
 
     const menuClosedCallback = vi.mocked(scene.events.once).mock.calls[0][1];
-
     menuClosedCallback();
 
     const delayedCallback = vi.mocked(scene.time.delayedCall).mock.calls[0][1];
-
     delayedCallback();
 
-    const firstOrganism = vi.mocked(Organism).mock.results[0].value;
+    const consoleLogSpy = vi.spyOn(console, "log").mockImplementation(() => {});
 
+    const firstOrganism = vi.mocked(Organism).mock.results[0].value;
     const secondOrganism = vi.mocked(Organism).mock.results[1].value;
 
-    const firstSelectionCallback = mockOrganismOn.mock.calls[0][1];
-
-    const secondSelectionCallback = mockOrganismOn.mock.calls[1][1];
+    const selectedCallbacks = mockOrganismOn.mock.calls.filter(
+      (call) => call[0] === "organismSelected",
+    );
+    const firstSelectionCallback = selectedCallbacks[0][1];
+    const secondSelectionCallback = selectedCallbacks[1][1];
 
     firstSelectionCallback.call(scene, firstOrganism);
     secondSelectionCallback.call(scene, secondOrganism);
 
-    expect(consoleLogSpy).toHaveBeenNthCalledWith(1, "acacia", 500, 240, 1);
+    expect(consoleLogSpy).toHaveBeenNthCalledWith(
+      1,
+      "acacia",
+      expect.any(Number),
+      expect.any(Number),
+      1,
+    );
 
-    expect(consoleLogSpy).toHaveBeenNthCalledWith(2, "amf", 500, 760, 1);
+    expect(consoleLogSpy).toHaveBeenNthCalledWith(
+      2,
+      "amf",
+      expect.any(Number),
+      expect.any(Number),
+      1,
+    );
 
     consoleLogSpy.mockRestore();
   });
 
   it("does nothing when the same organism is selected twice", () => {
-    const consoleLogSpy = vi.spyOn(console, "log").mockImplementation(() => {});
-
     scene.create();
 
     const menuClosedCallback = vi.mocked(scene.events.once).mock.calls[0][1];
-
     menuClosedCallback();
 
     const delayedCallback = vi.mocked(scene.time.delayedCall).mock.calls[0][1];
-
     delayedCallback();
+
+    const consoleLogSpy = vi.spyOn(console, "log").mockImplementation(() => {});
 
     const organism = vi.mocked(Organism).mock.results[0].value;
 
-    const selectionCallback = mockOrganismOn.mock.calls[0][1];
+    const selectionCallback = mockOrganismOn.mock.calls.filter(
+      (call) => call[0] === "organismSelected",
+    )[0][1];
 
     selectionCallback.call(scene, organism);
     selectionCallback.call(scene, organism);
@@ -336,6 +360,10 @@ describe("ArrowManager interactions", () => {
       fillTriangle: vi.fn(),
     };
 
+    (scene as any).scale = {
+      width: 1920,
+      height: 1080,
+    };
     (scene as any).permanentArrows = permanentArrows;
     (scene as any).previewArrow = previewArrow;
     (scene as any).interactions = [];

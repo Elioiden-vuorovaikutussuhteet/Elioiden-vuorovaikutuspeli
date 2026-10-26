@@ -1,7 +1,7 @@
 import Phaser from "phaser";
 import ArrowButtons from "../entities/arrowbuttons";
 import type Organism from "../entities/organism";
-import { organismDataMap } from "../data/organisms"; 
+import { organismDataMap } from "../data/organisms";
 import { getRelation } from "../services/RelationsService";
 import type { Connection } from "../types/Connection";
 import InteractionManager from "./InteractionManager";
@@ -103,8 +103,8 @@ export default class ArrowManager {
   private interactions: Connection[];
 
   public getSpawnPosition(id: string): { x: number; y: number } {
-    const centerX = this.scene.scale.width / 2;
-    const centerY = this.scene.scale.height / 2;
+    const centerX = this.forceConfig.centerX;
+    const centerY = this.forceConfig.centerY;
 
     const data = organismDataMap.get(id);
     if (!data) {
@@ -234,10 +234,10 @@ export default class ArrowManager {
     this.simulation.nodes(this.forceNodes);
     this.linkForce.links(this.forceLinks);
 
-    const centerX = this.scene.scale.width / 2;
-    const centerY = this.scene.scale.height / 2;
+    const centerX = this.forceConfig.worldWidth / 2;
+    const centerY = this.forceConfig.worldHeight / 2;
 
-    if (this.scene.scale.width > this.scene.scale.height) {
+    if (centerX > centerY) {
       this.simulation
         // Weak X 
         .force("x", forceX<ForceNode>(centerX).strength(0.005))

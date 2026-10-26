@@ -34,7 +34,6 @@ export default class Organism extends Phaser.GameObjects.Sprite {
     id: string,
     x: number,
     y: number,
-
     uiCamera?: Phaser.Cameras.Scene2D.Camera,
     onHealthChanged?: (x: number, y: number, amount: number) => void,
   ) {
