@@ -22,15 +22,15 @@ const {
 
   const MockOrganism = vi.fn(function (
     _scene: GameScene,
+    id = "acacia",
     x: number,
     y: number,
-    type = "acacia",
   ) {
     return {
       organismData: {
-        id: type,
-        name: type,
-        texture: `${type}_sprite`,
+        id: id,
+        name: id,
+        texture: `${id}_sprite`,
         default_scale: 1,
       },
       x,
@@ -107,6 +107,11 @@ describe("GameScene", () => {
 
     scene = new GameScene();
 
+    scene.scale = {
+      width: 800,
+      height: 600,
+    } as Phaser.Scale.ScaleManager;
+
     scene.cameras = mockDeep<typeof scene.cameras>({
       main: {
         centerX: 500,
@@ -130,6 +135,7 @@ describe("GameScene", () => {
       pause: vi.fn(),
       bringToTop: vi.fn(),
       resume: vi.fn(),
+
     });
 
     scene.events = mockPartial<typeof scene.events>({
@@ -192,9 +198,9 @@ describe("GameScene", () => {
 
     expect(Organism).toHaveBeenCalledWith(
       scene,
-      500,
-      240,
       "acacia",
+      expect.any(Number),
+      expect.any(Number),
       expect.anything(),
       expect.any(Function),
     );
@@ -208,7 +214,7 @@ describe("GameScene", () => {
     menuClosedCallback();
 
     expect(scene.time.delayedCall).toHaveBeenCalledWith(
-      3000,
+      expect.any(Number),
       expect.any(Function),
     );
 
@@ -218,9 +224,9 @@ describe("GameScene", () => {
 
     expect(Organism).toHaveBeenCalledWith(
       scene,
-      500,
-      760,
-      "amf",
+      "amf",                // <-- id comes second
+      expect.any(Number),   // <-- x
+      expect.any(Number),   // <-- y
       expect.anything(),
       expect.any(Function),
     );

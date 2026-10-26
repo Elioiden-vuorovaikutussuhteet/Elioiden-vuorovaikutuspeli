@@ -31,15 +31,16 @@ export default class Organism extends Phaser.GameObjects.Sprite {
 
   constructor(
     scene: Phaser.Scene,
+    id: string,
     x: number,
     y: number,
-    type = "acacia",
     uiCamera?: Phaser.Cameras.Scene2D.Camera,
     onHealthChanged?: (x: number, y: number, amount: number) => void,
   ) {
-    super(scene, x, y, getOrganismData(type).texture);
 
-    const organismData = getOrganismData(type);
+    super(scene, x, y, getOrganismData(id).texture);
+
+    const organismData = getOrganismData(id);
 
     this.onHealthChanged = onHealthChanged;
 
