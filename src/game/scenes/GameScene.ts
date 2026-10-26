@@ -2,6 +2,7 @@ import Phaser from "phaser";
 import ParticleManager from "../managers/ParticleManager";
 import Organism from "../entities/organism";
 import InfoButton from "../entities/infobutton";
+import HintButton from "../entities/hintbutton";
 import CameraManager from "../managers/CameraManager";
 import ArrowManager, { type OrganismSpawn } from "../managers/ArrowManager";
 import OrganismManager from "../managers/OrganismManager";
@@ -92,8 +93,8 @@ export default class GameScene extends Phaser.Scene {
     this.interactionManager = new InteractionManager(
       organismMap,
       interactions,
-      (fromId, toId) => {
-        this.arrowManager.playArrowPulseAnimation(fromId, toId);
+      (fromId, toId, hpChange) => {
+        this.arrowManager.playArrowPulseAnimation(fromId, toId, hpChange);
       },
     );
 
@@ -145,6 +146,20 @@ export default class GameScene extends Phaser.Scene {
 
     infobutton.on("infoButtonClicked", () => {
       this.scene.launch("TutorialScene");
+    });
+
+    const hintbutton = new HintButton(this, 240, 40);
+    this.cameras.main.ignore(hintbutton);
+
+    hintbutton.on("hintButtonClicked", () => {
+      const missing = this.connectionManager.getMissingConnections();
+      if (missing.length === 0) return;
+
+      this.scoreManager.loseMoney(100);
+
+      const hint = missing[0];
+      organismMap.get(hint.from)?.highlight();
+      organismMap.get(hint.to)?.highlight();
     });
 
     this.events.once("menuClosed", () => {

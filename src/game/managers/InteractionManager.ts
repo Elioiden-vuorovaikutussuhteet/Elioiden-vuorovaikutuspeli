@@ -5,6 +5,7 @@ import type { Connection } from "../types/Connection";
 type ArrowPulseAnimationCallback = (
   fromId: string,
   toId: string,
+  hpChange: number,
 ) => void;
 
 // interactionPulse is here
@@ -46,6 +47,7 @@ public async interactionPulse(startingOrganism: Organism, arrowOriginOrganism: O
     this.pulseAnimationCallback(
     arrowOriginOrganism.organismData.id,
     startingOrganism.organismData.id,
+    initialHealthChange,
     );
 
     await new Promise((resolve) => setTimeout(resolve, this.pulseWaitTime));
@@ -132,7 +134,7 @@ public async interactionPulse(startingOrganism: Organism, arrowOriginOrganism: O
           const currentChange = healthChanges.get(arrow.to) ?? 0;
 
           healthChanges.set(arrow.to, currentChange + hpChange);
-          this.pulseAnimationCallback(arrow.from, arrow.to);
+          this.pulseAnimationCallback(arrow.from, arrow.to, hpChange);
         }
       }
       await new Promise((resolve) => setTimeout(resolve, this.pulseWaitTime));

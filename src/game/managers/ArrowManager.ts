@@ -117,11 +117,11 @@ export default class ArrowManager {
     return JSON.stringify([fromId, toId]);
   }
 
-  public playArrowPulseAnimation(fromId: string, toId: string): void {
+  public playArrowPulseAnimation(fromId: string, toId: string, hpChange: number): void {
     const key = this.getPermanentArrowKey(fromId, toId);
     const arrow = this.permanentArrows.get(key);
 
-    arrow?.playPulse();
+    arrow?.playPulse(hpChange);
   }
 
   // Dynamic d3-force state & configuration

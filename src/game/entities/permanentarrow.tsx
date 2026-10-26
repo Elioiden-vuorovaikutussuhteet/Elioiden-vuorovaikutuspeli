@@ -9,6 +9,12 @@ export interface PermanentArrowConfig {
   lateralOffset?: number;
 }
 
+interface PulseAnimation {
+  circle: Phaser.GameObjects.Arc;
+  progress: number;
+  tween: Phaser.Tweens.Tween;
+}
+
 export default class PermanentArrow {
   public readonly key: string;
 	public readonly fromId: string;
@@ -23,9 +29,7 @@ export default class PermanentArrow {
   private thickness: number;
   private lateralOffset: number;
 
-	private pulse!: Phaser.GameObjects.Arc;
-	private pulseProgress = 0;
-	private pulseTween?: Phaser.Tweens.Tween;
+  private pulses: PulseAnimation[] = [];
 
 	private fromX = 0;
 	private fromY = 0;
@@ -54,17 +58,6 @@ export default class PermanentArrow {
     this.graphics = this.scene.add.graphics();
     this.graphics.setDepth(100);
     this.uiCamera.ignore(this.graphics);
-
-		this.pulse = this.scene.add.circle(
-			0,
-			0,
-			8,
-			0xffff66,
-		);
-
-		this.pulse.setDepth(101);
-		this.pulse.setVisible(false);
-		this.uiCamera.ignore(this.pulse);
   }
 
   public setStyle(config: Partial<PermanentArrowConfig>): void {
@@ -82,34 +75,50 @@ export default class PermanentArrow {
     }
   }
 	
-	public playPulse(): void {
-		this.pulseTween?.stop();
+  public playPulse(healthChange: number): void {
+    const color = healthChange >= 0 ? 0x04B504 : 0xb83232;
 
-		this.pulseProgress = 0;
-		this.pulse.setVisible(true);
+    const circle = this.scene.add.circle(
+      this.fromX,
+      this.fromY,
+      8,
+      color,
+    );
 
-		this.pulseTween = this.scene.tweens.add({
-			targets: this,
-			pulseProgress: 1,
-			duration: 1000,
-			ease: "Linear",
-			onComplete: () => {
-				this.pulse.setVisible(false);
-				this.pulseTween = undefined;
-			},
-		});
-	}
+    circle.setDepth(101);
+    circle.setAlpha(0.8);
+    this.uiCamera.ignore(circle);
 
-		private updatePulsePosition(): void {
-		if (!this.pulse.visible) return;
+    const pulse: PulseAnimation = {
+      circle,
+      progress: 0,
+      tween: undefined as unknown as Phaser.Tweens.Tween,
+    };
 
-		const t = this.pulseProgress;
+    pulse.tween = this.scene.tweens.add({
+      targets: pulse,
+      progress: 1,
+      duration: 1000,
+      ease: "Linear",
+      onComplete: () => {
+        circle.destroy();
+        this.pulses = this.pulses.filter((p) => p !== pulse);
+      },
+    });
 
-		this.pulse.setPosition(
-			this.fromX + (this.toX - this.fromX) * t,
-			this.fromY + (this.toY - this.fromY) * t,
-		);
-	}
+    this.pulses.push(pulse);
+  }
+
+  private updatePulsePosition(): void {
+    for (const pulse of this.pulses) {
+      const t = pulse.progress;
+
+      pulse.circle.setPosition(
+        this.fromX + (this.toX - this.fromX) * t,
+        this.fromY + (this.toY - this.fromY) * t,
+      );
+    }
+  }
 
 
   public update(from: Organism, to: Organism): void {
@@ -149,10 +158,13 @@ export default class PermanentArrow {
   }
 
   public destroy(): void {
-    this.pulseTween?.stop();
-    this.pulseTween = undefined;
-    
+    for (const pulse of this.pulses) {
+      pulse.tween.stop();
+      pulse.circle.destroy();
+    }
+
+    this.pulses = [];
+
     this.graphics.destroy();
-    this.pulse.destroy();
   }
 }

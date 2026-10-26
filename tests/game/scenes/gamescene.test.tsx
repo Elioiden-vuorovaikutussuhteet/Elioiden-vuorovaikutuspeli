@@ -4,16 +4,20 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import GameScene from "../../../src/game/scenes/GameScene";
 import Organism from "../../../src/game/entities/organism";
 import InfoButton from "../../../src/game/entities/infobutton";
+import HintButton from "../../../src/game/entities/hintbutton";
 
 const {
   MockOrganism,
   MockInfoButton,
   mockInfoButtonOn,
+  MockHintButton,
+  mockHintButtonOn,
   mockArrowButtonsOn,
   MockArrowButtons,
 } = vi.hoisted(() => {
   const mockOrganismOn = vi.fn();
   const mockInfoButtonOn = vi.fn();
+  const mockHintButtonOn = vi.fn();
   const mockArrowButtonsOn = vi.fn();
 
   const MockOrganism = vi.fn(function (
@@ -36,6 +40,7 @@ const {
       on: mockOrganismOn,
       changeHealth: vi.fn(),
       changeScale: vi.fn(),
+      highlight: vi.fn(),
     };
   });
 
@@ -45,6 +50,12 @@ const {
     //_y: number
     return {
       on: mockInfoButtonOn,
+    };
+  });
+
+  const MockHintButton = vi.fn(function () {
+    return {
+      on: mockHintButtonOn,
     };
   });
 
@@ -59,6 +70,8 @@ const {
     mockOrganismOn,
     MockInfoButton,
     mockInfoButtonOn,
+    MockHintButton,
+    mockHintButtonOn,
     MockArrowButtons,
     mockArrowButtonsOn,
   };
@@ -70,6 +83,10 @@ vi.mock("../../../src/game/entities/organism", () => ({
 
 vi.mock("../../../src/game/entities/infobutton", () => ({
   default: MockInfoButton,
+}));
+
+vi.mock("../../../src/game/entities/hintbutton", () => ({
+  default: MockHintButton,
 }));
 
 vi.mock("../../../src/game/entities/arrowbuttons", () => ({
@@ -138,6 +155,13 @@ describe("GameScene", () => {
         explode: vi.fn(),
         start: vi.fn(),
         stop: vi.fn(),
+        destroy: vi.fn(),
+      }),
+
+      text: vi.fn().mockReturnValue({
+        setText: vi.fn(),
+        setOrigin: vi.fn(),
+        setDepth: vi.fn(),
         destroy: vi.fn(),
       }),
     });
@@ -212,6 +236,28 @@ describe("GameScene", () => {
     infoButtonCallback();
 
     expect(scene.scene.launch).toHaveBeenCalledWith("TutorialScene");
+  });
+
+  it("highlights a missing connection pair and deducts 100 points when hint button is clicked", () => {
+    scene.create();
+
+    const menuClosedCallback = vi.mocked(scene.events.once).mock.calls[0][1];
+    menuClosedCallback();
+
+    const delayedCallback = vi.mocked(scene.time.delayedCall).mock.calls[0][1];
+    delayedCallback();
+
+    expect(HintButton).toHaveBeenCalledWith(scene, 240, 40);
+
+    const acacia = vi.mocked(Organism).mock.results[0].value;
+    const amf = vi.mocked(Organism).mock.results[1].value;
+
+    const hintButtonCallback = vi.mocked(mockHintButtonOn).mock.calls[0][1];
+    hintButtonCallback();
+
+    expect(acacia.highlight).toHaveBeenCalled();
+    expect(amf.highlight).toHaveBeenCalled();
+    expect((scene as any).scoreManager.money).toBe(900);
   });
 
   it("pauses properly on game start", () => {

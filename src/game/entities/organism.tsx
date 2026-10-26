@@ -27,13 +27,9 @@ export default class Organism extends Phaser.GameObjects.Sprite {
 
   private duplicates: Phaser.GameObjects.Sprite[] = [];
   public duplicateContainer: Phaser.GameObjects.Container;
+  private hintGlow!: Phaser.Filters.Glow;
 
-
-  private onHealthChanged?: (
-    x: number,
-    y: number,
-    amount: number
-  ) => void;
+  private onHealthChanged?: (x: number, y: number, amount: number) => void;
 
   private debugHealth: boolean;
   private debugHealthText?: Phaser.GameObjects.Text;
@@ -46,7 +42,6 @@ export default class Organism extends Phaser.GameObjects.Sprite {
     uiCamera?: Phaser.Cameras.Scene2D.Camera,
     onHealthChanged?: (x: number, y: number, amount: number) => void,
   ) {
-
     super(scene, x, y, getOrganismData(type).texture);
 
     const organismData = getOrganismData(type);
@@ -83,10 +78,34 @@ export default class Organism extends Phaser.GameObjects.Sprite {
       1,
       false,
       10,
-      10
+      10,
     );
 
     glow.active = false;
+
+    this.hintGlow = this.filters!.internal.addGlow(
+      0xffff00,
+      5,
+      0,
+      1,
+      false,
+      10,
+      10,
+    );
+
+    this.hintGlow.active = false;
+
+    this.hintGlow = this.filters!.internal.addGlow(
+      0xffff00,
+      5,
+      0,
+      1,
+      false,
+      10,
+      10
+    );
+
+    this.hintGlow.active = false;
 
     this.on("pointerover", () => {
       glow.active = true;
@@ -125,22 +144,15 @@ export default class Organism extends Phaser.GameObjects.Sprite {
       duration: 500,
       ease: "Sine.easeInOut",
       onUpdate: () => {
-        this.nameText.setPosition(
-          this.x,
-          this.y + this.displayHeight / 2 + 20
-        );
+        this.nameText.setPosition(this.x, this.y + this.displayHeight / 2 + 20);
       },
     });
   }
 
 
   private updateDuplicates() {
-    if (this.hp > (100 + this.breakpoint)) {
-      const duplicate = this.scene.add.sprite(
-        0,
-        0,
-        this.organismData.texture
-      );
+    if (this.hp > 100 + this.breakpoint) {
+      const duplicate = this.scene.add.sprite(0, 0, this.organismData.texture);
 
       duplicate.setScale(this.baseScale * 0.5);
 
@@ -152,10 +164,7 @@ export default class Organism extends Phaser.GameObjects.Sprite {
       this.breakpoint *= 2;
     }
 
-    while (
-      this.duplicates.length > 0 &&
-      this.hp <= (100 + this.breakpoint / 2)
-    ) {
+    while (this.duplicates.length > 0 && this.hp <= 100 + this.breakpoint / 2) {
       const duplicate = this.duplicates.pop();
 
       if (duplicate) {
@@ -230,11 +239,7 @@ export default class Organism extends Phaser.GameObjects.Sprite {
       ? this.y + this.displayHeight / 2
       : this.y - this.displayHeight / 2;
 
-    this.onHealthChanged?.(
-      this.x,
-      particleY,
-      totalChange
-    );
+    this.onHealthChanged?.(this.x, particleY, totalChange);
 
     if (this.organismData.growth_types.includes("multiply")) {
       this.updateDuplicates();
@@ -243,9 +248,14 @@ export default class Organism extends Phaser.GameObjects.Sprite {
       this.changeScale();
     }
   }
-  
+
   // Move organism
-  public override setPosition(x: number, y?: number, z?: number, w?: number): this {
+  public override setPosition(
+    x: number,
+    y?: number,
+    z?: number,
+    w?: number,
+  ): this {
     super.setPosition(x, y, z, w);
 
     const currentX = this.x;
@@ -276,5 +286,12 @@ export default class Organism extends Phaser.GameObjects.Sprite {
     super.destroy(fromScene);
   }
 
-  update() { }
+  public highlight(duration = 2000) {
+    this.hintGlow.active = true;
+    this.scene.time.delayedCall(duration, () => {
+      this.hintGlow.active = false;
+    });
+  }
+
+  update() {}
 }
