@@ -150,6 +150,8 @@ export default class PermanentArrow {
 
   public destroy(): void {
     this.pulseTween?.stop();
+    this.pulseTween = undefined;
+    
     this.graphics.destroy();
     this.pulse.destroy();
   }
