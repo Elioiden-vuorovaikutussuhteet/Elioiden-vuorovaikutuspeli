@@ -1,5 +1,5 @@
 import react from '@vitejs/plugin-react'
-import { defineConfig } from 'vitest/config'
+import { defineConfig, configDefaults} from 'vitest/config'
 
 //vite.dev/config/
 export default defineConfig({
@@ -27,7 +27,7 @@ export default defineConfig({
     restoreMocks: true,
     silent: false, 
     reporters: ['verbose'],
-    exclude: ['tests/playwright/**'],
+    exclude: ['tests/playwright/**', ...configDefaults.exclude],
     coverage: {
       provider: 'v8',
       reporter: ['text', 'html', 'lcov'],
