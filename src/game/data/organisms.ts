@@ -4,6 +4,8 @@ export interface OrganismData {
   texture: string;
   default_scale: number;
   growth_types: string[];
+  offsetX: number;
+  offsetY: number;
 }
 
 export const organisms: OrganismData[] = [
@@ -13,6 +15,8 @@ export const organisms: OrganismData[] = [
     texture: "acacia_sprite",
     default_scale: 1,
     growth_types: ["grow"],
+    offsetX: 0,
+    offsetY: -260,
   },
   {
     id: "amf",
@@ -20,6 +24,8 @@ export const organisms: OrganismData[] = [
     texture: "amf_sprite",
     default_scale: 1,
     growth_types: ["multiply"],
+    offsetX: 0,
+    offsetY: 260,
   },
   {
     id: "sapota",
@@ -27,6 +33,8 @@ export const organisms: OrganismData[] = [
     texture: "sapota_sprite",
     default_scale: 0.9,
     growth_types: ["grow"],
+    offsetX: 260,
+    offsetY: 0,
   },
   {
     id: "ants",
@@ -34,6 +42,8 @@ export const organisms: OrganismData[] = [
     texture: "ants_sprite",
     default_scale: 0.8,
     growth_types: ["multiply"],
+    offsetX: -260,
+    offsetY: 0,
   },
   {
     id: "antfootbacteria",
@@ -41,6 +51,8 @@ export const organisms: OrganismData[] = [
     texture: "antfootbacteria_sprite",
     default_scale: 1,
     growth_types: ["multiply"],
+    offsetX: -520,
+    offsetY: 185,
   },
   {
     id: "diazotroph",
@@ -48,6 +60,8 @@ export const organisms: OrganismData[] = [
     texture: "diazotroph_sprite",
     default_scale: 1,
     growth_types: ["multiply"],
+    offsetX: -520,
+    offsetY: -185,
   },
   {
     id: "mycorrhizahelper",
@@ -55,5 +69,16 @@ export const organisms: OrganismData[] = [
     texture: "mycorrhizahelper_sprite",
     default_scale: 1,
     growth_types: ["multiply"],
+    offsetX: 520,
+    offsetY: 185,
   },
 ];
+
+export const organismDataMap = new Map<string, OrganismData>(
+  organisms.map((org) => [org.id, org]),
+);
+
+export function getOrganismData(id: string): OrganismData | undefined {
+  return organismDataMap.get(id);
+}
+
