@@ -101,6 +101,7 @@ export default class ArrowManager {
   private permanentArrows = new Map<string, PermanentArrow>();
   private previewArrow!: Phaser.GameObjects.Graphics;
   private arrowColorValue: boolean = true;
+  private cursorMode = false;
   private selectedOrganism: Organism | null = null;
   private interactions: Connection[];
 
@@ -350,13 +351,20 @@ export default class ArrowManager {
           : 0xed0924,
         thickness: 8,
       },
+      () => {
+        const textId = getInteractionId(fromId, toId);
+        this.scene.scene.launch("PopupScene", { textId });
+      },
     );
 
+    arrow.setCursorMode(this.cursorMode);
     this.permanentArrows.set(key, arrow);
     return arrow;
   }
 
   public arrowChecker(organism: Organism) {
+    if (this.cursorMode) return;
+
     //Shift drag for debug
     if (this.scene.input?.activePointer?.event?.shiftKey) return;
 
@@ -526,13 +534,23 @@ export default class ArrowManager {
 
     greenButton.on("arrowButtonClicked", () => {
       this.arrowColorValue = true;
+      this.setCursorMode(false);
       console.log(this.arrowColorValue);
     });
 
     redButton.on("arrowButtonClicked", () => {
       this.arrowColorValue = false;
+      this.setCursorMode(false);
       console.log(this.arrowColorValue);
     });
+  }
+
+  public setCursorMode(enabled: boolean): void {
+    this.cursorMode = enabled;
+
+    for (const arrow of this.permanentArrows.values()) {
+      arrow.setCursorMode(enabled);
+    }
   }
 
   public getArrowColorValue() {

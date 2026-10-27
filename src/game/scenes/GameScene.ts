@@ -90,7 +90,7 @@ export default class GameScene extends Phaser.Scene {
       this.scoreManager,
       interactions,
     );
-    this.cursorManager = new CursorManager(this);
+    this.cursorManager = new CursorManager(this, this.arrowManager);
 
     this.arrowManager.createArrowButtons(centerY);
     this.cursorManager.createCursorButton(centerY);

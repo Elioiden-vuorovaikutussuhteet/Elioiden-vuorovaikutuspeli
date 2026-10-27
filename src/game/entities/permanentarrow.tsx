@@ -23,6 +23,8 @@ export default class PermanentArrow {
 
   private readonly scene: Phaser.Scene;
   private readonly uiCamera: Phaser.Cameras.Scene2D.Camera;
+  private readonly hitZone: Phaser.GameObjects.Zone;
+  private readonly onClicked: () => void;
 
   private targetOffset: number;
   private color: number;
@@ -35,6 +37,7 @@ export default class PermanentArrow {
 	private fromY = 0;
 	private toX = 0;
 	private toY = 0;
+  private hitBounds = new Phaser.Geom.Rectangle();
 
   constructor(
     scene: Phaser.Scene,
@@ -42,9 +45,11 @@ export default class PermanentArrow {
     fromId: string,
     toId: string,
     config: PermanentArrowConfig = {},
+    onClicked: () => void = () => undefined,
   ) {
     this.scene = scene;
     this.uiCamera = uiCamera;
+    this.onClicked = onClicked;
 
     this.fromId = fromId;
     this.toId = toId;
@@ -58,6 +63,18 @@ export default class PermanentArrow {
     this.graphics = this.scene.add.graphics();
     this.graphics.setDepth(100);
     this.uiCamera.ignore(this.graphics);
+    
+    //arrow hitzone for cursormode
+    this.hitZone = this.scene.add.zone(0, 0, 1, 1);
+    this.hitZone.setOrigin(0);
+    this.hitZone.setDepth(99);
+    this.hitZone.setInteractive(
+      new Phaser.Geom.Rectangle(0, 0, 1, 1),
+      (_hitArea, x, y) => this.isPointOnArrow(x + this.hitBounds.x, y + this.hitBounds.y),
+    );
+    this.hitZone.on("pointerdown", () => this.onClicked());
+    this.hitZone.input!.enabled = false;
+    this.uiCamera.ignore(this.hitZone);
   }
 
   public setStyle(config: Partial<PermanentArrowConfig>): void {
@@ -143,6 +160,7 @@ export default class PermanentArrow {
     this.toX = targetX + px * this.lateralOffset;
     this.toY = targetY + py * this.lateralOffset;
 
+    this.updateHitZone();
     drawArrow(this.graphics, {
         x1: from.x,
         y1: from.y,
@@ -156,6 +174,40 @@ export default class PermanentArrow {
     this.updatePulsePosition();
   }
 
+  public setCursorMode(enabled: boolean): void {
+    this.hitZone.input!.enabled = enabled;
+  }
+
+  private updateHitZone(): void {
+    const padding = this.thickness + 12;
+    const minX = Math.min(this.fromX, this.toX) - padding;
+    const minY = Math.min(this.fromY, this.toY) - padding;
+    const width = Math.max(1, Math.abs(this.toX - this.fromX) + padding * 2);
+    const height = Math.max(1, Math.abs(this.toY - this.fromY) + padding * 2);
+
+    this.hitBounds.setTo(minX, minY, width, height);
+    this.hitZone.setPosition(minX, minY);
+    this.hitZone.setSize(width, height);
+    this.hitZone.input!.hitArea = new Phaser.Geom.Rectangle(0, 0, width, height);
+  }
+
+  private isPointOnArrow(x: number, y: number): boolean {
+    const dx = this.toX - this.fromX;
+    const dy = this.toY - this.fromY;
+    const lengthSquared = dx * dx + dy * dy;
+
+    if (lengthSquared === 0) return false;
+
+    const projection = Math.max(
+      0,
+      Math.min(1, ((x - this.fromX) * dx + (y - this.fromY) * dy) / lengthSquared),
+    );
+    const closestX = this.fromX + projection * dx;
+    const closestY = this.fromY + projection * dy;
+
+    return Math.hypot(x - closestX, y - closestY) <= this.thickness + 8;
+  }
+
   public destroy(): void {
     for (const pulse of this.pulses) {
       pulse.tween.stop();
@@ -165,5 +217,6 @@ export default class PermanentArrow {
     this.pulses = [];
 
     this.graphics.destroy();
+    this.hitZone.destroy();
   }
 }
