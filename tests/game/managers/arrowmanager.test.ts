@@ -21,11 +21,13 @@ const {
   MockHintButton,
   mockHintButtonOn,
   MockArrowButtons,
+  MockCursorButton,
 } = vi.hoisted(() => {
   const mockOrganismOn = vi.fn();
   const mockInfoButtonOn = vi.fn();
   const mockHintButtonOn = vi.fn();
   const mockArrowButtonsOn = vi.fn();
+  const mockCursorButtonOn = vi.fn();
 
   const MockOrganism = vi.fn(function (
     ...[scene, id, x, y]: ConstructorParameters<typeof Organism>
@@ -65,6 +67,12 @@ const {
     };
   });
 
+  const MockCursorButton = vi.fn(function () {
+    return {
+      on: mockCursorButtonOn,
+    };
+  });
+
   return {
     MockOrganism,
     mockOrganismOn,
@@ -74,6 +82,7 @@ const {
     mockHintButtonOn,
     MockArrowButtons,
     mockArrowButtonsOn,
+    MockCursorButton,
   };
 });
 
@@ -97,6 +106,10 @@ vi.mock("../../../src/game/entities/arrowbuttons", () => ({
   default: MockArrowButtons,
 }));
 
+vi.mock("../../../src/game/entities/cursorbutton", () => ({
+  default: MockCursorButton,
+}));
+
 vi.mock("../../../src/game/services/DrawArrowService", () => ({
   drawArrow: vi.fn(),
 }));
@@ -107,6 +120,7 @@ const { MockPermanentArrow } = vi.hoisted(() => ({
       setStyle: vi.fn(),
       update: vi.fn(),
       playPulse: vi.fn(),
+      setCursorMode: vi.fn(),
     };
   }),
 }));

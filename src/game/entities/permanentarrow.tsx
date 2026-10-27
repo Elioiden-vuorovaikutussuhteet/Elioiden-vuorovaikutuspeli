@@ -23,6 +23,8 @@ export default class PermanentArrow {
 
   private readonly scene: Phaser.Scene;
   private readonly uiCamera: Phaser.Cameras.Scene2D.Camera;
+  private readonly arrowhitBox: Phaser.GameObjects.Zone;
+  private readonly onClicked: () => void;
 
   private targetOffset: number;
   private color: number;
@@ -35,6 +37,8 @@ export default class PermanentArrow {
 	private fromY = 0;
 	private toX = 0;
 	private toY = 0;
+  private hitBounds = new Phaser.Geom.Rectangle();
+  private hovered = false;
 
   constructor(
     scene: Phaser.Scene,
@@ -42,9 +46,11 @@ export default class PermanentArrow {
     fromId: string,
     toId: string,
     config: PermanentArrowConfig = {},
+    onClicked: () => void = () => undefined,
   ) {
     this.scene = scene;
     this.uiCamera = uiCamera;
+    this.onClicked = onClicked;
 
     this.fromId = fromId;
     this.toId = toId;
@@ -58,6 +64,26 @@ export default class PermanentArrow {
     this.graphics = this.scene.add.graphics();
     this.graphics.setDepth(100);
     this.uiCamera.ignore(this.graphics);
+    
+    //arrow hitzone for cursormode
+    this.arrowhitBox = this.scene.add.zone(0, 0, 1, 1);
+    this.arrowhitBox.setOrigin(0);
+    this.arrowhitBox.setDepth(99);
+    this.arrowhitBox.setInteractive(
+      new Phaser.Geom.Rectangle(0, 0, 1, 1),
+      (_hitArea, x, y) => this.isPointOnArrow(x + this.hitBounds.x, y + this.hitBounds.y),
+    );
+    this.arrowhitBox.on("pointerover", () => {
+      this.hovered = true;
+      this.redraw();
+    });
+    this.arrowhitBox.on("pointerout", () => {
+      this.hovered = false;
+      this.redraw();
+    });
+    this.arrowhitBox.on("pointerdown", () => this.onClicked());
+    this.arrowhitBox.input!.enabled = false;
+    this.uiCamera.ignore(this.arrowhitBox);
   }
 
   public setStyle(config: Partial<PermanentArrowConfig>): void {
@@ -125,9 +151,8 @@ export default class PermanentArrow {
     const dx = to.x - from.x;
     const dy = to.y - from.y;
     const distance = Math.hypot(dx, dy);
-
+    
     this.graphics.clear();
-
     if (distance === 0) return;
 
     const targetX = to.x - (dx / distance) * this.targetOffset;
@@ -144,17 +169,61 @@ export default class PermanentArrow {
     this.toX = targetX + px * this.lateralOffset;
     this.toY = targetY + py * this.lateralOffset;
 
-    drawArrow(this.graphics, {
-      x1: from.x,
-      y1: from.y,
-      x2: targetX,
-      y2: targetY,
-      color: this.color,
-      thickness: this.thickness,
-      lateralOffset: this.lateralOffset,
-    });
+    this.updateHitZone();
+    this.redraw();
 
     this.updatePulsePosition();
+  }
+
+  public setCursorMode(enabled: boolean): void {
+    this.arrowhitBox.input!.enabled = enabled;
+    if (!enabled) {
+      this.hovered = false;
+      this.redraw();
+    }
+  }
+
+  private redraw(): void {
+    this.graphics.clear();
+    drawArrow(this.graphics, {
+      x1: this.fromX,
+      y1: this.fromY,
+      x2: this.toX,
+      y2: this.toY,
+      color: this.hovered ? 0xffffff : this.color,
+      thickness: this.hovered ? this.thickness + 4 : this.thickness,
+    });
+  }
+
+  private updateHitZone(): void {
+    //adjust these values if you want to adjust hitbox size for arrows
+    const padding = this.thickness + 6;
+    const minX = Math.min(this.fromX, this.toX) - padding;
+    const minY = Math.min(this.fromY, this.toY) - padding;
+    const width = Math.max(1, Math.abs(this.toX - this.fromX) + padding * 2);
+    const height = Math.max(1, Math.abs(this.toY - this.fromY) + padding * 2);
+
+    this.hitBounds.setTo(minX, minY, width, height);
+    this.arrowhitBox.setPosition(minX, minY);
+    this.arrowhitBox.setSize(width, height);
+    this.arrowhitBox.input!.hitArea = new Phaser.Geom.Rectangle(0, 0, width, height);
+  }
+
+  private isPointOnArrow(x: number, y: number): boolean {
+    const dx = this.toX - this.fromX;
+    const dy = this.toY - this.fromY;
+    const lengthSquared = dx * dx + dy * dy;
+
+    if (lengthSquared === 0) return false;
+
+    const projection = Math.max(
+      0,
+      Math.min(1, ((x - this.fromX) * dx + (y - this.fromY) * dy) / lengthSquared),
+    );
+    const closestX = this.fromX + projection * dx;
+    const closestY = this.fromY + projection * dy;
+
+    return Math.hypot(x - closestX, y - closestY) <= this.thickness + 8;
   }
 
   public destroy(): void {
@@ -166,5 +235,6 @@ export default class PermanentArrow {
     this.pulses = [];
 
     this.graphics.destroy();
+    this.arrowhitBox.destroy();
   }
 }

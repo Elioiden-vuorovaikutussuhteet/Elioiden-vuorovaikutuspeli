@@ -14,11 +14,13 @@ const {
   mockHintButtonOn,
   mockArrowButtonsOn,
   MockArrowButtons,
+  MockCursorButton,
 } = vi.hoisted(() => {
   const mockOrganismOn = vi.fn();
   const mockInfoButtonOn = vi.fn();
   const mockHintButtonOn = vi.fn();
   const mockArrowButtonsOn = vi.fn();
+  const mockCursorButtonOn = vi.fn();
 
   const MockOrganism = vi.fn(function (
     _scene: GameScene,
@@ -65,6 +67,12 @@ const {
     };
   });
 
+  const MockCursorButton = vi.fn(function () {
+    return {
+      on: mockCursorButtonOn,
+    };
+  });
+
   return {
     MockOrganism,
     mockOrganismOn,
@@ -74,6 +82,7 @@ const {
     mockHintButtonOn,
     MockArrowButtons,
     mockArrowButtonsOn,
+    MockCursorButton,
   };
 });
 
@@ -91,6 +100,10 @@ vi.mock("../../../src/game/entities/hintbutton", () => ({
 
 vi.mock("../../../src/game/entities/arrowbuttons", () => ({
   default: MockArrowButtons,
+}));
+
+vi.mock("../../../src/game/entities/cursorbutton", () => ({
+  default: MockCursorButton,
 }));
 
 vi.mock("../../../src/game/RelationsService", () => ({
