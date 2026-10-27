@@ -125,9 +125,8 @@ export default class PermanentArrow {
     const dx = to.x - from.x;
     const dy = to.y - from.y;
     const distance = Math.hypot(dx, dy);
-
+    
     this.graphics.clear();
-
     if (distance === 0) return;
 
     const targetX = to.x - (dx / distance) * this.targetOffset;
@@ -145,13 +144,13 @@ export default class PermanentArrow {
     this.toY = targetY + py * this.lateralOffset;
 
     drawArrow(this.graphics, {
-      x1: from.x,
-      y1: from.y,
-      x2: targetX,
-      y2: targetY,
-      color: this.color,
-      thickness: this.thickness,
-      lateralOffset: this.lateralOffset,
+        x1: from.x,
+        y1: from.y,
+        x2: targetX,
+        y2: targetY,
+        color: this.color,
+        thickness: this.thickness,
+        lateralOffset: this.lateralOffset,
     });
 
     this.updatePulsePosition();

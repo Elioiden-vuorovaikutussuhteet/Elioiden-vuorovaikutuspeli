@@ -11,6 +11,7 @@ import InteractionManager from "../managers/InteractionManager";
 import ConnectionManager from "../managers/ConnectionManager";
 import { ScoreManager } from "../managers/ScoreManager";
 import type { Connection } from "../types/Connection";
+import CursorManager from "../managers/CursorManager";
 
 export default class GameScene extends Phaser.Scene {
   private cameraManager!: CameraManager;
@@ -22,6 +23,7 @@ export default class GameScene extends Phaser.Scene {
   private organismManager!: OrganismManager;
   private connectionManager!: ConnectionManager;
   private scoreManager!: ScoreManager;
+  private cursorManager!: CursorManager;
 
   constructor() {
     super("GameScene");
@@ -41,6 +43,7 @@ export default class GameScene extends Phaser.Scene {
     this.load.image("mycorrhizahelper_sprite", "mycorrhizabacteria.png");
     this.load.image("pos_particle", "pos_particle.png");
     this.load.image("neg_particle", "neg_particle.png");
+    this.load.image("cursor", "cursor.png");
   }
 
   create() {
@@ -87,8 +90,10 @@ export default class GameScene extends Phaser.Scene {
       this.scoreManager,
       interactions,
     );
+    this.cursorManager = new CursorManager(this);
 
     this.arrowManager.createArrowButtons(centerY);
+    this.cursorManager.createCursorButton(centerY);
     //First organism is the first in organisms.ts
     const initialOrganism = organisms[0];
 
