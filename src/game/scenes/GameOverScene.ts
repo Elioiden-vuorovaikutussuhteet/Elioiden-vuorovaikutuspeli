@@ -56,6 +56,7 @@ export default class GameOverScene extends Phaser.Scene {
 
     againButton.on("pointerdown", () => {
       this.scene.stop();
+      this.scene.stop("PopupScene");
       this.scene.start("GameScene")
     });
   }
