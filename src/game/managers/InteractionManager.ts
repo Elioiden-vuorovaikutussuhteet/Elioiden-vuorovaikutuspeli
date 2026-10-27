@@ -33,6 +33,7 @@ public async interactionPulse(startingOrganism: Organism, arrowOriginOrganism: O
     const depthGroups = new Map<number, string[]>();
 
     const startingId = startingOrganism.organismData.id;
+    const arrowOriginId = arrowOriginOrganism.organismData.id;
 
     const outgoingArrowsByOrganism = new Map<string, Connection[]>();
     const pulseInteractions = [...this.interactions];
@@ -54,18 +55,29 @@ public async interactionPulse(startingOrganism: Organism, arrowOriginOrganism: O
     startingOrganism.changeHealth(initialHealthChange);
 
     for (const arrow of pulseInteractions) {
-      if (
-        arrow.from === arrowOriginOrganism.organismData.id &&
-        arrow.to === startingOrganism.organismData.id
-      ) {
-        continue;
+    // Exclude the initial arrow from the spreading pulse.
+    if (arrow.from === arrowOriginId && arrow.to === startingId) {
+      continue;
+    }
+
+    const arrows = outgoingArrowsByOrganism.get(arrow.from) ?? [];
+    arrows.push(arrow);
+    outgoingArrowsByOrganism.set(arrow.from, arrows);
+    }
+
+    // Remove the initial opposing arrow, if one exists.
+    const initialOutgoingArrows =
+      outgoingArrowsByOrganism.get(startingId);
+
+    if (initialOutgoingArrows) {
+      const index = initialOutgoingArrows.findIndex(
+        (arrow) => arrow.to === arrowOriginId,
+      );
+
+      if (index !== -1) {
+        initialOutgoingArrows.splice(index, 1);
       }
-
-      const arrows = outgoingArrowsByOrganism.get(arrow.from) ?? [];
-
-      arrows.push(arrow);
-      outgoingArrowsByOrganism.set(arrow.from, arrows);
-}
+    }
 
     visited.add(startingId);
 
@@ -92,6 +104,19 @@ public async interactionPulse(startingOrganism: Organism, arrowOriginOrganism: O
         if (visited.has(arrow.to)) continue;
 
         visited.add(arrow.to);
+
+        const reverseArrows =
+          outgoingArrowsByOrganism.get(arrow.to);
+
+        if (reverseArrows) {
+          const reverseIndex = reverseArrows.findIndex(
+            (a) => a.to === current.id,
+          );
+
+          if (reverseIndex !== -1) {
+            reverseArrows.splice(reverseIndex, 1);
+          }
+        }
 
         queue.push({
           id: arrow.to,
