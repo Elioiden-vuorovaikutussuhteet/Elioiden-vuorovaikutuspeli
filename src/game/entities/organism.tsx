@@ -18,16 +18,21 @@ export default class Organism extends Phaser.GameObjects.Sprite {
 
   public readonly nameText: Phaser.GameObjects.Text;
 
-  public HP = 100;
+  private uiCamera?: Phaser.Cameras.Scene2D.Camera;
 
+  public hp = 100;
+  public previousHP = this.hp;
   private baseScale = 1;
+  private breakpoint = 10;
 
   private duplicates: Phaser.GameObjects.Sprite[] = [];
   public duplicateContainer: Phaser.GameObjects.Container;
-  private breakpoint = 2;
   private hintGlow!: Phaser.Filters.Glow;
 
   private onHealthChanged?: (x: number, y: number, amount: number) => void;
+
+  private debugHealth: boolean;
+  private debugHealthText?: Phaser.GameObjects.Text;
 
   constructor(
     scene: Phaser.Scene,
@@ -43,6 +48,10 @@ export default class Organism extends Phaser.GameObjects.Sprite {
     const organismData = getOrganismData(id);
 
     this.onHealthChanged = onHealthChanged;
+
+    // true to see previousHP, changeHealth() call and current hp
+    this.debugHealth = false;
+    this.uiCamera = uiCamera;
 
     this.duplicateContainer = scene.add.container(x, y);
     if (uiCamera) {
@@ -124,9 +133,9 @@ export default class Organism extends Phaser.GameObjects.Sprite {
   }
 
   public changeScale() {
-    const sensitivity = 2;
+    const sensitivity = 0.5;
 
-    const healthRatio = 1 + ((this.HP - 100) / 100) * sensitivity;
+    const healthRatio = 1 + ((this.hp - 100) / 100) * sensitivity;
 
     const newScale = this.baseScale * Math.max(0.1, healthRatio);
 
@@ -141,8 +150,9 @@ export default class Organism extends Phaser.GameObjects.Sprite {
     });
   }
 
+
   private updateDuplicates() {
-    if (this.HP > 100 + this.breakpoint) {
+    if (this.hp > 100 + this.breakpoint) {
       const duplicate = this.scene.add.sprite(0, 0, this.organismData.texture);
 
       duplicate.setScale(this.baseScale * 0.5);
@@ -155,7 +165,7 @@ export default class Organism extends Phaser.GameObjects.Sprite {
       this.breakpoint *= 2;
     }
 
-    while (this.duplicates.length > 0 && this.HP <= 100 + this.breakpoint / 2) {
+    while (this.duplicates.length > 0 && this.hp <= 100 + this.breakpoint / 2) {
       const duplicate = this.duplicates.pop();
 
       if (duplicate) {
@@ -189,12 +199,46 @@ export default class Organism extends Phaser.GameObjects.Sprite {
   public changeHealth(totalChange: number) {
     if (totalChange === 0) return;
 
-    this.HP += totalChange;
+    this.previousHP = this.hp
+    this.hp += totalChange;
 
+    if (this.debugHealth) {
+    const debugMessage =
+      `Previous HP: ${this.previousHP}\n` +
+      `changeHealth(${totalChange})\n` +
+      `New HP: ${this.hp}`;
+
+    if (this.debugHealthText) {
+      this.debugHealthText.setText(debugMessage);
+      this.debugHealthText.setPosition(this.x, this.y - this.displayHeight / 2 - 20);
+    } else {
+      this.debugHealthText = this.scene.add
+        .text(
+          this.x,
+          this.y - this.displayHeight / 2 - 20,
+          debugMessage,
+          {
+            fontFamily: "monospace",
+            fontSize: "14px",
+            color: "#1605fa",
+            backgroundColor: "#ffffff",
+            padding: { x: 6, y: 4 },
+            align: "left",
+          }
+        )
+        .setOrigin(0.5, 1)
+        .setDepth(1000);
+
+        if (this.uiCamera) {
+          this.uiCamera.ignore(this.debugHealthText);
+        }
+    }
+  }
+    
     const particleY =
-      totalChange > 0
-        ? this.y + this.displayHeight / 2
-        : this.y - this.displayHeight / 2;
+    totalChange > 0
+      ? this.y + this.displayHeight / 2
+      : this.y - this.displayHeight / 2;
 
     this.onHealthChanged?.(this.x, particleY, totalChange);
 
@@ -204,8 +248,6 @@ export default class Organism extends Phaser.GameObjects.Sprite {
     if (this.organismData.growth_types.includes("grow")) {
       this.changeScale();
     }
-    console.count(`Particle callback: ${this.organismData.id}`);
-    console.log("Health change:", totalChange);
   }
 
   // Move organism
