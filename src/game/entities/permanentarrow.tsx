@@ -23,7 +23,7 @@ export default class PermanentArrow {
 
   private readonly scene: Phaser.Scene;
   private readonly uiCamera: Phaser.Cameras.Scene2D.Camera;
-  private readonly hitZone: Phaser.GameObjects.Zone;
+  private readonly arrowhitBox: Phaser.GameObjects.Zone;
   private readonly onClicked: () => void;
 
   private targetOffset: number;
@@ -66,24 +66,24 @@ export default class PermanentArrow {
     this.uiCamera.ignore(this.graphics);
     
     //arrow hitzone for cursormode
-    this.hitZone = this.scene.add.zone(0, 0, 1, 1);
-    this.hitZone.setOrigin(0);
-    this.hitZone.setDepth(99);
-    this.hitZone.setInteractive(
+    this.arrowhitBox = this.scene.add.zone(0, 0, 1, 1);
+    this.arrowhitBox.setOrigin(0);
+    this.arrowhitBox.setDepth(99);
+    this.arrowhitBox.setInteractive(
       new Phaser.Geom.Rectangle(0, 0, 1, 1),
       (_hitArea, x, y) => this.isPointOnArrow(x + this.hitBounds.x, y + this.hitBounds.y),
     );
-    this.hitZone.on("pointerover", () => {
+    this.arrowhitBox.on("pointerover", () => {
       this.hovered = true;
       this.redraw();
     });
-    this.hitZone.on("pointerout", () => {
+    this.arrowhitBox.on("pointerout", () => {
       this.hovered = false;
       this.redraw();
     });
-    this.hitZone.on("pointerdown", () => this.onClicked());
-    this.hitZone.input!.enabled = false;
-    this.uiCamera.ignore(this.hitZone);
+    this.arrowhitBox.on("pointerdown", () => this.onClicked());
+    this.arrowhitBox.input!.enabled = false;
+    this.uiCamera.ignore(this.arrowhitBox);
   }
 
   public setStyle(config: Partial<PermanentArrowConfig>): void {
@@ -176,7 +176,7 @@ export default class PermanentArrow {
   }
 
   public setCursorMode(enabled: boolean): void {
-    this.hitZone.input!.enabled = enabled;
+    this.arrowhitBox.input!.enabled = enabled;
     if (!enabled) {
       this.hovered = false;
       this.redraw();
@@ -196,16 +196,17 @@ export default class PermanentArrow {
   }
 
   private updateHitZone(): void {
-    const padding = this.thickness + 12;
+    //adjust these values if you want to adjust hitbox size for arrows
+    const padding = this.thickness + 6;
     const minX = Math.min(this.fromX, this.toX) - padding;
     const minY = Math.min(this.fromY, this.toY) - padding;
     const width = Math.max(1, Math.abs(this.toX - this.fromX) + padding * 2);
     const height = Math.max(1, Math.abs(this.toY - this.fromY) + padding * 2);
 
     this.hitBounds.setTo(minX, minY, width, height);
-    this.hitZone.setPosition(minX, minY);
-    this.hitZone.setSize(width, height);
-    this.hitZone.input!.hitArea = new Phaser.Geom.Rectangle(0, 0, width, height);
+    this.arrowhitBox.setPosition(minX, minY);
+    this.arrowhitBox.setSize(width, height);
+    this.arrowhitBox.input!.hitArea = new Phaser.Geom.Rectangle(0, 0, width, height);
   }
 
   private isPointOnArrow(x: number, y: number): boolean {
@@ -234,6 +235,6 @@ export default class PermanentArrow {
     this.pulses = [];
 
     this.graphics.destroy();
-    this.hitZone.destroy();
+    this.arrowhitBox.destroy();
   }
 }
