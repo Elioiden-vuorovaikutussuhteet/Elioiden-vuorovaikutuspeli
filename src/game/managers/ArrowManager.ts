@@ -198,23 +198,6 @@ export default class ArrowManager {
    */
   public setForceConfig(newConfig: Partial<ForceLayoutConfig>) {
     this.forceConfig = { ...this.forceConfig, ...newConfig };
-    const cfg = this.forceConfig;
-
-    this.linkForce.distance(cfg.linkDistance).strength(cfg.linkStrength);
-
-    this.simulation
-      .force("link", this.linkForce)
-      .force("charge", forceManyBody<ForceNode>().strength(cfg.chargeStrength))
-      .force(
-        "center",
-        forceCenter<ForceNode>(cfg.centerX, cfg.centerY).strength(cfg.centerStrength),
-      )
-      .force(
-        "collide",
-        forceCollide<ForceNode>(cfg.collideRadius).strength(cfg.collideStrength),
-      )
-      .alphaDecay(cfg.alphaDecay);
-
     this.recalculateLayout();
     this.redrawPermanentArrows();
   }
@@ -232,33 +215,48 @@ export default class ArrowManager {
     this.forceLinks = this.buildForceLinks();
 
     this.simulation.nodes(this.forceNodes);
-    this.linkForce.links(this.forceLinks);
+    this.linkForce
+      .links(this.forceLinks)
+      .distance(this.forceConfig.linkDistance)
+      .strength(this.forceConfig.linkStrength);
 
-    const centerX = this.forceConfig.worldWidth / 2;
-    const centerY = this.forceConfig.worldHeight / 2;
-
-    if (centerX > centerY) {
+    if (this.forceConfig.centerX > this.forceConfig.centerY) {
       this.simulation
         // Weak X 
-        .force("x", forceX<ForceNode>(centerX).strength(0.005))
+        .force("x", forceX<ForceNode>(this.forceConfig.centerX).strength(this.forceConfig.centerStrength * 0.25))
         // Strong Y - organisms are pushed towards a horizontal line. 
-        .force("y", forceY<ForceNode>(centerY).strength(0.08));
+        .force("y", forceY<ForceNode>(this.forceConfig.centerY).strength(this.forceConfig.centerStrength));
     } else {
       this.simulation
         // Strong X 
-        .force("x", forceX<ForceNode>(centerX).strength(0.08))
+        .force("x", forceX<ForceNode>(this.forceConfig.centerX).strength(this.forceConfig.centerStrength))
         // Weak Y - organisms are pushed towards a vertical line.
-        .force("y", forceY<ForceNode>(centerY).strength(0.005));
+        .force("y", forceY<ForceNode>(this.forceConfig.centerY).strength(this.forceConfig.centerStrength * 0.25));
     }
 
 
     // Update the charge force with a max distance 
-    this.simulation.force(
-      "charge",
-      forceManyBody<ForceNode>()
-        .strength(this.forceConfig.chargeStrength)
-        .distanceMax(500),
-    );
+    this.simulation
+      .force("link", this.linkForce)
+      .force(
+        "charge",
+        forceManyBody<ForceNode>()
+          .strength(this.forceConfig.chargeStrength)
+          .distanceMax(this.forceConfig.chargeDistanceMax),
+      )
+      .force(
+        "center",
+        forceCenter<ForceNode>(this.forceConfig.centerX, this.forceConfig.centerY).strength(
+          this.forceConfig.centerStrength,
+        ),
+      )
+      .force(
+        "collide",
+        forceCollide<ForceNode>(this.forceConfig.collideRadius).strength(
+          this.forceConfig.collideStrength,
+        ),
+      )
+      .alphaDecay(this.forceConfig.alphaDecay)
 
     this.simulation.alpha(this.forceConfig.reheatAlpha);
   }
@@ -295,8 +293,6 @@ export default class ArrowManager {
 
   private hasRelation(idA: string, idB: string): boolean {
     return (
-      (getRelation(idA, idB)?.value ?? 0) !== 0 ||
-      (getRelation(idB, idA)?.value ?? 0) !== 0 ||
       this.interactions.some(
         (c) =>
           (c.from === idA && c.to === idB) ||
