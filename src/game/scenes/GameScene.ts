@@ -82,6 +82,11 @@ export default class GameScene extends Phaser.Scene {
       interactions,
     );
 
+    this.scoreManager.outOfMoney = () => {
+      this.scene.pause()
+      this.scene.launch("GameOverScene");
+    };
+
     this.arrowManager.createArrowButtons(centerY);
     //First organism is the first in organisms.ts
     const initialOrganism = organisms[0];
