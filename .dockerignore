@@ -22,3 +22,5 @@ Thumbs.db
 Dockerfile
 .dockerignore
 docker-compose*.yml
+test-results
+playwright-report
