@@ -10,6 +10,8 @@ import InteractionManager from "../../../src/game/managers/InteractionManager";
 import ConnectionManager from "../../../src/game/managers/ConnectionManager";
 import OrganismManager from "../../../src/game/managers/OrganismManager";
 import { ScoreManager } from "../../../src/game/managers/ScoreManager";
+import { drawArrow } from "../../../src/game/services/DrawArrowService";
+import PermanentArrow from "../../../src/game/entities/permanentarrow";
 
 const {
   MockOrganism,
@@ -93,6 +95,24 @@ vi.mock("../../../src/game/services/RelationsService", () => ({
 
 vi.mock("../../../src/game/entities/arrowbuttons", () => ({
   default: MockArrowButtons,
+}));
+
+vi.mock("../../../src/game/services/DrawArrowService", () => ({
+  drawArrow: vi.fn(),
+}));
+
+const { MockPermanentArrow } = vi.hoisted(() => ({
+  MockPermanentArrow: vi.fn(function () {
+    return {
+      setStyle: vi.fn(),
+      update: vi.fn(),
+      playPulse: vi.fn(),
+    };
+  }),
+}));
+
+vi.mock("../../../src/game/entities/permanentarrow", () => ({
+  default: MockPermanentArrow,
 }));
 
 const mockPartial = <T>(value: Partial<T>): T => value as T;
@@ -377,10 +397,7 @@ describe("ArrowManager interactions", () => {
     };
 
     (scene as any).add = {
-      graphics: vi
-        .fn()
-        .mockReturnValueOnce(permanentArrows)
-        .mockReturnValueOnce(previewArrow),
+      graphics: vi.fn().mockReturnValue(previewArrow),
     };
 
     uiCamera = {
@@ -441,14 +458,23 @@ describe("ArrowManager interactions", () => {
     return org as unknown as Organism;
   };
 
-  it("valitsee ensimmäisen organismin", () => {
-    const first = organism("tree");
+  it("valitsee ensimmäisen organismin", async () => {
+  const first = organism("tree", 100, 100);
 
-    arrowManager.arrowChecker(first);
-    arrowManager.update();
+  arrowManager.arrowChecker(first);
+  arrowManager.update();
 
-    expect(previewArrow.lineBetween).toHaveBeenCalled();
-  });
+  expect(drawArrow).toHaveBeenCalledWith(
+    expect.anything(),
+    expect.objectContaining({
+      x1: 100,
+      y1: 100,
+      color: 0x064f15,
+      thickness: 2,
+      lateralOffset: 0,
+    }),
+  );
+});
 
   it("luo positiivisen vuorovaikutuksen", () => {
     vi.mocked(getRelation).mockReturnValue({
@@ -462,13 +488,18 @@ describe("ArrowManager interactions", () => {
     arrowManager.arrowChecker(first);
     arrowManager.arrowChecker(second);
 
-    expect(interactions).toEqual([{ from: "tree", to: "shroom" }]);
-    expect(permanentArrows.lineBetween).toHaveBeenCalled();
-    expect(permanentArrows.fillTriangle).toHaveBeenCalled();
-    expect((scene as any).selectedOrganism).toBeNull();
-    expect((scene as any).scene.launch).toHaveBeenCalledWith("PopupScene", {
-      textId: "tree-shroom",
-    });
+    expect(interactions).toEqual([
+      { from: "tree", to: "shroom" },
+    ]);
+
+    expect(PermanentArrow).toHaveBeenCalled();
+    expect(arrowManager.getArrow("tree", "shroom")?.update)
+      .toHaveBeenCalled();
+
+    expect((scene as any).scene.launch).toHaveBeenCalledWith(
+      "PopupScene",
+      { textId: "tree-shroom" },
+    );
   });
 
   it("luo negatiiviselle vuorovaikutukselle punaisen nuolen", () => {
@@ -483,7 +514,20 @@ describe("ArrowManager interactions", () => {
     arrowManager.arrowChecker(first as unknown as Organism);
     arrowManager.arrowChecker(second as unknown as Organism);
 
-    expect(permanentArrows.lineStyle).toHaveBeenCalledWith(8, 0xed0924);
+    const arrow = arrowManager.getArrow("tree", "ant");
+
+    expect(arrow).toBeDefined();
+    expect(arrow!.setStyle).toHaveBeenCalledWith(
+      expect.objectContaining({
+        color: 0xed0924,
+        thickness: 8,
+      }),
+    );
+
+    expect((scene as any).scene.launch).toHaveBeenCalledWith(
+      "PopupScene",
+      { textId: "tree-ant" },
+    );
     expect((scene as any).scene.launch).toHaveBeenCalledWith("PopupScene", {
       textId: "tree-ant",
     });
@@ -625,7 +669,7 @@ describe("ArrowManager interactions", () => {
   });
 
   it("redraws permanent arrows when organisms move", () => {
-    vi.mocked(getRelation).mockReturnValue({ value: 1, mult: 1 });
+    vi.mocked(getRelation).mockReturnValue({value: 1, mult: 1});
 
     const first = organism("tree", 200, 300);
     const second = organism("shroom", 600, 300);
@@ -633,19 +677,25 @@ describe("ArrowManager interactions", () => {
     arrowManager.arrowChecker(first);
     arrowManager.arrowChecker(second);
 
-    permanentArrows.clear.mockClear();
-    permanentArrows.lineBetween.mockClear();
+    const arrow = arrowManager.getArrow("tree", "shroom");
+
+    expect(arrow).toBeDefined();
+
+    vi.mocked(arrow!.update).mockClear();
 
     first.x = 250;
     first.y = 450;
+
     arrowManager.update();
 
-    expect(permanentArrows.clear).toHaveBeenCalled();
-    expect(permanentArrows.lineBetween).toHaveBeenCalled();
+    expect(arrow!.update).toHaveBeenCalledWith(first, second);
   });
 
   it("offsets bidirectional arrows into parallel lanes", () => {
-    vi.mocked(getRelation).mockReturnValue({ value: 1, mult: 1 });
+    vi.mocked(getRelation).mockReturnValue({
+      value: 1,
+      mult: 1,
+    });
 
     const first = organism("tree", 300, 500);
     const second = organism("shroom", 700, 500);
@@ -653,25 +703,25 @@ describe("ArrowManager interactions", () => {
     arrowManager.arrowChecker(first);
     arrowManager.arrowChecker(second);
 
-    const singleArrowCall = permanentArrows.lineBetween.mock.calls.at(-1)!;
-    const singleArrowStartY = singleArrowCall[1];
-
-    expect(singleArrowStartY).toBe(500);
-
-    permanentArrows.lineBetween.mockClear();
+    expect(
+      arrowManager.getArrow("tree", "shroom")?.setStyle,
+    ).toHaveBeenLastCalledWith(
+      expect.objectContaining({ lateralOffset: 0 }),
+    );
 
     arrowManager.arrowChecker(second);
     arrowManager.arrowChecker(first);
 
-    expect(permanentArrows.lineBetween).toHaveBeenCalledTimes(3);
+    expect(
+      arrowManager.getArrow("tree", "shroom")?.setStyle,
+    ).toHaveBeenLastCalledWith(
+      expect.objectContaining({ lateralOffset: 25 }),
+    );
 
-    const [firstLaneCall, secondLaneCall] =
-      permanentArrows.lineBetween.mock.calls;
-    const lane1StartY = firstLaneCall[1];
-    const lane2StartY = secondLaneCall[1];
-
-    expect(lane1StartY).not.toBe(500);
-    expect(lane2StartY).not.toBe(500);
-    expect(lane1StartY).not.toBe(lane2StartY);
+    expect(
+      arrowManager.getArrow("shroom", "tree")?.setStyle,
+    ).toHaveBeenLastCalledWith(
+      expect.objectContaining({ lateralOffset: 25 }),
+    );
   });
 });
