@@ -38,6 +38,7 @@ export default class PermanentArrow {
 	private toX = 0;
 	private toY = 0;
   private hitBounds = new Phaser.Geom.Rectangle();
+  private hovered = false;
 
   constructor(
     scene: Phaser.Scene,
@@ -72,6 +73,14 @@ export default class PermanentArrow {
       new Phaser.Geom.Rectangle(0, 0, 1, 1),
       (_hitArea, x, y) => this.isPointOnArrow(x + this.hitBounds.x, y + this.hitBounds.y),
     );
+    this.hitZone.on("pointerover", () => {
+      this.hovered = true;
+      this.redraw();
+    });
+    this.hitZone.on("pointerout", () => {
+      this.hovered = false;
+      this.redraw();
+    });
     this.hitZone.on("pointerdown", () => this.onClicked());
     this.hitZone.input!.enabled = false;
     this.uiCamera.ignore(this.hitZone);
@@ -161,21 +170,29 @@ export default class PermanentArrow {
     this.toY = targetY + py * this.lateralOffset;
 
     this.updateHitZone();
-    drawArrow(this.graphics, {
-        x1: from.x,
-        y1: from.y,
-        x2: targetX,
-        y2: targetY,
-        color: this.color,
-        thickness: this.thickness,
-        lateralOffset: this.lateralOffset,
-    });
+    this.redraw();
 
     this.updatePulsePosition();
   }
 
   public setCursorMode(enabled: boolean): void {
     this.hitZone.input!.enabled = enabled;
+    if (!enabled) {
+      this.hovered = false;
+      this.redraw();
+    }
+  }
+
+  private redraw(): void {
+    this.graphics.clear();
+    drawArrow(this.graphics, {
+      x1: this.fromX,
+      y1: this.fromY,
+      x2: this.toX,
+      y2: this.toY,
+      color: this.hovered ? 0xffffff : this.color,
+      thickness: this.hovered ? this.thickness + 4 : this.thickness,
+    });
   }
 
   private updateHitZone(): void {
