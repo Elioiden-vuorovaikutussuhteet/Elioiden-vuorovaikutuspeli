@@ -11,6 +11,18 @@ export default defineConfig({
     ),
   },
   plugins: [react()],
+  //Remove all console calls from production (when using npm build)
+  build: {
+    rolldownOptions: {
+      output: {
+        minify: {
+          compress: {
+            dropConsole: true,
+          },
+        },
+      },
+    },
+  },
   server: {
     proxy: {
       '/api': {
