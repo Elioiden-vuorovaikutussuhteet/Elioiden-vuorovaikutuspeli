@@ -1,4 +1,4 @@
-import Phaser from "phaser";
+import type Phaser from "phaser";
 import type Organism from "../entities/organism";
 import PermanentArrow from "../entities/permanentarrow";
 import { drawArrow } from "../services/DrawArrowService";

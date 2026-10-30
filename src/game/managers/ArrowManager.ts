@@ -1,126 +1,38 @@
 import Phaser from "phaser";
 import ArrowButtons from "../entities/arrowbuttons";
 import type Organism from "../entities/organism";
-import { organismDataMap } from "../data/organisms";
+import type PermanentArrow from "../entities/permanentarrow";
 import { getRelation } from "../services/RelationsService";
 import type { Connection } from "../types/Connection";
 import InteractionManager from "./InteractionManager";
 import ConnectionManager from "./ConnectionManager";
 import OrganismManager from "./OrganismManager";
-import PermanentArrow from "../entities/permanentarrow";
-import { drawArrow } from "../services/DrawArrowService";
 import { ScoreManager } from "./ScoreManager";
+import ArrowRenderer from "./ArrowRenderer";
+import ForceLayoutManager from "./ForceLayoutManager";
 import { getInteractionId } from "../data/popupTexts";
 import {
-  forceSimulation,
-  forceLink,
-  forceManyBody,
-  forceCenter,
-  forceCollide,
-  forceX,
-  forceY,
-  type Simulation,
-  type SimulationNodeDatum,
-  type SimulationLinkDatum,
-} from "d3-force";
+  DEFAULT_FORCE_CONFIG,
+  type ForceLayoutConfig,
+} from "../config/forceConfig";
 
-export interface ForceLayoutConfig {
-  /** Target length of arrows between connected organisms (px) */
-  linkDistance: number;
-  /** How strongly connected organisms pull toward each other (0 to 1) */
-  linkStrength: number;
-  /** Repulsion between all organisms (negative pushes apart, e.g. -1500) */
-  chargeStrength: number;
-  /** Organisms further apart than this ignore each other */
-  chargeDistanceMax: number;
-  /** Minimum radius around each organism so sprites don't overlap (px) */
-  collideRadius: number;
-  /** How strongly overlapping organisms push apart (0 to 1) */
-  collideStrength: number;
-  /** Center point of the layout area */
-  centerX: number;
-  centerY: number;
-  /** Pull strength toward the center (0 to 1) */
-  centerStrength: number;
-  /** How quickly movement settles (lower = longer/smoother glide, e.g. 0.02 - 0.05) */
-  alphaDecay: number;
-  /** Energy injected when an arrow is drawn or organism spawns (0.1 = gentle nudge, 1.0 = energetic) */
-  reheatAlpha: number;
-  /** World bounds & edge padding to clamp organism coordinates */
-  worldWidth: number;
-  worldHeight: number;
-  padding: number;
-  /** Distance from target organism center where the arrowhead tip stops (px) */
-  arrowTargetOffset: number;
-  /** Distance how far away unconnected organisms affect */
-  distanceMax: number;
-}
+export { DEFAULT_FORCE_CONFIG, type ForceLayoutConfig };
 
-// These can be edited for arrow force configuration
-export const DEFAULT_FORCE_CONFIG: ForceLayoutConfig = {
-  linkDistance: 500,
-  linkStrength: 0.9,
-  chargeStrength: -1000,
-  collideRadius: 180,
-  collideStrength: 0.9,
-  centerX: 960,
-  centerY: 540,
-  centerStrength: 0.02,
-  chargeDistanceMax: 500,
-  alphaDecay: 0.03,
-  reheatAlpha: 0.5,
-  worldWidth: 1920,
-  worldHeight: 1080,
-  padding: 150,
-  arrowTargetOffset: 65,
-  distanceMax: 500,
-};
-
-interface ForceNode extends SimulationNodeDatum {
-  id: string;
-  organism: Organism;
-  x: number;
-  y: number;
-}
-
-interface ForceLink extends SimulationLinkDatum<ForceNode> {
-  source: string | ForceNode;
-  target: string | ForceNode;
-}
-
-// arrow related code, drawing of arrows, arrow buttons 
 export default class ArrowManager {
   private scene: Phaser.Scene;
-  private uiCamera: Phaser.Cameras.Scene2D.Camera;
+  private renderer: ArrowRenderer;
+  private forceLayout: ForceLayoutManager;
 
-  private interactionManager!: InteractionManager;
-  private connectionManager!: ConnectionManager;
-  private organismManager!: OrganismManager;
-  private scoreManager!: ScoreManager;
+  private interactionManager: InteractionManager;
+  private connectionManager: ConnectionManager;
+  private organismManager: OrganismManager;
+  private scoreManager: ScoreManager;
 
-  private permanentArrows = new Map<string, PermanentArrow>();
-  private previewArrow!: Phaser.GameObjects.Graphics;
-  private arrowColorValue: boolean = true;
+  private arrowColorValue = true;
   private cursorMode = false;
   private selectedOrganism: Organism | null = null;
   private interactions: Connection[];
 
-  public getSpawnPosition(id: string): { x: number; y: number } {
-    const centerX = this.forceConfig.centerX;
-    const centerY = this.forceConfig.centerY;
-
-    const data = organismDataMap.get(id);
-    if (!data) {
-      return { x: centerX, y: centerY };
-    }
-
-    return {
-      x: centerX + data.offsetX,
-      y: centerY + data.offsetY,
-    };
-  }
-
-  //Spawn order modified to be just strings of the id, spawn location is moved to data/organisms.ts. First 2 organisms are still spawned in gamescene
   private readonly defaultOrganismSpawnOrder: readonly string[] = [
     "ants",
     "sapota",
@@ -129,28 +41,11 @@ export default class ArrowManager {
     "glomeromycetes",
     "mycorrhizahelper",
   ];
-  public organismSpawnOrder: string[] = [];
-
+  public organismSpawnOrder: string[] = [...this.defaultOrganismSpawnOrder];
   private nextOrganismToSpawn = 0;
 
-  private getPermanentArrowKey(fromId: string, toId: string): string {
-    return JSON.stringify([fromId, toId]);
-  }
-
-  public playArrowPulseAnimation(fromId: string, toId: string, hpChange: number): void {
-    const key = this.getPermanentArrowKey(fromId, toId);
-    const arrow = this.permanentArrows.get(key);
-
-    arrow?.playPulse(hpChange);
-  }
-
-  // Dynamic d3-force state & configuration
-  private forceConfig: ForceLayoutConfig = { ...DEFAULT_FORCE_CONFIG };
-  private simulation: Simulation<ForceNode, ForceLink>;
-  private linkForce = forceLink<ForceNode, ForceLink>([]).id((d) => d.id);
-  private forceNodes: ForceNode[] = [];
-  private forceLinks: ForceLink[] = [];
   private knownOrganisms = new Map<string, Organism>();
+  private draggableOrganisms = new WeakSet<Organism>();
 
   constructor(
     scene: Phaser.Scene,
@@ -162,158 +57,57 @@ export default class ArrowManager {
     interactions: Connection[],
     forceConfig: Partial<ForceLayoutConfig> = {},
   ) {
-
     this.scene = scene;
-    this.uiCamera = uiCamera;
+    this.renderer = new ArrowRenderer(scene, uiCamera);
     this.interactionManager = interactionManager;
     this.connectionManager = connectionManager;
     this.organismManager = organismManager;
     this.scoreManager = scoreManager;
     this.interactions = interactions;
 
-    this.organismSpawnOrder = [...this.defaultOrganismSpawnOrder];
+    this.forceLayout = new ForceLayoutManager(
+      scene.scale.width,
+      scene.scale.height,
+      forceConfig,
+    );
 
-    this.initGraphics();
-
-    this.simulation = forceSimulation<ForceNode, ForceLink>([]).stop();
-
-    //Update force config with screen info
-    const width = scene.scale.width;
-    const height = scene.scale.height;
-
-    this.forceConfig = {
-      ...DEFAULT_FORCE_CONFIG,
-      worldWidth: width,
-      worldHeight: height,
-      centerX: width / 2,
-      centerY: height / 2,
-    };
-
-    this.setForceConfig(forceConfig);
+    this.recalculateLayout();
+    this.redrawPermanentArrows();
 
     if (import.meta.env?.DEV && typeof window !== "undefined") {
       (window as unknown as Record<string, unknown>).arrowManager = this;
     }
   }
 
-  private initGraphics() {
-    this.previewArrow = this.scene.add.graphics();
-    this.previewArrow.setDepth(100);
-    this.uiCamera.ignore(this.previewArrow);
+  public getSpawnPosition(id: string): { x: number; y: number } {
+    return this.forceLayout.getSpawnPosition(id);
   }
 
-  /**
-   * Apply force parameters and wake up the simulation.
-   */
-  public setForceConfig(newConfig: Partial<ForceLayoutConfig>) {
-    this.forceConfig = { ...this.forceConfig, ...newConfig };
-    this.recalculateLayout();
+  public playArrowPulseAnimation(
+    fromId: string,
+    toId: string,
+    hpChange: number,
+  ): void {
+    this.renderer.playPulse(fromId, toId, hpChange);
+  }
+
+  public setForceConfig(newConfig: Partial<ForceLayoutConfig>): void {
+    this.forceLayout.setConfig(
+      newConfig,
+      this.getActiveOrganisms(),
+      this.interactions,
+    );
     this.redrawPermanentArrows();
   }
 
   public getForceConfig(): ForceLayoutConfig {
-    return { ...this.forceConfig };
+    return this.forceLayout.getConfig();
   }
 
-  /**
-   * Sync active organisms and connections into d3-force 
-   */
-  public recalculateLayout() {
-
-    this.forceNodes = this.syncForceNodes();
-    this.forceLinks = this.buildForceLinks();
-
-    this.simulation.nodes(this.forceNodes);
-    this.linkForce
-      .links(this.forceLinks)
-      .distance(this.forceConfig.linkDistance)
-      .strength(this.forceConfig.linkStrength);
-
-    if (this.forceConfig.centerX > this.forceConfig.centerY) {
-      this.simulation
-        // Weak X 
-        .force("x", forceX<ForceNode>(this.forceConfig.centerX).strength(this.forceConfig.centerStrength * 0.25))
-        // Strong Y - organisms are pushed towards a horizontal line. 
-        .force("y", forceY<ForceNode>(this.forceConfig.centerY).strength(this.forceConfig.centerStrength));
-    } else {
-      this.simulation
-        // Strong X 
-        .force("x", forceX<ForceNode>(this.forceConfig.centerX).strength(this.forceConfig.centerStrength))
-        // Weak Y - organisms are pushed towards a vertical line.
-        .force("y", forceY<ForceNode>(this.forceConfig.centerY).strength(this.forceConfig.centerStrength * 0.25));
-    }
-
-
-    // Update the charge force with a max distance 
-    this.simulation
-      .force("link", this.linkForce)
-      .force(
-        "charge",
-        forceManyBody<ForceNode>()
-          .strength(this.forceConfig.chargeStrength)
-          .distanceMax(this.forceConfig.chargeDistanceMax),
-      )
-      .force(
-        "center",
-        forceCenter<ForceNode>(this.forceConfig.centerX, this.forceConfig.centerY).strength(
-          this.forceConfig.centerStrength,
-        ),
-      )
-      .force(
-        "collide",
-        forceCollide<ForceNode>(this.forceConfig.collideRadius).strength(
-          this.forceConfig.collideStrength,
-        ),
-      )
-      .alphaDecay(this.forceConfig.alphaDecay)
-
-    this.simulation.alpha(this.forceConfig.reheatAlpha);
+  public recalculateLayout(): void {
+    this.forceLayout.recalculate(this.getActiveOrganisms(), this.interactions);
   }
 
-  private syncForceNodes(): ForceNode[] {
-    const existingById = new Map(this.forceNodes.map((n) => [n.id, n]));
-
-    return this.getActiveOrganisms().map((organism) => {
-      const id = organism.organismData.id;
-      const existing = existingById.get(id);
-
-      return existing
-        ? Object.assign(existing, { organism, x: organism.x, y: organism.y })
-        : { id, organism, x: organism.x, y: organism.y };
-    });
-  }
-
-  private buildForceLinks(): ForceLink[] {
-    const links: ForceLink[] = [];
-
-    for (let i = 0; i < this.forceNodes.length; i++) {
-      for (let j = i + 1; j < this.forceNodes.length; j++) {
-        const idA = this.forceNodes[i].id;
-        const idB = this.forceNodes[j].id;
-
-        if (this.hasRelation(idA, idB)) {
-          links.push({ source: idA, target: idB });
-        }
-      }
-    }
-
-    return links;
-  }
-
-  private hasRelation(idA: string, idB: string): boolean {
-    return (
-      this.interactions.some(
-        (c) =>
-          (c.from === idA && c.to === idB) ||
-          (c.from === idB && c.to === idA),
-      )
-    );
-  }
-
-  /**
-   * Retrieve currently spawned Organism instances from OrganismManager,
-   * falling back to knownOrganisms so mocked unit tests work .
-   */
   private getActiveOrganisms(): Organism[] {
     const manager = this.organismManager as unknown as {
       getOrganisms?: () => Organism[];
@@ -333,39 +127,8 @@ export default class ArrowManager {
     return list.length > 0 ? list : Array.from(this.knownOrganisms.values());
   }
 
-  private createArrow(
-    fromId: string,
-    toId: string,
-  ): PermanentArrow {
-    const key = this.getPermanentArrowKey(fromId, toId);
-
-    const arrow = new PermanentArrow(
-      this.scene,
-      this.uiCamera,
-      fromId,
-      toId,
-      {
-        targetOffset: this.forceConfig.arrowTargetOffset,
-        color: getRelation(fromId, toId)?.value === 1
-          ? 0x064f15
-          : 0xed0924,
-        thickness: 8,
-      },
-      () => {
-        const textId = getInteractionId(fromId, toId);
-        this.scene.scene.launch("PopupScene", { textId });
-      },
-    );
-
-    arrow.setCursorMode(this.cursorMode);
-    this.permanentArrows.set(key, arrow);
-    return arrow;
-  }
-
-  public arrowChecker(organism: Organism) {
+  public arrowChecker(organism: Organism): void {
     if (this.cursorMode) return;
-
-    //Shift drag for debug
     if (this.scene.input?.activePointer?.event?.shiftKey) return;
 
     this.knownOrganisms.set(organism.organismData.id, organism);
@@ -378,76 +141,50 @@ export default class ArrowManager {
 
     const first = this.selectedOrganism;
     const second = organism;
-    const relationData = getRelation(
-      first.organismData.id,
-      second.organismData.id,
-    );
-    // Fix test
-    if (first.organismData.id === second.organismData.id || !relationData) {
+    const firstId = first.organismData.id;
+    const secondId = second.organismData.id;
+    const relationData = getRelation(firstId, secondId);
+
+    if (firstId === secondId || !relationData) {
       this.clearPreview();
       this.selectedOrganism = null;
       return;
     }
 
-    const relation = relationData["value"];
-
+    const relation = relationData.value;
     const arrowColorValue = this.getArrowColorValue();
+    const alreadyExists = this.interactions.some(
+      (i) => i.from === firstId && i.to === secondId,
+    );
 
-    // Create arrow if it doesnt exist yet
-    if (
-      !this.interactions.some(
-        (interaction) =>
-          interaction.from === first.organismData.id &&
-          interaction.to === second.organismData.id,
-      )
-    ) {
-      // relation is positive = green(0x064f15), bad = red(0xed0924)
-      if (relation === 1 && arrowColorValue === true) {
-        this.interactions.push({
-          from: first.organismData.id,
-          to: second.organismData.id,
-        });
+    if (!alreadyExists) {
+      const isCorrect =
+        (relation === 1 && arrowColorValue) ||
+        (relation === -1 && !arrowColorValue);
 
-        //finds popup text from data/popuptexts.ts and launches the window
-        const textId = getInteractionId(first.organismData.id, second.organismData.id);
+      if (isCorrect) {
+        this.interactions.push({ from: firstId, to: secondId });
+
+        const textId = getInteractionId(firstId, secondId);
         this.scene.scene.launch("PopupScene", { textId });
         this.scoreManager.getMoney();
 
         this.redrawPermanentArrows();
         this.interactionManager.interactionPulse(second, first);
-
-        this.recalculateLayout();
-      }
-
-      else if (relation === -1 && arrowColorValue === false) {
-        this.interactions.push({
-          from: first.organismData.id,
-          to: second.organismData.id,
-        });
-
-        //finds popup text from data/popuptexts.ts and launches the window
-        const textId = getInteractionId(first.organismData.id, second.organismData.id);
-        this.scene.scene.launch("PopupScene", { textId });
-        this.scoreManager.getMoney();
-
-        this.redrawPermanentArrows();
-        this.interactionManager.interactionPulse(second, first);
-
         this.recalculateLayout();
       } else {
-        // lose money if wrong guess
         this.scoreManager.loseMoney();
       }
     }
 
     this.clearPreview();
 
-    console.log(first.organismData.id, first.x, first.y, relation);
-    console.log(second.organismData.id, second.x, second.y, relation);
+    console.log(firstId, first.x, first.y, relation);
+    console.log(secondId, second.x, second.y, relation);
 
     const allRelationsCorrect = this.connectionManager.checkConnections();
-
     const nextOrganism = this.organismSpawnOrder[this.nextOrganismToSpawn];
+
     if (allRelationsCorrect && nextOrganism) {
       const position = this.getSpawnPosition(nextOrganism);
       const created = this.organismManager.createOrganism(
@@ -456,7 +193,7 @@ export default class ArrowManager {
         nextOrganism,
       ) as Organism | void;
 
-      if (created && created.organismData) {
+      if (created?.organismData) {
         this.knownOrganisms.set(created.organismData.id, created);
         this.enableDrag(created);
       }
@@ -469,53 +206,25 @@ export default class ArrowManager {
     this.selectedOrganism = null;
   }
 
-
   public redrawPermanentArrows(): void {
-    const activeOrganisms = this.getActiveOrganisms();
-
-    const organismsById = new Map(
-      activeOrganisms.map((organism) => [
-        organism.organismData.id,
-        organism,
-      ]),
-    );
-
-    for (const { from, to } of this.interactions) {
-      const first =
-        organismsById.get(from) ?? this.knownOrganisms.get(from);
-      const second =
-        organismsById.get(to) ?? this.knownOrganisms.get(to);
-
-      if (!first || !second) continue;
-
-      const key = this.getPermanentArrowKey(from, to);
-      const isBidirectional = this.interactions.some(
-        (other) => other.from === to && other.to === from,
-      );
-
-      const color =
-        getRelation(from, to)?.value === 1
-          ? 0x064f15
-          : 0xed0924;
-
-      let arrow = this.permanentArrows.get(key);
-
-      if (!arrow) {
-        arrow = this.createArrow(from, to);
-      }
-
-      arrow.setStyle({
-        targetOffset: this.forceConfig.arrowTargetOffset,
-        color,
-        thickness: 8,
-        lateralOffset: isBidirectional ? 25 : 0,
-      });
-
-      arrow.update(first, second);
+    const organismsById = new Map(this.knownOrganisms);
+    for (const org of this.getActiveOrganisms()) {
+      organismsById.set(org.organismData.id, org);
     }
+
+    this.renderer.redrawPermanentArrows(
+      this.interactions,
+      organismsById,
+      this.forceLayout.getConfig().arrowTargetOffset,
+      this.cursorMode,
+      (fromId, toId) => {
+        const textId = getInteractionId(fromId, toId);
+        this.scene.scene.launch("PopupScene", { textId });
+      },
+    );
   }
 
-  public createArrowButtons(centerY: number) {
+  public createArrowButtons(centerY: number): void {
     const greenButton = new ArrowButtons(
       this.scene,
       60,
@@ -535,49 +244,45 @@ export default class ArrowManager {
     greenButton.on("arrowButtonClicked", () => {
       this.arrowColorValue = true;
       this.setCursorMode(false);
-      console.log(this.arrowColorValue);
     });
 
     redButton.on("arrowButtonClicked", () => {
       this.arrowColorValue = false;
       this.setCursorMode(false);
-      console.log(this.arrowColorValue);
     });
   }
 
   public setCursorMode(enabled: boolean): void {
     this.cursorMode = enabled;
-
-    for (const arrow of this.permanentArrows.values()) {
-      arrow.setCursorMode(enabled);
-    }
+    this.renderer.setCursorMode(enabled);
   }
 
-  public getArrowColorValue() {
+  public getArrowColorValue(): boolean {
     return this.arrowColorValue;
   }
 
-  // for testing
-  public setArrowColorValue(value: boolean) {
+  public setArrowColorValue(value: boolean): void {
     this.arrowColorValue = value;
   }
 
-  public clearPreview() {
-    this.previewArrow.clear();
+  public clearPreview(): void {
+    this.renderer.clearPreview();
     this.selectedOrganism = null;
   }
 
   public getArrows(): ReadonlyMap<string, PermanentArrow> {
-    return this.permanentArrows;
+    return this.renderer.getArrows();
   }
 
   public getArrow(fromId: string, toId: string): PermanentArrow | undefined {
-    return this.permanentArrows.get(this.getPermanentArrowKey(fromId, toId));
+    return this.renderer.getArrow(fromId, toId);
   }
-    private draggableOrganisms = new WeakSet<Organism>();
 
-  private enableDrag(organism: Organism) {
-    if (this.draggableOrganisms.has(organism) || typeof organism.on !== "function") {
+  private enableDrag(organism: Organism): void {
+    if (
+      this.draggableOrganisms.has(organism) ||
+      typeof organism.on !== "function"
+    ) {
       return;
     }
     this.draggableOrganisms.add(organism);
@@ -585,65 +290,21 @@ export default class ArrowManager {
     organism.setInteractive?.({ draggable: true });
     this.scene.input?.setDraggable?.(organism);
 
-    organism.on("drag", (pointer: Phaser.Input.Pointer, dragX: number, dragY: number) => {
-      if (!pointer.event.shiftKey) return;
+    organism.on(
+      "drag",
+      (pointer: Phaser.Input.Pointer, dragX: number, dragY: number) => {
+        if (!pointer.event.shiftKey) return;
 
-      organism.setPosition(dragX, dragY);
-      this.recalculateLayout();
-      this.redrawPermanentArrows();
-    });
+        organism.setPosition(dragX, dragY);
+        this.recalculateLayout();
+        this.redrawPermanentArrows();
+      },
+    );
   }
 
-  public update() {
-    // Step dynamic d3-force simulation if active
-    if (this.simulation.alpha() > this.simulation.alphaMin()) {
-      this.simulation.tick();
-
-      const { padding, worldWidth, worldHeight } = this.forceConfig;
-      for (const node of this.forceNodes) {
-        const clampedX = Phaser.Math.Clamp(
-          node.x,
-          padding,
-          worldWidth - padding,
-        );
-        const clampedY = Phaser.Math.Clamp(
-          node.y,
-          padding,
-          worldHeight - padding,
-        );
-
-        node.x = clampedX;
-        node.y = clampedY;
-        node.organism.setPosition(clampedX, clampedY);
-
-      }
-    }
-
-    // Redraw permanent arrows so they track moving organisms
+  public update(): void {
+    this.forceLayout.step();
     this.redrawPermanentArrows();
-
-    // Draw active preview arrow
-    this.previewArrow.clear();
-
-    if (this.selectedOrganism === null) {
-      return;
-    }
-
-    const color = this.arrowColorValue ? 0x064f15 : 0xed0924;
-
-    //Fix tests
-    const pointer = this.scene.input.activePointer;
-    const targetX = pointer.worldX ?? pointer.x ?? 0;
-    const targetY = pointer.worldY ?? pointer.y ?? 0;
-
-    drawArrow(this.previewArrow, {
-      x1: this.selectedOrganism.x,
-      y1: this.selectedOrganism.y,
-      x2: targetX,
-      y2: targetY,
-      color,
-      thickness: 2,
-      lateralOffset: 0,
-    });
+    this.renderer.drawPreview(this.selectedOrganism, this.arrowColorValue);
   }
 }
