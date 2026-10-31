@@ -57,3 +57,11 @@ Aloita kehitysserveri:
 - npm run dev
 
 Sivun URL pitäisi tulostua esim. http://localhost:5173/
+
+Admin sivua varten:
+
+Aloita backend serveri toisessa komentoikkunassa:
+
+- npm run server
+
+Siirry esim. http://localhost:5173/admin

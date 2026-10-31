@@ -11,3 +11,18 @@ services:
     environment:
       - NODE_ENV=development
       - CHOKIDAR_USEPOLLING=true
+    depends_on:
+      - server
+
+  server:
+      build:
+        context: .
+        dockerfile: Dockerfile.dev
+      command: npm run server
+      ports:
+        - "3000:3000"
+      volumes:
+        - .:/app
+        - /app/node_modules
+      environment:
+        - NODE_ENV=development
