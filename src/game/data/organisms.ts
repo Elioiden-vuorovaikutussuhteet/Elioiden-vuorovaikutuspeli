@@ -16,7 +16,7 @@ export const organisms: OrganismData[] = [
     default_scale: 1,
     growth_types: ["grow"],
     offsetX: 0,
-    offsetY: -260,
+    offsetY: 0,
   },
   {
     id: "amf",
@@ -25,7 +25,7 @@ export const organisms: OrganismData[] = [
     default_scale: 1,
     growth_types: ["multiply"],
     offsetX: 0,
-    offsetY: 260,
+    offsetY: 300,
   },
   {
     id: "sapota",
@@ -33,7 +33,7 @@ export const organisms: OrganismData[] = [
     texture: "sapota_sprite",
     default_scale: 0.9,
     growth_types: ["grow"],
-    offsetX: 260,
+    offsetX: 400,
     offsetY: 0,
   },
   {
@@ -42,7 +42,7 @@ export const organisms: OrganismData[] = [
     texture: "ants_sprite",
     default_scale: 0.8,
     growth_types: ["multiply"],
-    offsetX: -260,
+    offsetX: -400,
     offsetY: 0,
   },
   {
@@ -51,8 +51,8 @@ export const organisms: OrganismData[] = [
     texture: "antfootbacteria_sprite",
     default_scale: 1,
     growth_types: ["multiply"],
-    offsetX: -520,
-    offsetY: 185,
+    offsetX: -400,
+    offsetY: 300,
   },
   {
     id: "diazotroph",
@@ -60,8 +60,8 @@ export const organisms: OrganismData[] = [
     texture: "diazotroph_sprite",
     default_scale: 1,
     growth_types: ["multiply"],
-    offsetX: -520,
-    offsetY: -185,
+    offsetX: 0,
+    offsetY: -300,
   },
   {
     id: "mycorrhizahelper",
@@ -69,8 +69,8 @@ export const organisms: OrganismData[] = [
     texture: "mycorrhizahelper_sprite",
     default_scale: 1,
     growth_types: ["multiply"],
-    offsetX: 520,
-    offsetY: 185,
+    offsetX: 400,
+    offsetY: 300,
   },
 ];
 
