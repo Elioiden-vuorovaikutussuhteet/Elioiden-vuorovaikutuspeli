@@ -92,6 +92,11 @@ export default class GameScene extends Phaser.Scene {
     );
     this.cursorManager = new CursorManager(this, this.arrowManager);
 
+    this.scoreManager.outOfMoney = () => {
+      this.scene.pause()
+      this.scene.launch("GameOverScene");
+    };
+
     this.arrowManager.createArrowButtons(centerY);
     this.cursorManager.createCursorButton(centerY);
     //First organism is the first in organisms.ts
