@@ -1,66 +1,63 @@
 import Phaser from "phaser";
+import {
+  particleConfig,
+  type EmitterVariantConfig,
+  type ParticleConfig,
+} from "../config/particleConfig";
 
 export default class ParticleManager {
   private positiveEmitter: Phaser.GameObjects.Particles.ParticleEmitter;
   private negativeEmitter: Phaser.GameObjects.Particles.ParticleEmitter;
+  private config: ParticleConfig;
 
-  constructor(scene: Phaser.Scene, uiCamera: Phaser.Cameras.Scene2D.Camera,) {
-    this.positiveEmitter = scene.add.particles(0, 0, "pos_particle", {
-        emitting: false,
-        tint: 0x48AB1D,
-      
-        emitZone: {
-          type: "edge",
-          source: new Phaser.Geom.Line(-50, 0, 50, 0),
-          quantity: 4,
-        },
-        speedX: 0,
-        speedY: { min: -180, max: -80 },
-      
-        scale: { start: 0.05, end: 0 },
-        alpha: { start: 1, end: 0 },
-        lifespan: 1500,
-      
-        quantity: 1,
-      });
-      
-      this.negativeEmitter = scene.add.particles(0, 0, "neg_particle", {
-        emitting: false,
-        tint: 0x8F1C00,
-      
-        emitZone: {
-          type: "edge",
-          source: new Phaser.Geom.Line(-50, 0, 50, 0),
-          quantity: 4,
-        },
-        speedX: 0,
-        speedY: { min: 80, max: 180 },
-      
-        scale: { start: 0.05, end: 0 },
-        alpha: { start: 1, end: 0 },
-        lifespan: 1500,
-      
-        quantity: 1,
-      });
+  constructor(
+    scene: Phaser.Scene,
+    uiCamera: Phaser.Cameras.Scene2D.Camera,
+    config: ParticleConfig = particleConfig,
+  ) {
+    this.config = config;
 
-      uiCamera.ignore([
-        this.positiveEmitter,
-        this.negativeEmitter,
-      ]);
-      
-      this.positiveEmitter.setDepth(1000);
-      this.negativeEmitter.setDepth(1000);
+    this.positiveEmitter = this.createEmitter(scene, this.config.positive);
+    this.negativeEmitter = this.createEmitter(scene, this.config.negative);
+
+    uiCamera.ignore([this.positiveEmitter, this.negativeEmitter]);
   }
 
-  public healthChanged(x: number, y: number, amount: number) {
+  private createEmitter(
+    scene: Phaser.Scene,
+    variant: EmitterVariantConfig,
+  ): Phaser.GameObjects.Particles.ParticleEmitter {
+    const { x1, y1, x2, y2 } = this.config.emitLine;
+
+    const emitter = scene.add.particles(0, 0, variant.texture, {
+      emitting: false,
+      tint: variant.tint,
+      emitZone: {
+        type: "edge",
+        source: new Phaser.Geom.Line(x1, y1, x2, y2),
+        quantity: this.config.emitZoneQuantity,
+      },
+      speedX: this.config.speedX,
+      speedY: variant.speedY,
+      scale: this.config.scale,
+      alpha: this.config.alpha,
+      lifespan: this.config.lifespan,
+      quantity: this.config.quantity,
+    });
+
+    emitter.setDepth(this.config.depth);
+    return emitter;
+  }
+
+  public healthChanged(x: number, y: number, amount: number): void {
     if (amount > 0) {
-      this.positiveEmitter.explode(4, x, y);
+      this.positiveEmitter.explode(this.config.explodeCount, x, y);
     } else if (amount < 0) {
-      this.negativeEmitter.explode(4, x, y);
+      this.negativeEmitter.explode(this.config.explodeCount, x, y);
     }
   }
 
-  public destroy() {
+  public destroy(): void {
     this.positiveEmitter.destroy();
     this.negativeEmitter.destroy();
   }
