@@ -1,6 +1,7 @@
 import Phaser from "phaser";
 import type Organism from "./organism";
 import { drawArrow } from "../services/DrawArrowService";
+import { arrowUIConfig, permanentArrowUIConfig } from "../config/uiConfig";
 
 export interface PermanentArrowConfig {
   targetOffset?: number;
@@ -17,7 +18,7 @@ interface PulseAnimation {
 
 export default class PermanentArrow {
   public readonly key: string;
-	public readonly fromId: string;
+  public readonly fromId: string;
   public readonly toId: string;
   public readonly graphics: Phaser.GameObjects.Graphics;
 
@@ -33,10 +34,10 @@ export default class PermanentArrow {
 
   private pulses: PulseAnimation[] = [];
 
-	private fromX = 0;
-	private fromY = 0;
-	private toX = 0;
-	private toY = 0;
+  private fromX = 0;
+  private fromY = 0;
+  private toX = 0;
+  private toY = 0;
   private hitBounds = new Phaser.Geom.Rectangle();
   private hovered = false;
 
@@ -56,22 +57,26 @@ export default class PermanentArrow {
     this.toId = toId;
     this.key = JSON.stringify([fromId, toId]);
 
-    this.targetOffset = config.targetOffset ?? 65;
-    this.color = config.color ?? 0x064f15;
-    this.thickness = config.thickness ?? 8;
-    this.lateralOffset = config.lateralOffset ?? 0;
+    this.targetOffset =
+      config.targetOffset ?? permanentArrowUIConfig.defaultTargetOffset;
+    this.color = config.color ?? arrowUIConfig.positiveColor;
+    this.thickness =
+      config.thickness ?? permanentArrowUIConfig.defaultThickness;
+    this.lateralOffset =
+      config.lateralOffset ?? permanentArrowUIConfig.defaultLateralOffset;
 
     this.graphics = this.scene.add.graphics();
-    this.graphics.setDepth(100);
+    this.graphics.setDepth(permanentArrowUIConfig.graphicsDepth);
     this.uiCamera.ignore(this.graphics);
-    
-    //arrow hitzone for cursormode
+
+    // Arrow hitzone for cursor mode
     this.arrowhitBox = this.scene.add.zone(0, 0, 1, 1);
     this.arrowhitBox.setOrigin(0);
-    this.arrowhitBox.setDepth(99);
+    this.arrowhitBox.setDepth(permanentArrowUIConfig.hitZoneDepth);
     this.arrowhitBox.setInteractive(
       new Phaser.Geom.Rectangle(0, 0, 1, 1),
-      (_hitArea, x, y) => this.isPointOnArrow(x + this.hitBounds.x, y + this.hitBounds.y),
+      (_hitArea, x, y) =>
+        this.isPointOnArrow(x + this.hitBounds.x, y + this.hitBounds.y),
     );
     this.arrowhitBox.on("pointerover", () => {
       this.hovered = true;
@@ -100,19 +105,22 @@ export default class PermanentArrow {
       this.lateralOffset = config.lateralOffset;
     }
   }
-	
+
   public playPulse(healthChange: number): void {
-    const color = healthChange >= 0 ? 0x04B504 : 0xb83232;
+    const color =
+      healthChange >= 0
+        ? permanentArrowUIConfig.pulsePositiveColor
+        : permanentArrowUIConfig.pulseNegativeColor;
 
     const circle = this.scene.add.circle(
       this.fromX,
       this.fromY,
-      8,
+      permanentArrowUIConfig.pulseRadius,
       color,
     );
 
-    circle.setDepth(101);
-    circle.setAlpha(0.8);
+    circle.setDepth(permanentArrowUIConfig.pulseDepth);
+    circle.setAlpha(permanentArrowUIConfig.pulseAlpha);
     this.uiCamera.ignore(circle);
 
     const pulse: PulseAnimation = {
@@ -124,7 +132,7 @@ export default class PermanentArrow {
     pulse.tween = this.scene.tweens.add({
       targets: pulse,
       progress: 1,
-      duration: 1000,
+      duration: permanentArrowUIConfig.pulseDuration,
       ease: "Linear",
       onComplete: () => {
         circle.destroy();
@@ -146,12 +154,11 @@ export default class PermanentArrow {
     }
   }
 
-
   public update(from: Organism, to: Organism): void {
     const dx = to.x - from.x;
     const dy = to.y - from.y;
     const distance = Math.hypot(dx, dy);
-    
+
     this.graphics.clear();
     if (distance === 0) return;
 
@@ -163,7 +170,6 @@ export default class PermanentArrow {
     const px = -uy;
     const py = ux;
 
-    // values used for animation
     this.fromX = from.x + px * this.lateralOffset;
     this.fromY = from.y + py * this.lateralOffset;
     this.toX = targetX + px * this.lateralOffset;
@@ -171,7 +177,6 @@ export default class PermanentArrow {
 
     this.updateHitZone();
     this.redraw();
-
     this.updatePulsePosition();
   }
 
@@ -190,14 +195,16 @@ export default class PermanentArrow {
       y1: this.fromY,
       x2: this.toX,
       y2: this.toY,
-      color: this.hovered ? 0xffffff : this.color,
-      thickness: this.hovered ? this.thickness + 4 : this.thickness,
+      color: this.hovered ? permanentArrowUIConfig.hoverColor : this.color,
+      thickness: this.hovered
+        ? this.thickness + permanentArrowUIConfig.hoverThicknessBonus
+        : this.thickness,
     });
   }
 
   private updateHitZone(): void {
-    //adjust these values if you want to adjust hitbox size for arrows
-    const padding = this.thickness + 6;
+    const padding =
+      this.thickness + permanentArrowUIConfig.hitBoxPaddingOffset;
     const minX = Math.min(this.fromX, this.toX) - padding;
     const minY = Math.min(this.fromY, this.toY) - padding;
     const width = Math.max(1, Math.abs(this.toX - this.fromX) + padding * 2);
@@ -206,7 +213,12 @@ export default class PermanentArrow {
     this.hitBounds.setTo(minX, minY, width, height);
     this.arrowhitBox.setPosition(minX, minY);
     this.arrowhitBox.setSize(width, height);
-    this.arrowhitBox.input!.hitArea = new Phaser.Geom.Rectangle(0, 0, width, height);
+    this.arrowhitBox.input!.hitArea = new Phaser.Geom.Rectangle(
+      0,
+      0,
+      width,
+      height,
+    );
   }
 
   private isPointOnArrow(x: number, y: number): boolean {
@@ -218,12 +230,18 @@ export default class PermanentArrow {
 
     const projection = Math.max(
       0,
-      Math.min(1, ((x - this.fromX) * dx + (y - this.fromY) * dy) / lengthSquared),
+      Math.min(
+        1,
+        ((x - this.fromX) * dx + (y - this.fromY) * dy) / lengthSquared,
+      ),
     );
     const closestX = this.fromX + projection * dx;
     const closestY = this.fromY + projection * dy;
 
-    return Math.hypot(x - closestX, y - closestY) <= this.thickness + 8;
+    return (
+      Math.hypot(x - closestX, y - closestY) <=
+      this.thickness + permanentArrowUIConfig.hitDistanceToleranceOffset
+    );
   }
 
   public destroy(): void {
