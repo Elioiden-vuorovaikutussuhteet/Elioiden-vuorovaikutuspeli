@@ -12,6 +12,7 @@ import ConnectionManager from "../managers/ConnectionManager";
 import { ScoreManager } from "../managers/ScoreManager";
 import type { Connection } from "../types/Connection";
 import CursorManager from "../managers/CursorManager";
+import RandomEventManager from "../managers/RandomEventManager";
 
 export default class GameScene extends Phaser.Scene {
   private cameraManager!: CameraManager;
@@ -24,6 +25,8 @@ export default class GameScene extends Phaser.Scene {
   private connectionManager!: ConnectionManager;
   private scoreManager!: ScoreManager;
   private cursorManager!: CursorManager;
+  private randomEventManager = new RandomEventManager();
+  private arrowsReady = false;
 
   constructor() {
     super("GameScene");
@@ -50,7 +53,6 @@ export default class GameScene extends Phaser.Scene {
     this.cameraManager = new CameraManager(this);
     this.uiCamera = this.cameraManager.getUICamera();
     this.scoreManager = new ScoreManager(this, 1000);
-
     const centerX = this.cameras.main.centerX;
     const centerY = this.cameras.main.centerY;
 
@@ -161,6 +163,8 @@ export default class GameScene extends Phaser.Scene {
       });
     });
   }
+
+  //TODO: method for random event start when all arrows have been drawn
 
   update() {
     this.cameraManager.update();
