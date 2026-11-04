@@ -1,6 +1,7 @@
 import Phaser from "phaser";
 import type Organism from "./organism";
 import { drawArrow } from "../services/DrawArrowService";
+import { arrowUIConfig, permanentArrowUIConfig } from "../config/uiConfig";
 
 export interface PermanentArrowConfig {
   targetOffset?: number;
@@ -56,19 +57,22 @@ export default class PermanentArrow {
     this.toId = toId;
     this.key = JSON.stringify([fromId, toId]);
 
-    this.targetOffset = config.targetOffset ?? 65;
-    this.color = config.color ?? 0x064f15;
-    this.thickness = config.thickness ?? 8;
-    this.lateralOffset = config.lateralOffset ?? 0;
+    this.targetOffset =
+      config.targetOffset ?? permanentArrowUIConfig.defaultTargetOffset;
+    this.color = config.color ?? arrowUIConfig.positiveColor;
+    this.thickness =
+      config.thickness ?? permanentArrowUIConfig.defaultThickness;
+    this.lateralOffset =
+      config.lateralOffset ?? permanentArrowUIConfig.defaultLateralOffset;
 
     this.graphics = this.scene.add.graphics();
-    this.graphics.setDepth(100);
+    this.graphics.setDepth(permanentArrowUIConfig.graphicsDepth);
     this.uiCamera.ignore(this.graphics);
 
-    //arrow hitzone for cursormode
+    // Arrow hitzone for cursor mode
     this.arrowhitBox = this.scene.add.zone(0, 0, 1, 1);
     this.arrowhitBox.setOrigin(0);
-    this.arrowhitBox.setDepth(99);
+    this.arrowhitBox.setDepth(permanentArrowUIConfig.hitZoneDepth);
     this.arrowhitBox.setInteractive(
       new Phaser.Geom.Rectangle(0, 0, 1, 1),
       (_hitArea, x, y) =>
@@ -103,12 +107,20 @@ export default class PermanentArrow {
   }
 
   public playPulse(healthChange: number): void {
-    const color = healthChange >= 0 ? 0x04b504 : 0xb83232;
+    const color =
+      healthChange >= 0
+        ? permanentArrowUIConfig.pulsePositiveColor
+        : permanentArrowUIConfig.pulseNegativeColor;
 
-    const circle = this.scene.add.circle(this.fromX, this.fromY, 8, color);
+    const circle = this.scene.add.circle(
+      this.fromX,
+      this.fromY,
+      permanentArrowUIConfig.pulseRadius,
+      color,
+    );
 
-    circle.setDepth(101);
-    circle.setAlpha(0.8);
+    circle.setDepth(permanentArrowUIConfig.pulseDepth);
+    circle.setAlpha(permanentArrowUIConfig.pulseAlpha);
     this.uiCamera.ignore(circle);
 
     const pulse: PulseAnimation = {
@@ -120,7 +132,7 @@ export default class PermanentArrow {
     pulse.tween = this.scene.tweens.add({
       targets: pulse,
       progress: 1,
-      duration: 1000,
+      duration: permanentArrowUIConfig.pulseDuration,
       ease: "Linear",
       onComplete: () => {
         circle.destroy();
@@ -311,7 +323,6 @@ export default class PermanentArrow {
 
     this.updateHitZone();
     this.redraw();
-
     this.updatePulsePosition();
   }
 
@@ -330,14 +341,16 @@ export default class PermanentArrow {
       y1: this.fromY,
       x2: this.toX,
       y2: this.toY,
-      color: this.hovered ? 0xffffff : this.color,
-      thickness: this.hovered ? this.thickness + 4 : this.thickness,
+      color: this.hovered ? permanentArrowUIConfig.hoverColor : this.color,
+      thickness: this.hovered
+        ? this.thickness + permanentArrowUIConfig.hoverThicknessBonus
+        : this.thickness,
     });
   }
 
   private updateHitZone(): void {
-    //adjust these values if you want to adjust hitbox size for arrows
-    const padding = this.thickness + 6;
+    const padding =
+      this.thickness + permanentArrowUIConfig.hitBoxPaddingOffset;
     const minX = Math.min(this.fromX, this.toX) - padding;
     const minY = Math.min(this.fromY, this.toY) - padding;
     const width = Math.max(1, Math.abs(this.toX - this.fromX) + padding * 2);
@@ -371,7 +384,10 @@ export default class PermanentArrow {
     const closestX = this.fromX + projection * dx;
     const closestY = this.fromY + projection * dy;
 
-    return Math.hypot(x - closestX, y - closestY) <= this.thickness + 8;
+    return (
+      Math.hypot(x - closestX, y - closestY) <=
+      this.thickness + permanentArrowUIConfig.hitDistanceToleranceOffset
+    );
   }
 
   public destroy(): void {
