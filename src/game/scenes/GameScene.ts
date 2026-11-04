@@ -26,7 +26,7 @@ export default class GameScene extends Phaser.Scene {
   private scoreManager!: ScoreManager;
   private cursorManager!: CursorManager;
   private randomEventManager = new RandomEventManager();
-  private arrowsReady = false;
+  private randomEventsStarted = false;
 
   constructor() {
     super("GameScene");
@@ -166,15 +166,19 @@ export default class GameScene extends Phaser.Scene {
     });
   }
 
-  //all organisms have spawned & all right arrows have been drawn
+  //this starts random events after all organisms have spawned & all right arrows have been drawn
   private updateGameCompletion(): void {
-    this.arrowsReady =
+    const gameComplete =
       this.arrowManager.areAllOrganismsSpawned() &&
       this.connectionManager.checkConnections();
-  }
 
-  public isGameComplete(): boolean {
-    return this.arrowsReady;
+    if (!gameComplete || this.randomEventsStarted) return;
+
+    this.randomEventsStarted = true;
+    this.randomEventManager.startRandomEvents(
+      this,
+      this.organismManager.getOrganisms(),
+    );
   }
 
   update() {

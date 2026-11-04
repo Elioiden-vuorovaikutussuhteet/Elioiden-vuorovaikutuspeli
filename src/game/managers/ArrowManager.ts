@@ -166,7 +166,6 @@ export default class ArrowManager {
 
       if (isCorrect) {
         this.interactions.push({ from: firstId, to: secondId });
-        this.onRightArrowDrawn?.();
 
         const textId = getInteractionId(firstId, secondId);
         this.scene.scene.launch("PopupScene", { textId });
@@ -207,6 +206,7 @@ export default class ArrowManager {
 
     this.redrawPermanentArrows();
     this.selectedOrganism = null;
+    this.onRightArrowDrawn?.();
   }
 
   public redrawPermanentArrows(): void {
