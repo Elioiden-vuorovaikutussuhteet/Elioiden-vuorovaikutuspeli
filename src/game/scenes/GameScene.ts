@@ -82,7 +82,7 @@ export default class GameScene extends Phaser.Scene {
       rightConnections,
       interactions,
     );
-
+    //undefined is needed for forceConfig
     this.arrowManager = new ArrowManager(
       this,
       this.uiCamera,
@@ -91,6 +91,8 @@ export default class GameScene extends Phaser.Scene {
       this.organismManager,
       this.scoreManager,
       interactions,
+      undefined,
+      this.updateGameCompletion.bind(this),
     );
     this.cursorManager = new CursorManager(this, this.arrowManager);
 
@@ -164,7 +166,16 @@ export default class GameScene extends Phaser.Scene {
     });
   }
 
-  //TODO: method for random event start when all arrows have been drawn
+  //all organisms have spawned & all right arrows have been drawn
+  private updateGameCompletion(): void {
+    this.arrowsReady =
+      this.arrowManager.areAllOrganismsSpawned() &&
+      this.connectionManager.checkConnections();
+  }
+
+  public isGameComplete(): boolean {
+    return this.arrowsReady;
+  }
 
   update() {
     this.cameraManager.update();
