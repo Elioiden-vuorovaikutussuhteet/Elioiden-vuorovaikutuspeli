@@ -31,12 +31,13 @@ app.use(
 
 app.use("/api/auth", authRouter);
 
+// Authorization
 function requireAdmin(
   req: express.Request,
   res: express.Response,
   next: express.NextFunction
 ) {
-  if (!req.session.isAdmin) {
+  if (!req.session.user?.isAdmin) {
     return res.status(401).json({ error: "Unauthorized" });
   }
 

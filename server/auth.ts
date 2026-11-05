@@ -5,9 +5,18 @@ const router = Router();
 
 declare module "express-session" {
   interface SessionData {
-    isAdmin?: boolean;
+    user?: {
+      id: string;
+      isAdmin: boolean;
+    };
   }
 }
+
+/*
+Current login has 1 fixed password
+Future authentication methods should establish req.session.user
+after successfully verifying the user's identity.
+*/
 
 router.post("/login", async (req, res) => {
   const { password } = req.body;
@@ -31,7 +40,10 @@ router.post("/login", async (req, res) => {
         return res.status(500).json({ error: "Login failed" });
       }
 
-      req.session.isAdmin = true;
+      req.session.user = {
+        id: "admin",
+        isAdmin: true
+      };
 
       res.json({ authenticated: true });
     });
@@ -49,7 +61,7 @@ router.post("/logout", (req, res) => {
 
 router.get("/me", (req, res) => {
   res.json({
-    authenticated: req.session.isAdmin === true
+    authenticated: !!req.session.user?.isAdmin
   });
 });
 
