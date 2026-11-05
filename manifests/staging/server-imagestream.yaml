@@ -1,0 +1,19 @@
+apiVersion: image.openshift.io/v1
+kind: ImageStream
+metadata:
+  name: server
+  namespace: eliopeli
+  labels:
+    app: eliopeli-staging
+spec:
+  lookupPolicy:
+    local: false
+  tags:
+    - name: staging
+      from:
+        kind: DockerImage
+        name: ghcr.io/elioiden-vuorovaikutussuhteet/elioiden-vuorovaikutuspeli:server-staging
+      importPolicy:
+        scheduled: true
+      referencePolicy:
+        type: Local

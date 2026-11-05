@@ -1,28 +1,26 @@
-import type Phaser from "phaser";
+import Phaser from "phaser";
 import type Organism from "../entities/organism";
 import PermanentArrow from "../entities/permanentarrow";
 import { drawArrow } from "../services/DrawArrowService";
 import { getRelation } from "../services/RelationsService";
 import type { Connection } from "../types/Connection";
-
-const POSITIVE_COLOR = 0x064f15;
-const NEGATIVE_COLOR = 0xed0924;
-const PERMANENT_THICKNESS = 8;
-const PREVIEW_THICKNESS = 2;
-const BIDIRECTIONAL_OFFSET = 25;
+import { arrowUIConfig, type ArrowUIConfig } from "../config/uiConfig";
 
 export default class ArrowRenderer {
   private scene: Phaser.Scene;
   private uiCamera: Phaser.Cameras.Scene2D.Camera;
+  private config: ArrowUIConfig;
   private permanentArrows = new Map<string, PermanentArrow>();
   private previewArrow: Phaser.GameObjects.Graphics;
 
   constructor(
     scene: Phaser.Scene,
     uiCamera: Phaser.Cameras.Scene2D.Camera,
+    config: ArrowUIConfig = arrowUIConfig,
   ) {
     this.scene = scene;
     this.uiCamera = uiCamera;
+    this.config = config;
 
     this.previewArrow = this.scene.add.graphics();
     this.previewArrow.setDepth(100);
@@ -35,8 +33,8 @@ export default class ArrowRenderer {
 
   private getRelationColor(fromId: string, toId: string): number {
     return getRelation(fromId, toId)?.value === 1
-      ? POSITIVE_COLOR
-      : NEGATIVE_COLOR;
+      ? this.config.positiveColor
+      : this.config.negativeColor;
   }
 
   public redrawPermanentArrows(
@@ -64,7 +62,7 @@ export default class ArrowRenderer {
           this.uiCamera,
           from,
           to,
-          { targetOffset, color, thickness: PERMANENT_THICKNESS },
+          { targetOffset, color, thickness: this.config.permanentThickness },
           () => onArrowClick(from, to),
         );
         arrow.setCursorMode(cursorMode);
@@ -74,8 +72,8 @@ export default class ArrowRenderer {
       arrow.setStyle({
         targetOffset,
         color,
-        thickness: PERMANENT_THICKNESS,
-        lateralOffset: isBidirectional ? BIDIRECTIONAL_OFFSET : 0,
+        thickness: this.config.permanentThickness,
+        lateralOffset: isBidirectional ? this.config.bidirectionalOffset : 0,
       });
 
       arrow.update(first, second);
@@ -98,8 +96,10 @@ export default class ArrowRenderer {
       y1: selectedOrganism.y,
       x2: targetX,
       y2: targetY,
-      color: isPositiveColor ? POSITIVE_COLOR : NEGATIVE_COLOR,
-      thickness: PREVIEW_THICKNESS,
+      color: isPositiveColor
+        ? this.config.positiveColor
+        : this.config.negativeColor,
+      thickness: this.config.previewThickness,
       lateralOffset: 0,
     });
   }

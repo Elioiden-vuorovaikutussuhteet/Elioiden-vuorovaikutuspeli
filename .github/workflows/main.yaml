@@ -54,3 +54,21 @@ jobs:
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
+
+      - name: Extract backend Docker metadata
+        id: server_meta
+        uses: docker/metadata-action@v6
+        with:
+          images: ghcr.io/${{ github.repository }}
+          tags: |
+            type=raw,value=server-staging,enable=${{ github.event_name == 'push' || (github.event_name == 'workflow_dispatch' && inputs.target_environment == 'staging') }}
+            type=raw,value=server-latest,enable=${{ github.event_name == 'release' || (github.event_name == 'workflow_dispatch' && inputs.target_environment == 'production') }}
+
+      - name: Build and push backend Docker image
+        uses: docker/build-push-action@v7
+        with:
+          context: .
+          file: Dockerfile.server
+          push: true
+          tags: ${{ steps.server_meta.outputs.tags }}
+          labels: ${{ steps.server_meta.outputs.labels }}
