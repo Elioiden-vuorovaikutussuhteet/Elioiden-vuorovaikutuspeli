@@ -105,7 +105,9 @@ export default class PermanentArrow {
   public playPulse(healthChange: number): void {
     const color = healthChange >= 0 ? 0x04b504 : 0xb83232;
 
-    const circle = this.scene.add.circle(this.fromX, this.fromY, 8, color);
+    const circle = this.scene.add.circle(this.fromX, this.fromY, 2, color);
+    circle.setStrokeStyle(15, 0xffffff, 0.5);
+    circle.enableFilters().filters?.internal.addGlow(color, 16, 1);
 
     circle.setDepth(101);
     circle.setAlpha(0.8);
