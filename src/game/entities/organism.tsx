@@ -42,7 +42,6 @@ export default class Organism extends Phaser.GameObjects.Sprite {
     uiCamera?: Phaser.Cameras.Scene2D.Camera,
     onHealthChanged?: (x: number, y: number, amount: number) => void,
   ) {
-
     super(scene, x, y, getOrganismData(id).texture);
 
     const organismData = getOrganismData(id);
@@ -103,7 +102,7 @@ export default class Organism extends Phaser.GameObjects.Sprite {
       1,
       false,
       10,
-      10
+      10,
     );
 
     this.hintGlow.active = false;
@@ -150,7 +149,6 @@ export default class Organism extends Phaser.GameObjects.Sprite {
     });
   }
 
-
   private updateDuplicates() {
     if (this.hp > 100 + this.breakpoint) {
       const duplicate = this.scene.add.sprite(0, 0, this.organismData.texture);
@@ -180,10 +178,14 @@ export default class Organism extends Phaser.GameObjects.Sprite {
   private positionDuplicates() {
     const count = this.duplicates.length;
 
-    const radius = this.displayWidth * 0.8;
+    const radius = Math.min(this.displayWidth * 0.65, 100);
+
+    const startAngle = (170 * Math.PI) / 180; // 170° (just below horizontal left)
+    const arcSpan = (200 * Math.PI) / 180; // 200° sweep over the top to 10° (right)
 
     this.duplicates.forEach((duplicate, index) => {
-      const angle = (index / count) * Math.PI * 2;
+      const progress = count === 1 ? 0.5 : index / (count - 1);
+      const angle = startAngle + progress * arcSpan;
 
       const x = Math.cos(angle) * radius;
       const y = Math.sin(angle) * radius;
@@ -199,46 +201,44 @@ export default class Organism extends Phaser.GameObjects.Sprite {
   public changeHealth(totalChange: number) {
     if (totalChange === 0) return;
 
-    this.previousHP = this.hp
+    this.previousHP = this.hp;
     this.hp += totalChange;
 
     if (this.debugHealth) {
-    const debugMessage =
-      `Previous HP: ${this.previousHP}\n` +
-      `changeHealth(${totalChange})\n` +
-      `New HP: ${this.hp}`;
+      const debugMessage =
+        `Previous HP: ${this.previousHP}\n` +
+        `changeHealth(${totalChange})\n` +
+        `New HP: ${this.hp}`;
 
-    if (this.debugHealthText) {
-      this.debugHealthText.setText(debugMessage);
-      this.debugHealthText.setPosition(this.x, this.y - this.displayHeight / 2 - 20);
-    } else {
-      this.debugHealthText = this.scene.add
-        .text(
+      if (this.debugHealthText) {
+        this.debugHealthText.setText(debugMessage);
+        this.debugHealthText.setPosition(
           this.x,
           this.y - this.displayHeight / 2 - 20,
-          debugMessage,
-          {
+        );
+      } else {
+        this.debugHealthText = this.scene.add
+          .text(this.x, this.y - this.displayHeight / 2 - 20, debugMessage, {
             fontFamily: "monospace",
             fontSize: "14px",
             color: "#1605fa",
             backgroundColor: "#ffffff",
             padding: { x: 6, y: 4 },
             align: "left",
-          }
-        )
-        .setOrigin(0.5, 1)
-        .setDepth(1000);
+          })
+          .setOrigin(0.5, 1)
+          .setDepth(1000);
 
         if (this.uiCamera) {
           this.uiCamera.ignore(this.debugHealthText);
         }
+      }
     }
-  }
-    
+
     const particleY =
-    totalChange > 0
-      ? this.y + this.displayHeight / 2
-      : this.y - this.displayHeight / 2;
+      totalChange > 0
+        ? this.y + this.displayHeight / 2
+        : this.y - this.displayHeight / 2;
 
     this.onHealthChanged?.(this.x, particleY, totalChange);
 
