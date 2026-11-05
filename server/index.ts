@@ -11,6 +11,8 @@ dotenv.config({ path: path.resolve(process.cwd(), 'server/.env') });
 const app = express();
 const PORT = 3000;
 
+app.set('trust proxy', 1);
+
 app.use(helmet());
 app.use(express.json());
 
