@@ -1,6 +1,7 @@
 import express from 'express';
 import session from 'express-session';
 import authRouter from "./auth"
+import helmet from 'helmet';
 
 import dotenv from 'dotenv';
 import path from 'path';
@@ -10,6 +11,7 @@ dotenv.config({ path: path.resolve(process.cwd(), 'server/.env') });
 const app = express();
 const PORT = 3000;
 
+app.use(helmet());
 app.use(express.json());
 
 console.log("SESSION_SECRET loaded:", !!process.env.SESSION_SECRET);
