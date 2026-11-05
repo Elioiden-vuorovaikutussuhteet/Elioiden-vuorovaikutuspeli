@@ -64,8 +64,20 @@ router.post("/login", loginLimiter, async (req, res) => {
 });
 
 router.post("/logout", (req, res) => {
-  req.session.destroy(() => {
-    res.clearCookie("admin.sid");
+  req.session.destroy((err) => {
+    if (err) {
+      return res.status(500).json({
+        error: "Logout failed"
+      });
+    }
+
+    res.clearCookie("admin.sid", {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "strict",
+      path: "/"
+    });
+
     res.json({ authenticated: false });
   });
 });
