@@ -14,6 +14,8 @@ eslint.config.js
 README.md
 .env
 .env.*
+**/.env
+**/.env.*
 *.local
 *.log
 npm-debug.log*
