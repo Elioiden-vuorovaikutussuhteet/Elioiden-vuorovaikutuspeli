@@ -1,5 +1,6 @@
 import { Router } from "express";
 import bcrypt from "bcrypt";
+import { rateLimit } from 'express-rate-limit';
 
 const router = Router();
 
@@ -12,13 +13,23 @@ declare module "express-session" {
   }
 }
 
+const loginLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  limit: 8,
+  message: {
+    error: 'Too many login attempts. Try again later.'
+  },
+  standardHeaders: true,
+  legacyHeaders: false
+});
+
 /*
 Current login has 1 fixed password
 Future authentication methods should establish req.session.user
 after successfully verifying the user's identity.
 */
 
-router.post("/login", async (req, res) => {
+router.post("/login", loginLimiter, async (req, res) => {
   const { password } = req.body;
 
   if (typeof password !== "string") {
