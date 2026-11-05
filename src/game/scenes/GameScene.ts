@@ -12,7 +12,7 @@ import ConnectionManager from "../managers/ConnectionManager";
 import { ScoreManager } from "../managers/ScoreManager";
 import type { Connection } from "../types/Connection";
 import CursorManager from "../managers/CursorManager";
-import RandomEventManager from "../managers/RandomEventManager";
+//import RandomEventManager from "../managers/RandomEventManager";
 
 export default class GameScene extends Phaser.Scene {
   private cameraManager!: CameraManager;
@@ -25,8 +25,8 @@ export default class GameScene extends Phaser.Scene {
   private connectionManager!: ConnectionManager;
   private scoreManager!: ScoreManager;
   private cursorManager!: CursorManager;
-  private randomEventManager = new RandomEventManager();
-  private arrowsReady = false;
+  //private randomEventManager = new RandomEventManager();
+  
 
   constructor() {
     super("GameScene");

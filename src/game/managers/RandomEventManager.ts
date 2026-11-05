@@ -12,14 +12,15 @@ export default class RandomEventManager {
      public startRandomEvents(organisms: Organism[]): void{
         // Timers or other triggers can be later added here
         this.triggerRandomEvent(organisms);
-        //scene: Phaser.Scene
-    }
+     }
 
-    public triggerRandomEvent(organisms: Organism[]): void {
+     public triggerRandomEvent(organisms: Organism[]): void {
         if (organisms.length === 0) return;
         //organisms: Organism[]
         //choose crandom event, select viable random target, apply event
 
     }
 
-}
+    }
+
+    
