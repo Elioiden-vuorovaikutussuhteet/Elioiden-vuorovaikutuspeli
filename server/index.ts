@@ -1,9 +1,49 @@
 import express from 'express';
+import session from 'express-session';
+import authRouter from "./auth"
+
+import dotenv from 'dotenv';
+import path from 'path';
+
+dotenv.config({ path: path.resolve(process.cwd(), 'server/.env') });
 
 const app = express();
 const PORT = 3000;
 
 app.use(express.json());
+
+console.log("SESSION_SECRET loaded:", !!process.env.SESSION_SECRET);
+
+app.use(
+  session({
+    name: "admin.sid",
+    secret: process.env.SESSION_SECRET!,
+    resave: false,
+    saveUninitialized: false,
+    cookie: {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "strict",
+      maxAge: 1000 * 60 * 60 * 12
+    }
+  })
+);
+
+app.use("/api/auth", authRouter);
+
+function requireAdmin(
+  req: express.Request,
+  res: express.Response,
+  next: express.NextFunction
+) {
+  if (!req.session.isAdmin) {
+    return res.status(401).json({ error: "Unauthorized" });
+  }
+
+  next();
+}
+
+app.use("/api/hello", requireAdmin);
 
 app.get('/api/hello', (req, res) => {
   res.json({
