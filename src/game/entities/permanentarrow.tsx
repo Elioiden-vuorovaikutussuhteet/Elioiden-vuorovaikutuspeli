@@ -112,11 +112,25 @@ export default class PermanentArrow {
         ? permanentArrowUIConfig.pulsePositiveColor
         : permanentArrowUIConfig.pulseNegativeColor;
 
+ //   const circle = this.scene.add.circle(this.fromX, this.fromY, 2, color);
+  //  circle.setStrokeStyle(15, 0xffffff, 0.5);
+ //   circle.enableFilters().filters?.internal.addGlow(color, 16, 1);
+
     const circle = this.scene.add.circle(
       this.fromX,
       this.fromY,
       permanentArrowUIConfig.pulseRadius,
       color,
+    );
+    circle.setStrokeStyle(
+      permanentArrowUIConfig.pulseColorInsideGlow,
+      permanentArrowUIConfig.pulseColorInside,
+      permanentArrowUIConfig.pulseColorInsideOpacity
+     );
+    circle.enableFilters().filters?.external.addGlow(
+      color,
+      permanentArrowUIConfig.pulseColorGlowRadius,
+      permanentArrowUIConfig.pulseColorGlowIntensity,
     );
 
     circle.setDepth(permanentArrowUIConfig.pulseDepth);
