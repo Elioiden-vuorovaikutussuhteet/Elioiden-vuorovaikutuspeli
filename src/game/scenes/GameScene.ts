@@ -1,5 +1,5 @@
 import Phaser from "phaser";
-import ParticleManager from "../managers/ParticleManager";
+import GlowManager from "../managers/GlowManager";
 import Organism from "../entities/organism";
 import { organisms } from "../data/organisms"; // adjust path
 import InfoButton from "../entities/infobutton";
@@ -12,7 +12,7 @@ import ConnectionManager from "../managers/ConnectionManager";
 import { ScoreManager } from "../managers/ScoreManager";
 import type { Connection } from "../types/Connection";
 import CursorManager from "../managers/CursorManager";
-import { glowConfig } from "../config/particleConfig";
+import { glowConfig } from "../config/glowConfig";
 //import RandomEventManager from "../managers/RandomEventManager";
 
 export default class GameScene extends Phaser.Scene {
@@ -20,7 +20,7 @@ export default class GameScene extends Phaser.Scene {
   private uiCamera!: Phaser.Cameras.Scene2D.Camera;
 
   private arrowManager!: ArrowManager;
-  private particleManager!: ParticleManager;
+  private glowManager!: GlowManager;
   private interactionManager!: InteractionManager;
   private organismManager!: OrganismManager;
   private connectionManager!: ConnectionManager;
@@ -61,7 +61,7 @@ export default class GameScene extends Phaser.Scene {
     const rightConnections: Connection[] = [];
     const organismMap = new Map<string, Organism>();
 
-    this.particleManager = new ParticleManager(this, glowConfig);
+    this.glowManager = new GlowManager(this, glowConfig);
 
     this.organismManager = new OrganismManager(
       this,
@@ -69,7 +69,7 @@ export default class GameScene extends Phaser.Scene {
       organismMap,
       rightConnections,
       (organism) => this.arrowManager.arrowChecker(organism),
-      (organism, amount) => this.particleManager.healthChanged(organism, amount),
+      (organism, amount) => this.glowManager.healthChanged(organism, amount),
     );
     this.interactionManager = new InteractionManager(
       organismMap,

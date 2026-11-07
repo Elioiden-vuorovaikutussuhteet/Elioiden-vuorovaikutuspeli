@@ -235,11 +235,6 @@ export default class Organism extends Phaser.GameObjects.Sprite {
       }
     }
 
-//    const particleY =
-//      totalChange > 0
-//        ? this.y + this.displayHeight / 2
-//        : this.y - this.displayHeight / 2;
-
     this.onHealthChanged?.(this, totalChange);
 
     if (this.organismData.growth_types.includes("multiply")) {
