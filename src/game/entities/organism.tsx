@@ -29,7 +29,7 @@ export default class Organism extends Phaser.GameObjects.Sprite {
   public duplicateContainer: Phaser.GameObjects.Container;
   private hintGlow!: Phaser.Filters.Glow;
 
-  private onHealthChanged?: (x: number, y: number, amount: number) => void;
+  private onHealthChanged?: (organism: Organism, amount: number) => void;
 
   private debugHealth: boolean;
   private debugHealthText?: Phaser.GameObjects.Text;
@@ -40,7 +40,7 @@ export default class Organism extends Phaser.GameObjects.Sprite {
     x: number,
     y: number,
     uiCamera?: Phaser.Cameras.Scene2D.Camera,
-    onHealthChanged?: (x: number, y: number, amount: number) => void,
+    onHealthChanged?: (organism: Organism, amount: number) => void,
   ) {
     super(scene, x, y, getOrganismData(id).texture);
 
@@ -235,12 +235,7 @@ export default class Organism extends Phaser.GameObjects.Sprite {
       }
     }
 
-    const particleY =
-      totalChange > 0
-        ? this.y + this.displayHeight / 2
-        : this.y - this.displayHeight / 2;
-
-    this.onHealthChanged?.(this.x, particleY, totalChange);
+    this.onHealthChanged?.(this, totalChange);
 
     if (this.organismData.growth_types.includes("multiply")) {
       this.updateDuplicates();
