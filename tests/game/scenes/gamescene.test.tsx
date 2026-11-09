@@ -148,7 +148,6 @@ describe("GameScene", () => {
       pause: vi.fn(),
       bringToTop: vi.fn(),
       resume: vi.fn(),
-
     });
 
     scene.events = mockPartial<typeof scene.events>({
@@ -237,9 +236,9 @@ describe("GameScene", () => {
 
     expect(Organism).toHaveBeenCalledWith(
       scene,
-      "amf",                // <-- id comes second
-      expect.any(Number),   // <-- x
-      expect.any(Number),   // <-- y
+      "amf", // <-- id comes second
+      expect.any(Number), // <-- x
+      expect.any(Number), // <-- y
       expect.anything(),
       expect.any(Function),
     );
@@ -266,7 +265,7 @@ describe("GameScene", () => {
     const delayedCallback = vi.mocked(scene.time.delayedCall).mock.calls[0][1];
     delayedCallback();
 
-    expect(HintButton).toHaveBeenCalledWith(scene, 240, 40);
+    expect(HintButton).toHaveBeenCalledWith(scene, 290, 40);
 
     const acacia = vi.mocked(Organism).mock.results[0].value;
     const amf = vi.mocked(Organism).mock.results[1].value;
