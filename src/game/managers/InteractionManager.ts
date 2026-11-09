@@ -1,10 +1,7 @@
 import Organism from "../entities/organism";
 import { getRelation } from "../services/RelationsService";
 import type { Connection } from "../types/Connection";
-import {
-  interactionConfig,
-  type InteractionConfig,
-} from "../config/interactionConfig";
+import { interactionConfig, type InteractionConfig } from "../config";
 
 type ArrowPulseAnimationCallback = (
   fromId: string,

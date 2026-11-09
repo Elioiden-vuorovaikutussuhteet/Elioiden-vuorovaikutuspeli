@@ -1,9 +1,6 @@
 import Phaser from "phaser";
 import Organism from "../entities/organism";
-import { 
-  glowConfig,
-  type GlowConfig 
-} from "../config/glowConfig"
+import { glowConfig, type GlowConfig } from "../config";
 
 export default class GlowManager {
   private scene: Phaser.Scene;

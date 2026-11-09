@@ -1,5 +1,5 @@
 import Phaser from "phaser";
-import { scoreConfig, type ScoreConfig } from "../config/scoreConfig";
+import { scoreConfig, type ScoreConfig } from "../config";
 
 export class ScoreManager {
   private scene: Phaser.Scene;
