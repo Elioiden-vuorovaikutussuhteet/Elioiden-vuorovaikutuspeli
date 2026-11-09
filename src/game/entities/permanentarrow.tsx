@@ -1,7 +1,7 @@
 import Phaser from "phaser";
 import type Organism from "./organism";
 import { drawArrow } from "../services/DrawArrowService";
-import { arrowUIConfig, permanentArrowUIConfig } from "../config";
+import { arrowUIConfig, permanentArrowUIConfig } from "../config/uiConfig";
 
 export interface PermanentArrowConfig {
   targetOffset?: number;
@@ -112,11 +112,25 @@ export default class PermanentArrow {
         ? permanentArrowUIConfig.pulsePositiveColor
         : permanentArrowUIConfig.pulseNegativeColor;
 
+ //   const circle = this.scene.add.circle(this.fromX, this.fromY, 2, color);
+  //  circle.setStrokeStyle(15, 0xffffff, 0.5);
+ //   circle.enableFilters().filters?.internal.addGlow(color, 16, 1);
+
     const circle = this.scene.add.circle(
       this.fromX,
       this.fromY,
       permanentArrowUIConfig.pulseRadius,
       color,
+    );
+    circle.setStrokeStyle(
+      permanentArrowUIConfig.pulseColorInsideGlow,
+      permanentArrowUIConfig.pulseColorInside,
+      permanentArrowUIConfig.pulseColorInsideOpacity
+     );
+    circle.enableFilters().filters?.external.addGlow(
+      color,
+      permanentArrowUIConfig.pulseColorGlowRadius,
+      permanentArrowUIConfig.pulseColorGlowIntensity,
     );
 
     circle.setDepth(permanentArrowUIConfig.pulseDepth);
@@ -154,6 +168,136 @@ export default class PermanentArrow {
     }
   }
 
+  private getOrganismPixelAlpha(
+    organism: Organism,
+    worldX: number,
+    worldY: number,
+  ): number {
+    const getPixelAlpha = this.scene.textures?.getPixelAlpha;
+    if (typeof getPixelAlpha !== "function") return 255;
+
+    const scaleX = organism.scaleX || 1;
+    const scaleY = organism.scaleY || 1;
+    const textureWidth = organism.width ?? 0;
+    const textureHeight = organism.height ?? 0;
+    if (textureWidth <= 0 || textureHeight <= 0) return 255;
+
+    const textureX = Math.round(
+      (worldX - organism.x) / scaleX + textureWidth / 2,
+    );
+    const textureY = Math.round(
+      (worldY - organism.y) / scaleY + textureHeight / 2,
+    );
+
+    if (
+      textureX < 0 ||
+      textureX >= textureWidth ||
+      textureY < 0 ||
+      textureY >= textureHeight
+    ) {
+      return 0;
+    }
+
+    const textureKey = organism.texture?.key ?? organism.organismData?.texture;
+    if (!textureKey) return 255;
+
+    return (
+      getPixelAlpha.call(this.scene.textures, textureX, textureY, textureKey) ??
+      0
+    );
+  }
+
+  private getOrganismBorderPoint(
+    organism: Organism,
+    ux: number,
+    uy: number,
+    lateralShiftX: number,
+    lateralShiftY: number,
+  ): { x: number; y: number } {
+    const halfDisplayWidth = (organism.displayWidth ?? 0) / 2;
+    const halfDisplayHeight = (organism.displayHeight ?? 0) / 2;
+
+    if (halfDisplayWidth <= 0 || halfDisplayHeight <= 0) {
+      return {
+        x: organism.x + lateralShiftX + ux * this.targetOffset,
+        y: organism.y + lateralShiftY + uy * this.targetOffset,
+      };
+    }
+
+    const borderPadding = 10;
+
+    // find border pixels of organism sprite
+    const maxSpriteDistance = Math.hypot(halfDisplayWidth, halfDisplayHeight);
+    let spriteBorderDistance = 0;
+
+    for (
+      let distanceFromCenter = maxSpriteDistance;
+      distanceFromCenter >= 0;
+      distanceFromCenter -= 2
+    ) {
+      const worldX = organism.x + lateralShiftX + ux * distanceFromCenter;
+      const worldY = organism.y + lateralShiftY + uy * distanceFromCenter;
+      if (this.getOrganismPixelAlpha(organism, worldX, worldY) > 10) {
+        spriteBorderDistance = distanceFromCenter + borderPadding;
+        break;
+      }
+    }
+
+    // clear the nameText box below the organism so arrows never cross the text
+    const halfNameTextWidth =
+      (organism.nameText?.width ?? 0) / 2 + borderPadding;
+    const nameTextBottomOffset =
+      organism.nameText?.y !== undefined
+        ? organism.nameText.y -
+          organism.y +
+          (organism.nameText.height ?? 20) / 2
+        : halfDisplayHeight + 35;
+    const nameTextTopY = halfDisplayHeight - 4;
+    const nameTextBottomY =
+      Math.max(halfDisplayHeight, nameTextBottomOffset) + borderPadding;
+
+    const minDistanceX =
+      ux > 1e-6
+        ? (-halfNameTextWidth - lateralShiftX) / ux
+        : ux < -1e-6
+          ? (halfNameTextWidth - lateralShiftX) / ux
+          : -Infinity;
+    const maxDistanceX =
+      ux > 1e-6
+        ? (halfNameTextWidth - lateralShiftX) / ux
+        : ux < -1e-6
+          ? (-halfNameTextWidth - lateralShiftX) / ux
+          : Infinity;
+
+    const minDistanceY =
+      uy > 1e-6
+        ? (nameTextTopY - lateralShiftY) / uy
+        : uy < -1e-6
+          ? (nameTextBottomY - lateralShiftY) / uy
+          : -Infinity;
+    const maxDistanceY =
+      uy > 1e-6
+        ? (nameTextBottomY - lateralShiftY) / uy
+        : uy < -1e-6
+          ? (nameTextTopY - lateralShiftY) / uy
+          : Infinity;
+
+    const boxEntryDistance = Math.max(minDistanceX, minDistanceY);
+    const boxExitDistance = Math.min(maxDistanceX, maxDistanceY);
+    const nameTextBorderDistance =
+      boxExitDistance >= Math.max(0, boxEntryDistance) ? boxExitDistance : 0;
+
+    const borderDistance = Math.max(
+      spriteBorderDistance,
+      nameTextBorderDistance,
+    );
+
+    return {
+      x: organism.x + lateralShiftX + ux * borderDistance,
+      y: organism.y + lateralShiftY + uy * borderDistance,
+    };
+  }
+
   public update(from: Organism, to: Organism): void {
     const dx = to.x - from.x;
     const dy = to.y - from.y;
@@ -162,18 +306,34 @@ export default class PermanentArrow {
     this.graphics.clear();
     if (distance === 0) return;
 
-    const targetX = to.x - (dx / distance) * this.targetOffset;
-    const targetY = to.y - (dy / distance) * this.targetOffset;
-
     const ux = dx / distance;
     const uy = dy / distance;
     const px = -uy;
     const py = ux;
 
-    this.fromX = from.x + px * this.lateralOffset;
-    this.fromY = from.y + py * this.lateralOffset;
-    this.toX = targetX + px * this.lateralOffset;
-    this.toY = targetY + py * this.lateralOffset;
+    const lateralShiftX = px * this.lateralOffset;
+    const lateralShiftY = py * this.lateralOffset;
+
+    const fromBorderPoint = this.getOrganismBorderPoint(
+      from,
+      ux,
+      uy,
+      lateralShiftX,
+      lateralShiftY,
+    );
+    const toBorderPoint = this.getOrganismBorderPoint(
+      to,
+      -ux,
+      -uy,
+      lateralShiftX,
+      lateralShiftY,
+    );
+
+    // values used for animation
+    this.fromX = fromBorderPoint.x;
+    this.fromY = fromBorderPoint.y;
+    this.toX = toBorderPoint.x;
+    this.toY = toBorderPoint.y;
 
     this.updateHitZone();
     this.redraw();
