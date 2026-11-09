@@ -67,7 +67,7 @@ export const gameSceneConfig: GameSceneConfig = {
     { key: "pos_particle", file: "pos_particle.png" },
     { key: "neg_particle", file: "neg_particle.png" },
     { key: "cursor", file: "cursor.png" },
-    { key: "coin", file: "coin.ong" },
+    { key: "coin", file: "coin.png" },
   ],
   startingMoney: 1000,
   hintCost: 100,

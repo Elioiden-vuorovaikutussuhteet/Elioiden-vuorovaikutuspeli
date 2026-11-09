@@ -1,5 +1,6 @@
 import Phaser from "phaser";
-import { scoreConfig, type ScoreConfig } from "../config";
+
+import { scoreConfig, type ScoreConfig } from "../config/scoreConfig";
 
 export class ScoreManager {
   private scene: Phaser.Scene;
@@ -28,13 +29,23 @@ export class ScoreManager {
         fontStyle: this.config.fontStyle,
       },
     );
+
     this.scene.cameras.main.ignore(this.moneyText);
 
-    const coinIcon = scene.add.image?.(0, this.config.textY + 15, "coin");
+    const coinIcon = scene.add.image?.(
+      this.config.textX,
+      this.config.textY + this.config.coin.yOffset,
+      this.config.coin.texture,
+    );
+
     if (coinIcon) {
       this.coinIcon = coinIcon;
-      this.coinIcon.setOrigin?.(0, 0.5);
-      this.coinIcon.setScale?.(0.65);
+      this.coinIcon.setOrigin?.(
+        this.config.coin.originX,
+        this.config.coin.originY,
+      );
+      this.coinIcon.setScale?.(this.config.coin.scale);
+
       this.updateCoinPosition();
       this.scene.cameras.main.ignore(this.coinIcon);
     }
@@ -48,10 +59,12 @@ export class ScoreManager {
 
   loseMoney(amount = this.config.defaultLoseAmount): void {
     this.money -= amount;
-    if (this.money <= 0) {
-      this.money = 0;
+
+    if (this.money <= this.config.minMoney) {
+      this.money = this.config.minMoney;
       this.outOfMoney?.();
     }
+
     this.updateText();
     this.showMoneyChange(-amount);
   }
@@ -59,34 +72,45 @@ export class ScoreManager {
   private showMoneyChange(amount: number): void {
     if (typeof this.scene.tweens?.add !== "function") return;
 
-    const isGain = amount > 0;
-    const sign = isGain ? "+" : "";
-    const color = isGain ? "#067d1d" : "#d91616";
+    const isGain = amount > this.config.change.gainThreshold;
 
     const changeText = this.scene.add.text(
-      this.config.textX + 10,
-      this.config.textY + 35,
-      `${sign}${amount}`,
+      this.config.textX + this.config.change.xOffset,
+      this.config.textY + this.config.change.startYOffset,
+      isGain
+        ? `${this.config.change.positivePrefix}${amount}`
+        : String(amount),
       {
-        fontSize: "24px",
-        color,
-        fontStyle: "bold",
+        fontSize: this.config.change.fontSize,
+        color: isGain
+          ? this.config.change.gainColor
+          : this.config.change.lossColor,
+        fontStyle: this.config.change.fontStyle,
       },
     );
+
     this.scene.cameras.main.ignore(changeText);
 
     this.scene.tweens.add({
       targets: changeText,
-      y: this.config.textY + (isGain ? 20 : 55),
-      alpha: 0,
-      duration: 900,
-      ease: "Cubic.easeOut",
+      y:
+        this.config.textY +
+        (isGain
+          ? this.config.change.gainEndYOffset
+          : this.config.change.lossEndYOffset),
+      alpha: this.config.change.endAlpha,
+      duration: this.config.change.duration,
+      ease: this.config.change.ease,
       onComplete: () => changeText.destroy(),
     });
   }
 
   private updateCoinPosition(): void {
-    this.coinIcon?.setX(this.moneyText.x + (this.moneyText.width ?? 75) + 8);
+    this.coinIcon?.setX(
+      this.moneyText.x +
+        (this.moneyText.width ?? this.config.coin.fallbackTextWidth) +
+        this.config.coin.gap,
+    );
   }
 
   private updateText(): void {

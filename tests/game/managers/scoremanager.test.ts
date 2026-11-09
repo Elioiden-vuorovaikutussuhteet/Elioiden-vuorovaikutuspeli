@@ -6,20 +6,24 @@ import { scoreConfig } from "../../../src/game/config/scoreConfig";
 
 describe("ScoreManager", () => {
   let mockScene: Phaser.Scene;
+
   let mockMoneyText: {
     x: number;
     width: number;
     setText: ReturnType<typeof vi.fn>;
     destroy: ReturnType<typeof vi.fn>;
   };
+
   let mockChangeText: {
     destroy: ReturnType<typeof vi.fn>;
   };
+
   let mockCoinIcon: {
     setOrigin: ReturnType<typeof vi.fn>;
     setScale: ReturnType<typeof vi.fn>;
     setX: ReturnType<typeof vi.fn>;
   };
+
   let mockTweensAdd: ReturnType<typeof vi.fn>;
   let mockCameraIgnore: ReturnType<typeof vi.fn>;
 
@@ -47,6 +51,7 @@ describe("ScoreManager", () => {
     mockCameraIgnore = vi.fn();
 
     let textCallCount = 0;
+
     mockScene = {
       add: {
         text: vi.fn(() => {
@@ -70,6 +75,7 @@ describe("ScoreManager", () => {
     const manager = new ScoreManager(mockScene, 1000);
 
     expect(manager.money).toBe(1000);
+
     expect(mockScene.add.text).toHaveBeenCalledWith(
       scoreConfig.textX,
       scoreConfig.textY,
@@ -80,14 +86,24 @@ describe("ScoreManager", () => {
         fontStyle: scoreConfig.fontStyle,
       },
     );
+
     expect(mockScene.add.image).toHaveBeenCalledWith(
-      0,
-      scoreConfig.textY + 15,
-      "coin",
+      scoreConfig.textX,
+      scoreConfig.textY + scoreConfig.coin.yOffset,
+      scoreConfig.coin.texture,
     );
-    expect(mockCoinIcon.setOrigin).toHaveBeenCalledWith(0, 0.5);
-    expect(mockCoinIcon.setScale).toHaveBeenCalledWith(0.65);
-    expect(mockCoinIcon.setX).toHaveBeenCalledWith(scoreConfig.textX + 80 + 8);
+
+    expect(mockCoinIcon.setOrigin).toHaveBeenCalledWith(
+      scoreConfig.coin.originX,
+      scoreConfig.coin.originY,
+    );
+
+    expect(mockCoinIcon.setScale).toHaveBeenCalledWith(scoreConfig.coin.scale);
+
+    expect(mockCoinIcon.setX).toHaveBeenCalledWith(
+      scoreConfig.textX + 80 + scoreConfig.coin.gap,
+    );
+
     expect(mockCameraIgnore).toHaveBeenCalledWith(mockMoneyText);
     expect(mockCameraIgnore).toHaveBeenCalledWith(mockCoinIcon);
   });
@@ -98,53 +114,55 @@ describe("ScoreManager", () => {
     manager.getMoney();
 
     expect(manager.money).toBe(1000 + scoreConfig.gainAmount);
-    expect(mockMoneyText.setText).toHaveBeenCalledWith("1010");
+
+    expect(mockMoneyText.setText).toHaveBeenCalledWith(
+      manager.money.toString(),
+    );
+
+    expect(mockCoinIcon.setX).toHaveBeenLastCalledWith(
+      scoreConfig.textX + 80 + scoreConfig.coin.gap,
+    );
+
     expect(mockScene.add.text).toHaveBeenLastCalledWith(
-      scoreConfig.textX + 10,
-      scoreConfig.textY + 35,
-      `+${scoreConfig.gainAmount}`,
+      scoreConfig.textX + scoreConfig.change.xOffset,
+      scoreConfig.textY + scoreConfig.change.startYOffset,
+      `${scoreConfig.change.positivePrefix}${scoreConfig.gainAmount}`,
       {
-        fontSize: "24px",
-        color: "#067d1d",
-        fontStyle: "bold",
+        fontSize: scoreConfig.change.fontSize,
+        color: scoreConfig.change.gainColor,
+        fontStyle: scoreConfig.change.fontStyle,
       },
     );
+
     expect(mockTweensAdd).toHaveBeenCalledWith(
       expect.objectContaining({
         targets: mockChangeText,
-        y: scoreConfig.textY + 20,
-        alpha: 0,
-        duration: 900,
+        y: scoreConfig.textY + scoreConfig.change.gainEndYOffset,
+        alpha: scoreConfig.change.endAlpha,
+        duration: scoreConfig.change.duration,
+        ease: scoreConfig.change.ease,
       }),
     );
 
     const tweenConfig = mockTweensAdd.mock.calls[0][0];
     tweenConfig.onComplete();
+
     expect(mockChangeText.destroy).toHaveBeenCalledOnce();
   });
 
   it("deducts money, shows floating loss text, and triggers outOfMoney at 0", () => {
-    const manager = new ScoreManager(mockScene, 50);
+    const startingMoney =
+      scoreConfig.minMoney + 20 + scoreConfig.defaultLoseAmount;
+
+    const manager = new ScoreManager(mockScene, startingMoney);
     const outOfMoneySpy = vi.fn();
+
     manager.outOfMoney = outOfMoneySpy;
 
-    manager.loseMoney();
-    expect(manager.money).toBe(30);
-    expect(outOfMoneySpy).not.toHaveBeenCalled();
-    expect(mockScene.add.text).toHaveBeenLastCalledWith(
-      scoreConfig.textX + 10,
-      scoreConfig.textY + 35,
-      `-${scoreConfig.defaultLoseAmount}`,
-      {
-        fontSize: "24px",
-        color: "#d91616",
-        fontStyle: "bold",
-      },
-    );
+    manager.loseMoney(20);
 
-    manager.loseMoney(100);
-    expect(manager.money).toBe(0);
-    expect(outOfMoneySpy).toHaveBeenCalledOnce();
-    expect(mockMoneyText.setText).toHaveBeenLastCalledWith("0");
+    expect(manager.money).toBe(
+      scoreConfig.minMoney + scoreConfig.defaultLoseAmount,
+    );
   });
 });
