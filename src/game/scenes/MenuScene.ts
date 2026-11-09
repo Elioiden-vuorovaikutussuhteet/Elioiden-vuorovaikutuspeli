@@ -1,53 +1,57 @@
 import Phaser from "phaser";
+import { menuSceneConfig, type MenuSceneConfig } from "../config/sceneConfig";
 
 export default class MenuScene extends Phaser.Scene {
-  constructor() {
-    super("MenuScene");
+  private config: MenuSceneConfig;
+
+  constructor(config?: MenuSceneConfig) {
+    const resolvedConfig =
+      config && "targetSceneKey" in config ? config : menuSceneConfig;
+    super(resolvedConfig.key);
+    this.config = resolvedConfig;
   }
 
   create() {
     const centerX = this.cameras.main.centerX;
     const centerY = this.cameras.main.centerY;
 
-    const menuWidth = 400;
-    const menuHeight = 200;
+    const { width, height, cornerRadius } = this.config;
+    const x = centerX - width / 2;
+    const y = centerY - height / 2;
 
-    const backround = this.add.graphics();
-    backround.fillStyle(0x000000, 0.7);
-    backround.fillRoundedRect(
-      centerX - menuWidth / 2,
-      centerY - menuHeight / 2,
-      menuWidth,
-      menuHeight,
-      30,
+    const background = this.add.graphics();
+    background.fillStyle(
+      this.config.backgroundColor,
+      this.config.backgroundAlpha,
     );
+    background.fillRoundedRect(x, y, width, height, cornerRadius);
 
     const border = this.add.graphics();
-    border.lineStyle(8, 0xffffff, 1);
-    border.strokeRoundedRect(
-      centerX - menuWidth / 2,
-      centerY - menuHeight / 2,
-      menuWidth,
-      menuHeight,
-      30,
+    border.lineStyle(
+      this.config.borderWidth,
+      this.config.borderColor,
+      this.config.borderAlpha,
     );
+    border.strokeRoundedRect(x, y, width, height, cornerRadius);
 
     this.add
-      .text(centerX, centerY, "Start Game", {
-        fontFamily: "monospace",
-        fontSize: "30px",
-        fontStyle: "bold",
-        color: "#ffffff",
+      .text(centerX, centerY, this.config.text.label, {
+        fontFamily: this.config.text.fontFamily,
+        fontSize: this.config.text.fontSize,
+        fontStyle: this.config.text.fontStyle,
+        color: this.config.text.color,
       })
-      .setOrigin(0.5);
+      .setOrigin(this.config.text.origin);
 
     const menuButton = this.add
-      .zone(centerX, centerY, menuWidth, menuHeight)
+      .zone(centerX, centerY, width, height)
       .setInteractive();
 
     menuButton.on("pointerdown", () => {
       this.scene.stop();
-      this.scene.get("GameScene").events.emit("menuClosed");
+      this.scene
+        .get(this.config.targetSceneKey)
+        .events.emit(this.config.closeEvent);
     });
   }
 }
