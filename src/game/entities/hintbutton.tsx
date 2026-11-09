@@ -4,7 +4,7 @@ export default class HintButton extends Phaser.GameObjects.Container {
   constructor(scene: Phaser.Scene, x: number, y: number) {
     super(scene, x, y);
 
-    const buttonWidth = 80;
+    const buttonWidth = 130;
     const buttonHeight = 36;
     const cornerRadius = 10;
 
@@ -33,15 +33,23 @@ export default class HintButton extends Phaser.GameObjects.Container {
     );
 
     const text = scene.add
-      .text(0, 0, "Hint", {
+      .text(0, 0, "Hint 100", {
         fontFamily: "monospace",
-        fontSize: "18px",
-        fontStyle: "bold",
+        fontSize: "15px",
         color: "#ffffff",
       })
-      .setOrigin(0.5);
+      .setOrigin(0, 0.5);
 
-    this.add([background, border, text]);
+    const coin = scene.add.image(0, 0, "coin").setOrigin(0, 0.5).setScale(0.4);
+
+    const gap = 6;
+    const totalWidth = (text.width ?? 72) + gap + (coin.displayWidth ?? 19);
+    const startX = -totalWidth / 2;
+
+    text.setX(startX);
+    coin.setX(startX + (text.width ?? 72) + gap);
+
+    this.add([background, border, text, coin]);
 
     this.setSize(buttonWidth, buttonHeight);
     this.setInteractive({ useHandCursor: true });
