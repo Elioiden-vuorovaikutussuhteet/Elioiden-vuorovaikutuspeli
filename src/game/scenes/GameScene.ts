@@ -27,7 +27,6 @@ export default class GameScene extends Phaser.Scene {
   private scoreManager!: ScoreManager;
   private cursorManager!: CursorManager;
   //private randomEventManager = new RandomEventManager();
-  
 
   constructor() {
     super("GameScene");
@@ -48,6 +47,7 @@ export default class GameScene extends Phaser.Scene {
     this.load.image("pos_particle", "pos_particle.png");
     this.load.image("neg_particle", "neg_particle.png");
     this.load.image("cursor", "cursor.png");
+    this.load.image("coin", "coin.png");
   }
 
   create() {
@@ -96,7 +96,7 @@ export default class GameScene extends Phaser.Scene {
     this.cursorManager = new CursorManager(this, this.arrowManager);
 
     this.scoreManager.outOfMoney = () => {
-      this.scene.pause()
+      this.scene.pause();
       this.scene.launch("GameOverScene");
     };
 
@@ -106,7 +106,9 @@ export default class GameScene extends Phaser.Scene {
     const initialOrganism = organisms[0];
 
     this.organismManager.createOrganism(
-      centerX + initialOrganism.offsetX, centerY + initialOrganism.offsetY, initialOrganism.id
+      centerX + initialOrganism.offsetX,
+      centerY + initialOrganism.offsetY,
+      initialOrganism.id,
     );
 
     //Eventlistener for: If players clicks on empty space, preview arrow disappears
@@ -138,8 +140,8 @@ export default class GameScene extends Phaser.Scene {
 
     //Second organism is the second in organisms.ts
     const secondOrganism = organisms[1];
-    
-    const hintbutton = new HintButton(this, 240, 40);
+
+    const hintbutton = new HintButton(this, 290, 40);
     this.cameras.main.ignore(hintbutton);
 
     hintbutton.on("hintButtonClicked", () => {
@@ -157,9 +159,11 @@ export default class GameScene extends Phaser.Scene {
       // Resume game scene
       this.scene.resume();
       this.time.delayedCall(3000, () => {
-        console.log(secondOrganism)
+        console.log(secondOrganism);
         this.organismManager.createOrganism(
-          centerX + secondOrganism.offsetX, centerY + secondOrganism.offsetY, secondOrganism.id
+          centerX + secondOrganism.offsetX,
+          centerY + secondOrganism.offsetY,
+          secondOrganism.id,
         );
       });
     });

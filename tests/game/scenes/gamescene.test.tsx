@@ -148,7 +148,6 @@ describe("GameScene", () => {
       pause: vi.fn(),
       bringToTop: vi.fn(),
       resume: vi.fn(),
-
     });
 
     scene.events = mockPartial<typeof scene.events>({
@@ -237,9 +236,9 @@ describe("GameScene", () => {
 
     expect(Organism).toHaveBeenCalledWith(
       scene,
-      "amf",                // <-- id comes second
-      expect.any(Number),   // <-- x
-      expect.any(Number),   // <-- y
+      "amf", // <-- id comes second
+      expect.any(Number), // <-- x
+      expect.any(Number), // <-- y
       expect.anything(),
       expect.any(Function),
     );
@@ -266,7 +265,7 @@ describe("GameScene", () => {
     const delayedCallback = vi.mocked(scene.time.delayedCall).mock.calls[0][1];
     delayedCallback();
 
-    expect(HintButton).toHaveBeenCalledWith(scene, 240, 40);
+    expect(HintButton).toHaveBeenCalledWith(scene, 290, 40);
 
     const acacia = vi.mocked(Organism).mock.results[0].value;
     const amf = vi.mocked(Organism).mock.results[1].value;
@@ -277,6 +276,17 @@ describe("GameScene", () => {
     expect(acacia.highlight).toHaveBeenCalled();
     expect(amf.highlight).toHaveBeenCalled();
     expect((scene as any).scoreManager.money).toBe(900);
+  });
+
+  it("does not deduct points when hint button is clicked and no connections are missing", () => {
+    scene.create();
+
+    const acacia = vi.mocked(Organism).mock.results[0].value;
+    const hintButtonCallback = vi.mocked(mockHintButtonOn).mock.calls[0][1];
+    hintButtonCallback();
+
+    expect(acacia.highlight).not.toHaveBeenCalled();
+    expect((scene as any).scoreManager.money).toBe(1000);
   });
 
   it("pauses properly on game start", () => {
