@@ -1,63 +1,72 @@
 import Phaser from "phaser";
+import {
+  gameOverSceneConfig,
+  type GameOverSceneConfig,
+} from "../config/sceneConfig";
 
 export default class GameOverScene extends Phaser.Scene {
-  constructor() {
-    super("GameOverScene");
+  private config: GameOverSceneConfig;
+
+  constructor(config?: GameOverSceneConfig) {
+    const resolvedConfig =
+      config && "restartSceneKey" in config ? config : gameOverSceneConfig;
+    super(resolvedConfig.key);
+    this.config = resolvedConfig;
   }
 
   create() {
     const centerX = this.cameras.main.centerX;
     const centerY = this.cameras.main.centerY;
 
-    const menuWidth = 400;
-    const menuHeight = 200;
+    const { width, height, cornerRadius } = this.config;
+    const x = centerX - width / 2;
+    const y = centerY - height / 2;
 
-    const backround = this.add.graphics();
-    backround.fillStyle(0x000000, 0.7);
-    backround.fillRoundedRect(
-      centerX - menuWidth / 2,
-      centerY - menuHeight / 2,
-      menuWidth,
-      menuHeight,
-      30,
+    const background = this.add.graphics();
+    background.fillStyle(
+      this.config.backgroundColor,
+      this.config.backgroundAlpha,
     );
+    background.fillRoundedRect(x, y, width, height, cornerRadius);
 
     const border = this.add.graphics();
-    border.lineStyle(8, 0xffffff, 1);
-    border.strokeRoundedRect(
-      centerX - menuWidth / 2,
-      centerY - menuHeight / 2,
-      menuWidth,
-      menuHeight,
-      30,
+    border.lineStyle(
+      this.config.borderWidth,
+      this.config.borderColor,
+      this.config.borderAlpha,
     );
+    border.strokeRoundedRect(x, y, width, height, cornerRadius);
+
+    const { titleText, retryButton } = this.config;
 
     this.add
-      .text(centerX, centerY - 30, "GAME OVER", {
-        fontFamily: "monospace",
-        fontSize: "30px",
-        fontStyle: "bold",
-        color: "#ffffff",
+      .text(centerX, centerY + titleText.offsetY, titleText.label, {
+        fontFamily: titleText.fontFamily,
+        fontSize: titleText.fontSize,
+        fontStyle: titleText.fontStyle,
+        color: titleText.color,
       })
-      .setOrigin(0.5);
+      .setOrigin(titleText.origin);
 
     const againButton = this.add
-      .zone(centerX, centerY + 30, menuWidth, menuHeight)
+      .zone(centerX, centerY + retryButton.offsetY, width, height)
       .setInteractive();
 
     this.add
-      .text(centerX, centerY + 30, "Try again", {
-        fontFamily: "monospace",
-        fontSize: "20px",
-        fontStyle: "bold",
-        color: "#fffff0",
+      .text(centerX, centerY + retryButton.offsetY, retryButton.label, {
+        fontFamily: retryButton.fontFamily,
+        fontSize: retryButton.fontSize,
+        fontStyle: retryButton.fontStyle,
+        color: retryButton.color,
       })
-      .setOrigin(0.5);
+      .setOrigin(retryButton.origin);
 
     againButton.on("pointerdown", () => {
       this.scene.stop();
-      this.scene.stop("PopupScene");
-      this.scene.start("GameScene")
+      for (const sceneKey of this.config.scenesToStop) {
+        this.scene.stop(sceneKey);
+      }
+      this.scene.start(this.config.restartSceneKey);
     });
   }
 }

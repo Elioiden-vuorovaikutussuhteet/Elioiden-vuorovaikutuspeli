@@ -20,7 +20,7 @@ https://github.com/Elioiden-vuorovaikutussuhteet/Elioiden-vuorovaikutuspeli/pkgs
 
 # Docker-käyttö kehitykseen
 
-1. Asenna [docker ja docker compose](https://docs.docker.com/engine/install/). Halutettasi lisää itsesi docker-käyttäjäryhmään [ohjeiden mukaisesti](https://docs.docker.com/engine/install/linux-postinstall/). Tällöin et tarvitse sudoa.
+1. Asenna [docker ja docker compose](https://docs.docker.com/engine/install/). Halutessasi lisää itsesi docker-käyttäjäryhmään [ohjeiden mukaisesti](https://docs.docker.com/engine/install/linux-postinstall/). Tällöin et tarvitse sudoa.
 2. Lataa repositorio
 3. Avaa komentorivi latauskansiossa
 ```

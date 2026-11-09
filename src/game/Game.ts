@@ -2,7 +2,7 @@ import Phaser from "phaser";
 import GameScene from "./scenes/GameScene";
 import MenuScene from "./scenes/MenuScene";
 import TutorialScene from "./scenes/TutorialScene";
-import PopupScene from "./scenes/popupScene";
+import PopupScene from "./scenes/PopupScene";
 import GameOverScene from "./scenes/GameOverScene";
 
 export function createGame(parent: HTMLElement) {

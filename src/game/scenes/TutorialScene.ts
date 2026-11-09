@@ -1,81 +1,101 @@
 import Phaser from "phaser";
 import CloseButton from "../entities/closebutton";
+import {
+  tutorialSceneConfig,
+  type TutorialSceneConfig,
+} from "../config/sceneConfig";
 
 export default class TutorialScene extends Phaser.Scene {
-    constructor() {
-        super("TutorialScene");
+  private config: TutorialSceneConfig;
+
+  constructor(config?: TutorialSceneConfig) {
+    const resolvedConfig =
+      config && "widthRatio" in config ? config : tutorialSceneConfig;
+    super(resolvedConfig.key);
+    this.config = resolvedConfig;
+  }
+
+  preload() {
+    this.load.setPath(this.config.assetsPath);
+    for (const image of this.config.images) {
+      this.load.image(image.key, image.file);
     }
+  }
 
-    preload() {
-        this.load.setPath("assets");
-        this.load.image("close_button_sprite", "closebutton.png");
-    }
+  create() {
+    const { width, height } = this.cameras.main;
 
-    create() {
-        const { width, height } = this.cameras.main;
+    const menuWidth = Math.min(
+      width * this.config.widthRatio,
+      this.config.maxWidth,
+    );
+    const menuHeight = Math.min(
+      height * this.config.heightRatio,
+      this.config.maxHeight,
+    );
 
-        const menuWidth = Math.min(width * 0.3, 450);
-        const menuHeight = Math.min(height * 0.7, 600);
+    const leftMargin = width * this.config.leftMarginRatio;
+    const menuX = leftMargin / 2;
+    const menuY = (height - menuHeight) / this.config.topOffsetDivisor;
 
-        const leftMargin = width * 0.05;
+    const background = this.add.graphics();
+    background.fillStyle(
+      this.config.backgroundColor,
+      this.config.backgroundAlpha,
+    );
+    background.fillRoundedRect(
+      menuX,
+      menuY,
+      menuWidth,
+      menuHeight,
+      this.config.cornerRadius,
+    );
 
-        const menuX = leftMargin / 2;
-        const menuY = (height - menuHeight) / 4;
+    const border = this.add.graphics();
+    border.lineStyle(
+      this.config.borderWidth,
+      this.config.borderColor,
+      this.config.borderAlpha,
+    );
+    border.strokeRoundedRect(
+      menuX,
+      menuY,
+      menuWidth,
+      menuHeight,
+      this.config.cornerRadius,
+    );
 
-        const background = this.add.graphics();
-        background.fillStyle(0x000000, 0.7);
-        background.fillRoundedRect(
-            menuX,
-            menuY,
-            menuWidth,
-            menuHeight,
-            30,
-        );
+    const fontSize = Math.min(
+      width * this.config.text.fontSizeRatio,
+      this.config.text.maxFontSize,
+    );
 
-        const border = this.add.graphics();
-        border.lineStyle(8, 0xffffff, 1);
-        border.strokeRoundedRect(
-            menuX,
-            menuY,
-            menuWidth,
-            menuHeight,
-            30,
-        );
+    this.add
+      .text(
+        menuX + menuWidth / 2,
+        menuY + menuHeight * this.config.text.topOffsetRatio,
+        this.config.text.content,
+        {
+          fontFamily: this.config.text.fontFamily,
+          fontSize: `${fontSize}px`,
+          fontStyle: this.config.text.fontStyle,
+          color: this.config.text.color,
+          wordWrap: {
+            width: menuWidth * this.config.text.wordWrapWidthRatio,
+          },
+          align: this.config.text.align,
+        },
+      )
+      .setOrigin(this.config.text.originX, this.config.text.originY);
 
-        const text = `
-Select whether you want
-to draw a positive
-or a negative relation
-by clicking on
-the corresponding icon
-and then choosing your
-starting and end organism.
-        `.trim();
+    const closeButton = new CloseButton(
+      this,
+      menuX + menuWidth / 2,
+      menuY + menuHeight - this.config.closeButton.bottomOffset,
+    );
 
-        this.add.text(
-            menuX + menuWidth / 2,
-            menuY + menuHeight * 0.15,
-            text,
-            {
-                fontFamily: "monospace",
-                fontSize: `${Math.min(width * 0.015, 25)}px`,
-                fontStyle: "bold",
-                color: "#ffffff",
-                wordWrap: {
-                    width: menuWidth * 0.8,
-                },
-                align: "center",
-            },
-        ).setOrigin(0.5, 0);
-
-        const closeButton = new CloseButton(
-            this,
-            menuX + menuWidth / 2,
-            menuY + menuHeight - 50,
-        );
-
-        closeButton.on("closeButtonClicked", () => {
-            this.scene.stop();
-        });
-    }
+    closeButton.on(this.config.closeButton.event, () => {
+      this.scene.stop();
+    });
+  }
 }
