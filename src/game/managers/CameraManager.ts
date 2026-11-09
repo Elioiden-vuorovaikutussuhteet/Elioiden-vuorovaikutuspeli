@@ -1,5 +1,5 @@
 import Phaser from "phaser";
-import { cameraConfig } from "../config/cameraConfig";
+import { cameraConfig } from "../config";
 
 export { cameraConfig };
 
