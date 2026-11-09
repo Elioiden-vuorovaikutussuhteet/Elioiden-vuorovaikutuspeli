@@ -1,5 +1,5 @@
 import Phaser from "phaser";
-import ParticleManager from "../managers/ParticleManager";
+import GlowManager from "../managers/GlowManager";
 import Organism from "../entities/organism";
 import { organisms } from "../data/organisms"; // adjust path
 import InfoButton from "../entities/infobutton";
@@ -12,6 +12,7 @@ import ConnectionManager from "../managers/ConnectionManager";
 import { ScoreManager } from "../managers/ScoreManager";
 import type { Connection } from "../types/Connection";
 import CursorManager from "../managers/CursorManager";
+import { glowConfig } from "../config/glowConfig";
 //import RandomEventManager from "../managers/RandomEventManager";
 
 export default class GameScene extends Phaser.Scene {
@@ -19,14 +20,13 @@ export default class GameScene extends Phaser.Scene {
   private uiCamera!: Phaser.Cameras.Scene2D.Camera;
 
   private arrowManager!: ArrowManager;
-  private particleManager!: ParticleManager;
+  private glowManager!: GlowManager;
   private interactionManager!: InteractionManager;
   private organismManager!: OrganismManager;
   private connectionManager!: ConnectionManager;
   private scoreManager!: ScoreManager;
   private cursorManager!: CursorManager;
   //private randomEventManager = new RandomEventManager();
-  
 
   constructor() {
     super("GameScene");
@@ -47,6 +47,7 @@ export default class GameScene extends Phaser.Scene {
     this.load.image("pos_particle", "pos_particle.png");
     this.load.image("neg_particle", "neg_particle.png");
     this.load.image("cursor", "cursor.png");
+    this.load.image("coin", "coin.png");
   }
 
   create() {
@@ -60,7 +61,7 @@ export default class GameScene extends Phaser.Scene {
     const rightConnections: Connection[] = [];
     const organismMap = new Map<string, Organism>();
 
-    this.particleManager = new ParticleManager(this, this.uiCamera);
+    this.glowManager = new GlowManager(this, glowConfig);
 
     this.organismManager = new OrganismManager(
       this,
@@ -68,7 +69,7 @@ export default class GameScene extends Phaser.Scene {
       organismMap,
       rightConnections,
       (organism) => this.arrowManager.arrowChecker(organism),
-      (x, y, amount) => this.particleManager.healthChanged(x, y, amount),
+      (organism, amount) => this.glowManager.healthChanged(organism, amount),
     );
     this.interactionManager = new InteractionManager(
       organismMap,
@@ -95,7 +96,7 @@ export default class GameScene extends Phaser.Scene {
     this.cursorManager = new CursorManager(this, this.arrowManager);
 
     this.scoreManager.outOfMoney = () => {
-      this.scene.pause()
+      this.scene.pause();
       this.scene.launch("GameOverScene");
     };
 
@@ -105,7 +106,9 @@ export default class GameScene extends Phaser.Scene {
     const initialOrganism = organisms[0];
 
     this.organismManager.createOrganism(
-      centerX + initialOrganism.offsetX, centerY + initialOrganism.offsetY, initialOrganism.id
+      centerX + initialOrganism.offsetX,
+      centerY + initialOrganism.offsetY,
+      initialOrganism.id,
     );
 
     this.input.on("pointermove", () => {
@@ -141,8 +144,8 @@ export default class GameScene extends Phaser.Scene {
 
     //Second organism is the second in organisms.ts
     const secondOrganism = organisms[1];
-    
-    const hintbutton = new HintButton(this, 240, 40);
+
+    const hintbutton = new HintButton(this, 290, 40);
     this.cameras.main.ignore(hintbutton);
 
     hintbutton.on("hintButtonClicked", () => {
@@ -160,9 +163,11 @@ export default class GameScene extends Phaser.Scene {
       // Resume game scene
       this.scene.resume();
       this.time.delayedCall(3000, () => {
-        console.log(secondOrganism)
+        console.log(secondOrganism);
         this.organismManager.createOrganism(
-          centerX + secondOrganism.offsetX, centerY + secondOrganism.offsetY, secondOrganism.id
+          centerX + secondOrganism.offsetX,
+          centerY + secondOrganism.offsetY,
+          secondOrganism.id,
         );
       });
     });
