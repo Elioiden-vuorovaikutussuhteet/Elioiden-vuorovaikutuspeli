@@ -98,7 +98,7 @@ export default class ArrowManager {
       this.getActiveOrganisms(),
       this.interactions,
     );
-    this.redrawPermanentArrows();
+    this.markArrowsDirty();
   }
 
   public getForceConfig(): ForceLayoutConfig {
@@ -137,6 +137,7 @@ export default class ArrowManager {
 
     if (this.selectedOrganism === null) {
       this.selectedOrganism = organism;
+      this.updatePreview();
       return;
     }
 
@@ -165,12 +166,12 @@ export default class ArrowManager {
 
       if (isCorrect) {
         this.interactions.push({ from: firstId, to: secondId });
+        this.redrawPermanentArrows();
 
         const textId = getInteractionId(firstId, secondId);
         this.scene.scene.launch("PopupScene", { textId });
         this.scoreManager.getMoney();
 
-        this.redrawPermanentArrows();
         this.interactionManager.interactionPulse(second, first);
         this.recalculateLayout();
       } else {
@@ -203,8 +204,9 @@ export default class ArrowManager {
       this.recalculateLayout();
     }
 
-    this.redrawPermanentArrows();
+    this.markArrowsDirty();
     this.selectedOrganism = null;
+    this.updatePreview();
   }
 
   public redrawPermanentArrows(): void {
@@ -311,14 +313,27 @@ export default class ArrowManager {
 
         organism.setPosition(dragX, dragY);
         this.recalculateLayout();
-        this.redrawPermanentArrows();
+        this.markArrowsDirty();
       },
     );
   }
 
-  public update(): void {
-    this.forceLayout.step();
-    this.redrawPermanentArrows();
+  private arrowsDirty = true;
+
+  private markArrowsDirty(): void {
+    this.arrowsDirty = true;
+  }
+
+  public updatePreview(): void {
     this.renderer.drawPreview(this.selectedOrganism, this.arrowColorValue);
+  }
+
+  public update(): void {
+    const layoutChanged = this.forceLayout.step();
+
+    if (layoutChanged || this.arrowsDirty) {
+      this.redrawPermanentArrows();
+      this.arrowsDirty = false;
+    }
   }
 }

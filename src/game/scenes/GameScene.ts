@@ -108,6 +108,10 @@ export default class GameScene extends Phaser.Scene {
       centerX + initialOrganism.offsetX, centerY + initialOrganism.offsetY, initialOrganism.id
     );
 
+    this.input.on("pointermove", () => {
+      this.arrowManager.updatePreview();
+    });
+
     //Eventlistener for: If players clicks on empty space, preview arrow disappears
     this.input.on(
       "pointerdown",
