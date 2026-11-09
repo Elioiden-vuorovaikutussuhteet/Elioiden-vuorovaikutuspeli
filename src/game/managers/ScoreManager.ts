@@ -5,6 +5,7 @@ export class ScoreManager {
   private scene: Phaser.Scene;
   public money: number;
   private moneyText: Phaser.GameObjects.Text;
+  private coinIcon?: Phaser.GameObjects.Image;
   public outOfMoney?: () => void;
   private config: ScoreConfig;
 
@@ -28,6 +29,15 @@ export class ScoreManager {
       },
     );
     this.scene.cameras.main.ignore(this.moneyText);
+
+    if (typeof scene.add.image === "function") {
+      this.coinIcon = scene.add
+        .image(0, this.config.textY + 15, "coin")
+        .setOrigin(0, 0.5)
+        .setScale(0.65);
+      this.updateCoinPosition();
+      this.scene.cameras.main.ignore(this.coinIcon);
+    }
   }
 
   getMoney(): void {
@@ -44,7 +54,12 @@ export class ScoreManager {
     this.updateText();
   }
 
+  private updateCoinPosition(): void {
+    this.coinIcon?.setX(this.moneyText.x + (this.moneyText.width ?? 75) + 8);
+  }
+
   private updateText(): void {
     this.moneyText.setText(this.money.toString());
+    this.updateCoinPosition();
   }
 }
