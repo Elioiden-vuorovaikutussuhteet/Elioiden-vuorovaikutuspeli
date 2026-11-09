@@ -3,6 +3,24 @@ export interface AssetEntry {
   file: string;
 }
 
+export interface OverlayBoxStyle {
+  cornerRadius: number;
+  backgroundColor: number;
+  backgroundAlpha: number;
+  borderWidth: number;
+  borderColor: number;
+  borderAlpha: number;
+}
+
+export const defaultOverlayBoxStyle: OverlayBoxStyle = {
+  cornerRadius: 30,
+  backgroundColor: 0x000000,
+  backgroundAlpha: 0.7,
+  borderWidth: 8,
+  borderColor: 0xffffff,
+  borderAlpha: 1,
+};
+
 export interface GameSceneConfig {
   key: string;
   scenes: {
@@ -65,18 +83,12 @@ export const gameSceneConfig: GameSceneConfig = {
   secondOrganismSpawnDelayMs: 3000,
 };
 
-export interface MenuSceneConfig {
+export interface MenuSceneConfig extends OverlayBoxStyle {
   key: string;
   targetSceneKey: string;
   closeEvent: string;
   width: number;
   height: number;
-  cornerRadius: number;
-  backgroundColor: number;
-  backgroundAlpha: number;
-  borderWidth: number;
-  borderColor: number;
-  borderAlpha: number;
   text: {
     label: string;
     fontFamily: string;
@@ -88,17 +100,12 @@ export interface MenuSceneConfig {
 }
 
 export const menuSceneConfig: MenuSceneConfig = {
+  ...defaultOverlayBoxStyle,
   key: "MenuScene",
   targetSceneKey: "GameScene",
   closeEvent: "menuClosed",
   width: 400,
   height: 200,
-  cornerRadius: 30,
-  backgroundColor: 0x000000,
-  backgroundAlpha: 0.7,
-  borderWidth: 8,
-  borderColor: 0xffffff,
-  borderAlpha: 1,
   text: {
     label: "Start Game",
     fontFamily: "monospace",
@@ -109,7 +116,7 @@ export const menuSceneConfig: MenuSceneConfig = {
   },
 };
 
-export interface TutorialSceneConfig {
+export interface TutorialSceneConfig extends OverlayBoxStyle {
   key: string;
   assetsPath: string;
   images: AssetEntry[];
@@ -119,12 +126,6 @@ export interface TutorialSceneConfig {
   maxHeight: number;
   leftMarginRatio: number;
   topOffsetDivisor: number;
-  cornerRadius: number;
-  backgroundColor: number;
-  backgroundAlpha: number;
-  borderWidth: number;
-  borderColor: number;
-  borderAlpha: number;
   text: {
     content: string;
     topOffsetRatio: number;
@@ -145,6 +146,7 @@ export interface TutorialSceneConfig {
 }
 
 export const tutorialSceneConfig: TutorialSceneConfig = {
+  ...defaultOverlayBoxStyle,
   key: "TutorialScene",
   assetsPath: "assets",
   images: [{ key: "close_button_sprite", file: "closebutton.png" }],
@@ -154,12 +156,6 @@ export const tutorialSceneConfig: TutorialSceneConfig = {
   maxHeight: 600,
   leftMarginRatio: 0.05,
   topOffsetDivisor: 4,
-  cornerRadius: 30,
-  backgroundColor: 0x000000,
-  backgroundAlpha: 0.7,
-  borderWidth: 8,
-  borderColor: 0xffffff,
-  borderAlpha: 1,
   text: {
     content: [
       "Select whether you want",
@@ -187,18 +183,12 @@ export const tutorialSceneConfig: TutorialSceneConfig = {
   },
 };
 
-export interface GameOverSceneConfig {
+export interface GameOverSceneConfig extends OverlayBoxStyle {
   key: string;
   scenesToStop: string[];
   restartSceneKey: string;
   width: number;
   height: number;
-  cornerRadius: number;
-  backgroundColor: number;
-  backgroundAlpha: number;
-  borderWidth: number;
-  borderColor: number;
-  borderAlpha: number;
   titleText: {
     label: string;
     offsetY: number;
@@ -220,17 +210,12 @@ export interface GameOverSceneConfig {
 }
 
 export const gameOverSceneConfig: GameOverSceneConfig = {
+  ...defaultOverlayBoxStyle,
   key: "GameOverScene",
   scenesToStop: ["PopupScene"],
   restartSceneKey: "GameScene",
   width: 400,
   height: 200,
-  cornerRadius: 30,
-  backgroundColor: 0x000000,
-  backgroundAlpha: 0.7,
-  borderWidth: 8,
-  borderColor: 0xffffff,
-  borderAlpha: 1,
   titleText: {
     label: "GAME OVER",
     offsetY: -30,
@@ -248,5 +233,82 @@ export const gameOverSceneConfig: GameOverSceneConfig = {
     fontStyle: "bold",
     color: "#fffff0",
     origin: 0.5,
+  },
+};
+
+export interface PopupSceneConfig extends OverlayBoxStyle {
+  key: string;
+  assetsPath: string;
+  images: AssetEntry[];
+  widthRatio: number;
+  maxWidth: number;
+  heightRatio: number;
+  maxHeight: number;
+  rightMarginRatio: number;
+  topOffsetDivisor: number;
+  text: {
+    fontFamily: string;
+    fontSizeRatio: number;
+    maxFontSize: number;
+    color: string;
+    wordWrapWidthRatio: number;
+    align: string;
+    originX: number;
+    originY: number;
+    title: {
+      topOffsetRatio: number;
+      fontStyle: string;
+    };
+    relation: {
+      topOffsetRatio: number;
+      fontStyle: string;
+    };
+    description: {
+      topOffsetRatio: number;
+      fontStyle: string;
+    };
+  };
+  closeButton: {
+    bottomOffset: number;
+    event: string;
+  };
+}
+
+export const popupSceneConfig: PopupSceneConfig = {
+  ...defaultOverlayBoxStyle,
+  key: "PopupScene",
+  assetsPath: "assets",
+  images: [{ key: "close_button_sprite", file: "closebutton.png" }],
+  widthRatio: 0.3,
+  maxWidth: 450,
+  heightRatio: 0.85,
+  maxHeight: 700,
+  rightMarginRatio: 0.025,
+  topOffsetDivisor: 4,
+  text: {
+    fontFamily: "monospace",
+    fontSizeRatio: 0.015,
+    maxFontSize: 25,
+    color: "#ffffff",
+    wordWrapWidthRatio: 0.8,
+    align: "center",
+    originX: 0.5,
+    originY: 0,
+    title: {
+      topOffsetRatio: 0.05,
+      fontStyle: "bold",
+    },
+    relation: {
+      topOffsetRatio: 0.15,
+      fontStyle: "bold",
+    },
+    description: {
+      topOffsetRatio: 0.25,
+      fontStyle: "",
+    },
+  },
+  closeButton: {
+    bottomOffset: 50,
+    event: "closeButtonClicked",
   },
 };
