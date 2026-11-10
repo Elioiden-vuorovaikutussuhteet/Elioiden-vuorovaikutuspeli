@@ -45,7 +45,7 @@ export default class GameScene extends Phaser.Scene {
       this.load.image(image.key, image.file);
     }
   }
-
+   
   create() {
     this.cameraManager = new CameraManager(this);
     this.uiCamera = this.cameraManager.getUICamera();
@@ -92,6 +92,15 @@ export default class GameScene extends Phaser.Scene {
       this.updateGameCompletion.bind(this),
     );
     this.cursorManager = new CursorManager(this, this.arrowManager);
+
+    // creates random event spawning command if game started in development mode
+    if (import.meta.env?.DEV && typeof window !== "undefined") {
+      window.spawnRandomEvent = () => {
+        this.randomEventManager.triggerRandomEvent(
+          this.organismManager.getOrganisms(),
+        );
+      };
+    }
 
     this.scoreManager.outOfMoney = () => {
       this.scene.pause();
@@ -178,10 +187,9 @@ export default class GameScene extends Phaser.Scene {
     if (!gameComplete || this.randomEventsStarted) return;
 
     this.randomEventsStarted = true;
-    this.randomEventManager.startRandomEvents(
-      this,
-      this.organismManager.getOrganisms(),
-    );
+    this.time.delayedCall(this.config.randomEventSpawnDelayMs, () => {
+      this.randomEventManager.startRandomEvents(this, this.organismManager.getOrganisms());
+    });
   }
 
   update() {

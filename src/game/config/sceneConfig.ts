@@ -43,6 +43,7 @@ export interface GameSceneConfig {
   initialOrganismIndex: number;
   secondOrganismIndex: number;
   secondOrganismSpawnDelayMs: number;
+  randomEventSpawnDelayMs: number;
 }
 
 export const gameSceneConfig: GameSceneConfig = {
@@ -82,6 +83,7 @@ export const gameSceneConfig: GameSceneConfig = {
   initialOrganismIndex: 0,
   secondOrganismIndex: 1,
   secondOrganismSpawnDelayMs: 3000,
+  randomEventSpawnDelayMs: 100,
 };
 
 export interface MenuSceneConfig extends OverlayBoxStyle {
