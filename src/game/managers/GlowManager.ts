@@ -1,9 +1,6 @@
 import Phaser from "phaser";
 import Organism from "../entities/organism";
-import { 
-  glowConfig,
-  type GlowConfig 
-} from "../config/glowConfig"
+import { glowConfig, type GlowConfig } from "../config";
 
 export default class GlowManager {
   private scene: Phaser.Scene;
@@ -33,14 +30,14 @@ export default class GlowManager {
 
     const color = amount > 0 ? this.config.positiveGlow : this.config.negativeGlow;
 
-    const glow = organism.filters!.external.addGlow(color);
+    const glow = organism.filters!.external.addGlow(color, undefined, undefined, undefined, undefined, this.config.glowQuality);
     glow.setPaddingOverride(null);
-    const duplicateGlow = organism.duplicateContainer.filters!.external.addGlow(color);
+    const duplicateGlow = organism.duplicateContainer.filters!.external.addGlow(color, undefined, undefined, undefined, undefined, this.config.glowQuality);
     duplicateGlow.setPaddingOverride(null);
 
-    const whiteGlow = organism.filters!.internal.addGlow(this.config.whiteGlow)
+    const whiteGlow = organism.filters!.internal.addGlow(this.config.whiteGlow, undefined, undefined, undefined, undefined, this.config.glowQuality)
     whiteGlow.setPaddingOverride(null);
-    const duplicateWhiteGlow = organism.duplicateContainer.filters!.internal.addGlow(this.config.whiteGlow);
+    const duplicateWhiteGlow = organism.duplicateContainer.filters!.internal.addGlow(this.config.whiteGlow, undefined, undefined, undefined, undefined, this.config.glowQuality);
     duplicateWhiteGlow.setPaddingOverride(null);
 
     const outerGlow = this.scene.tweens.add({

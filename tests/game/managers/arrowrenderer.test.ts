@@ -11,8 +11,10 @@ const mockPermanentArrowInstances: Array<{
   onClick: () => void;
   setStyle: ReturnType<typeof vi.fn>;
   update: ReturnType<typeof vi.fn>;
+  draw: ReturnType<typeof vi.fn>;
   playPulse: ReturnType<typeof vi.fn>;
   setCursorMode: ReturnType<typeof vi.fn>;
+  destroy: ReturnType<typeof vi.fn>;
 }> = [];
 
 vi.mock("../../../src/game/entities/permanentarrow", () => ({
@@ -30,8 +32,10 @@ vi.mock("../../../src/game/entities/permanentarrow", () => ({
       onClick,
       setStyle: vi.fn(),
       update: vi.fn(),
+      draw: vi.fn(),
       playPulse: vi.fn(),
       setCursorMode: vi.fn(),
+      destroy: vi.fn(),
     };
     mockPermanentArrowInstances.push(instance);
     return instance;
@@ -50,14 +54,23 @@ import ArrowRenderer from "../../../src/game/managers/ArrowRenderer";
 import type Organism from "../../../src/game/entities/organism";
 import { drawArrow } from "../../../src/game/services/DrawArrowService";
 import { getRelation } from "../../../src/game/services/RelationsService";
-import { arrowUIConfig } from "../../../src/game/config/uiConfig";
+import {
+  arrowUIConfig,
+  permanentArrowUIConfig,
+} from "../../../src/game/config/uiConfig";
 
 describe("ArrowRenderer", () => {
   let mockScene: Phaser.Scene;
   let mockUiCamera: Phaser.Cameras.Scene2D.Camera;
-  let mockGraphics: {
+  let mockSharedGraphics: {
     setDepth: ReturnType<typeof vi.fn>;
     clear: ReturnType<typeof vi.fn>;
+    destroy: ReturnType<typeof vi.fn>;
+  };
+  let mockPreviewGraphics: {
+    setDepth: ReturnType<typeof vi.fn>;
+    clear: ReturnType<typeof vi.fn>;
+    destroy: ReturnType<typeof vi.fn>;
   };
   let renderer: ArrowRenderer;
 
@@ -72,13 +85,25 @@ describe("ArrowRenderer", () => {
     mockPermanentArrowInstances.length = 0;
     vi.clearAllMocks();
 
-    mockGraphics = {
+    mockSharedGraphics = {
       setDepth: vi.fn(),
       clear: vi.fn(),
+      destroy: vi.fn(),
+    };
+
+    mockPreviewGraphics = {
+      setDepth: vi.fn(),
+      clear: vi.fn(),
+      destroy: vi.fn(),
     };
 
     mockScene = {
-      add: { graphics: vi.fn(() => mockGraphics) },
+      add: {
+        graphics: vi
+          .fn()
+          .mockReturnValueOnce(mockSharedGraphics)
+          .mockReturnValueOnce(mockPreviewGraphics),
+      },
       input: { activePointer: { worldX: 300, worldY: 400 } },
     } as unknown as Phaser.Scene;
 
@@ -89,10 +114,14 @@ describe("ArrowRenderer", () => {
     renderer = new ArrowRenderer(mockScene, mockUiCamera);
   });
 
-  it("initializes preview graphics and ignores it on uiCamera", () => {
-    expect(mockScene.add.graphics).toHaveBeenCalledOnce();
-    expect(mockGraphics.setDepth).toHaveBeenCalledWith(100);
-    expect(mockUiCamera.ignore).toHaveBeenCalledWith(mockGraphics);
+  it("initializes shared and preview graphics and ignores them on uiCamera", () => {
+    expect(mockScene.add.graphics).toHaveBeenCalledTimes(2);
+    expect(mockSharedGraphics.setDepth).toHaveBeenCalledWith(
+      permanentArrowUIConfig.graphicsDepth,
+    );
+    expect(mockPreviewGraphics.setDepth).toHaveBeenCalledWith(100);
+    expect(mockUiCamera.ignore).toHaveBeenCalledWith(mockSharedGraphics);
+    expect(mockUiCamera.ignore).toHaveBeenCalledWith(mockPreviewGraphics);
   });
 
   it("creates and updates permanent arrows with styles from arrowUIConfig", () => {
@@ -128,6 +157,8 @@ describe("ArrowRenderer", () => {
       lateralOffset: 0,
     });
     expect(arrow.update).toHaveBeenCalledWith(ants, sapota);
+    expect(mockSharedGraphics.clear).toHaveBeenCalledOnce();
+    expect(arrow.draw).toHaveBeenCalledWith(mockSharedGraphics);
 
     renderer.redrawPermanentArrows(
       [
@@ -156,8 +187,8 @@ describe("ArrowRenderer", () => {
     const ants = createOrganism("ants", 120, 180);
 
     renderer.drawPreview(ants, true);
-    expect(mockGraphics.clear).toHaveBeenCalledOnce();
-    expect(drawArrow).toHaveBeenCalledWith(mockGraphics, {
+    expect(mockPreviewGraphics.clear).toHaveBeenCalledOnce();
+    expect(drawArrow).toHaveBeenCalledWith(mockPreviewGraphics, {
       x1: 120,
       y1: 180,
       x2: 300,
@@ -168,7 +199,7 @@ describe("ArrowRenderer", () => {
     });
 
     renderer.drawPreview(ants, false);
-    expect(drawArrow).toHaveBeenLastCalledWith(mockGraphics, {
+    expect(drawArrow).toHaveBeenLastCalledWith(mockPreviewGraphics, {
       x1: 120,
       y1: 180,
       x2: 300,
@@ -198,6 +229,8 @@ describe("ArrowRenderer", () => {
     expect(mockPermanentArrowInstances[0].playPulse).toHaveBeenCalledWith(10);
 
     renderer.setCursorMode(true);
-    expect(mockPermanentArrowInstances[0].setCursorMode).toHaveBeenCalledWith(true);
+    expect(mockPermanentArrowInstances[0].setCursorMode).toHaveBeenCalledWith(
+      true,
+    );
   });
 });

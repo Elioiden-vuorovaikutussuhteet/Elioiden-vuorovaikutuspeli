@@ -16,12 +16,19 @@ interface PulseAnimation {
   tween: Phaser.Tweens.Tween;
 }
 
+const textureAlphaCache = new Map<
+  string,
+  { width: number; height: number; data: Uint8ClampedArray }
+>();
+
 export default class PermanentArrow {
   public readonly key: string;
   public readonly fromId: string;
   public readonly toId: string;
   public readonly graphics: Phaser.GameObjects.Graphics;
+  public dirty = true;
 
+  private readonly ownsGraphics: boolean;
   private readonly scene: Phaser.Scene;
   private readonly uiCamera: Phaser.Cameras.Scene2D.Camera;
   private readonly arrowhitBox: Phaser.GameObjects.Zone;
@@ -38,7 +45,14 @@ export default class PermanentArrow {
   private fromY = 0;
   private toX = 0;
   private toY = 0;
+  private lastFromOrgX = NaN;
+  private lastFromOrgY = NaN;
+  private lastToOrgX = NaN;
+  private lastToOrgY = NaN;
+  private visible = false;
+
   private hitBounds = new Phaser.Geom.Rectangle();
+  private hitAreaRect = new Phaser.Geom.Rectangle(0, 0, 1, 1);
   private hovered = false;
 
   constructor(
@@ -48,6 +62,7 @@ export default class PermanentArrow {
     toId: string,
     config: PermanentArrowConfig = {},
     onClicked: () => void = () => undefined,
+    sharedGraphics?: Phaser.GameObjects.Graphics,
   ) {
     this.scene = scene;
     this.uiCamera = uiCamera;
@@ -65,26 +80,33 @@ export default class PermanentArrow {
     this.lateralOffset =
       config.lateralOffset ?? permanentArrowUIConfig.defaultLateralOffset;
 
-    this.graphics = this.scene.add.graphics();
-    this.graphics.setDepth(permanentArrowUIConfig.graphicsDepth);
-    this.uiCamera.ignore(this.graphics);
+    if (sharedGraphics) {
+      this.graphics = sharedGraphics;
+      this.ownsGraphics = false;
+    } else {
+      this.graphics = this.scene.add.graphics();
+      this.graphics.setDepth(permanentArrowUIConfig.graphicsDepth);
+      this.uiCamera.ignore(this.graphics);
+      this.ownsGraphics = true;
+    }
 
-    // Arrow hitzone for cursor mode
     this.arrowhitBox = this.scene.add.zone(0, 0, 1, 1);
     this.arrowhitBox.setOrigin(0);
     this.arrowhitBox.setDepth(permanentArrowUIConfig.hitZoneDepth);
     this.arrowhitBox.setInteractive(
-      new Phaser.Geom.Rectangle(0, 0, 1, 1),
+      this.hitAreaRect,
       (_hitArea, x, y) =>
         this.isPointOnArrow(x + this.hitBounds.x, y + this.hitBounds.y),
     );
     this.arrowhitBox.on("pointerover", () => {
       this.hovered = true;
-      this.redraw();
+      this.dirty = true;
+      if (this.ownsGraphics) this.redrawStandalone();
     });
     this.arrowhitBox.on("pointerout", () => {
       this.hovered = false;
-      this.redraw();
+      this.dirty = true;
+      if (this.ownsGraphics) this.redrawStandalone();
     });
     this.arrowhitBox.on("pointerdown", () => this.onClicked());
     this.arrowhitBox.input!.enabled = false;
@@ -92,17 +114,26 @@ export default class PermanentArrow {
   }
 
   public setStyle(config: Partial<PermanentArrowConfig>): void {
-    if (config.targetOffset !== undefined) {
+    let changed = false;
+    if (config.targetOffset !== undefined && config.targetOffset !== this.targetOffset) {
       this.targetOffset = config.targetOffset;
+      changed = true;
     }
-    if (config.color !== undefined) {
+    if (config.color !== undefined && config.color !== this.color) {
       this.color = config.color;
+      changed = true;
     }
-    if (config.thickness !== undefined) {
+    if (config.thickness !== undefined && config.thickness !== this.thickness) {
       this.thickness = config.thickness;
+      changed = true;
     }
-    if (config.lateralOffset !== undefined) {
+    if (config.lateralOffset !== undefined && config.lateralOffset !== this.lateralOffset) {
       this.lateralOffset = config.lateralOffset;
+      changed = true;
+    }
+    if (changed) {
+      this.lastFromOrgX = NaN;
+      this.dirty = true;
     }
   }
 
@@ -112,27 +143,19 @@ export default class PermanentArrow {
         ? permanentArrowUIConfig.pulsePositiveColor
         : permanentArrowUIConfig.pulseNegativeColor;
 
- //   const circle = this.scene.add.circle(this.fromX, this.fromY, 2, color);
-  //  circle.setStrokeStyle(15, 0xffffff, 0.5);
- //   circle.enableFilters().filters?.internal.addGlow(color, 16, 1);
-
     const circle = this.scene.add.circle(
       this.fromX,
       this.fromY,
       permanentArrowUIConfig.pulseRadius,
       color,
     );
-    circle.setStrokeStyle(
-      permanentArrowUIConfig.pulseColorInsideGlow,
-      permanentArrowUIConfig.pulseColorInside,
-      permanentArrowUIConfig.pulseColorInsideOpacity
-     );
-    circle.enableFilters().filters?.external.addGlow(
-      color,
-      permanentArrowUIConfig.pulseColorGlowRadius,
-      permanentArrowUIConfig.pulseColorGlowIntensity,
-    );
 
+    circle.setStrokeStyle(
+      permanentArrowUIConfig.pulseColorGlowRadius || 8,
+      color,
+      0.35,
+    );
+    circle.setBlendMode(Phaser.BlendModes.ADD);
     circle.setDepth(permanentArrowUIConfig.pulseDepth);
     circle.setAlpha(permanentArrowUIConfig.pulseAlpha);
     this.uiCamera.ignore(circle);
@@ -160,7 +183,6 @@ export default class PermanentArrow {
   private updatePulsePosition(): void {
     for (const pulse of this.pulses) {
       const t = pulse.progress;
-
       pulse.circle.setPosition(
         this.fromX + (this.toX - this.fromX) * t,
         this.fromY + (this.toY - this.fromY) * t,
@@ -173,9 +195,6 @@ export default class PermanentArrow {
     worldX: number,
     worldY: number,
   ): number {
-    const getPixelAlpha = this.scene.textures?.getPixelAlpha;
-    if (typeof getPixelAlpha !== "function") return 255;
-
     const scaleX = organism.scaleX || 1;
     const scaleY = organism.scaleY || 1;
     const textureWidth = organism.width ?? 0;
@@ -201,10 +220,35 @@ export default class PermanentArrow {
     const textureKey = organism.texture?.key ?? organism.organismData?.texture;
     if (!textureKey) return 255;
 
-    return (
-      getPixelAlpha.call(this.scene.textures, textureX, textureY, textureKey) ??
-      0
-    );
+    let cached = textureAlphaCache.get(textureKey);
+    if (!cached && this.scene.textures?.exists(textureKey)) {
+      const tex = this.scene.textures.get(textureKey);
+      const sourceImage = tex.getSourceImage() as HTMLImageElement | HTMLCanvasElement;
+      if (sourceImage && typeof document !== "undefined") {
+        const canvas = document.createElement("canvas");
+        canvas.width = textureWidth;
+        canvas.height = textureHeight;
+        const ctx = canvas.getContext("2d");
+        if (ctx) {
+          ctx.drawImage(sourceImage, 0, 0);
+          cached = {
+            width: textureWidth,
+            height: textureHeight,
+            data: ctx.getImageData(0, 0, textureWidth, textureHeight).data,
+          };
+          textureAlphaCache.set(textureKey, cached);
+        }
+      }
+    }
+
+    if (cached) {
+      return cached.data[(textureY * cached.width + textureX) * 4 + 3] ?? 0;
+    }
+
+    const getPixelAlpha = this.scene.textures?.getPixelAlpha;
+    return typeof getPixelAlpha === "function"
+      ? (getPixelAlpha.call(this.scene.textures, textureX, textureY, textureKey) ?? 0)
+      : 255;
   }
 
   private getOrganismBorderPoint(
@@ -225,8 +269,6 @@ export default class PermanentArrow {
     }
 
     const borderPadding = 10;
-
-    // find border pixels of organism sprite
     const maxSpriteDistance = Math.hypot(halfDisplayWidth, halfDisplayHeight);
     let spriteBorderDistance = 0;
 
@@ -243,14 +285,13 @@ export default class PermanentArrow {
       }
     }
 
-    // clear the nameText box below the organism so arrows never cross the text
     const halfNameTextWidth =
       (organism.nameText?.width ?? 0) / 2 + borderPadding;
     const nameTextBottomOffset =
       organism.nameText?.y !== undefined
         ? organism.nameText.y -
-          organism.y +
-          (organism.nameText.height ?? 20) / 2
+        organism.y +
+        (organism.nameText.height ?? 20) / 2
         : halfDisplayHeight + 35;
     const nameTextTopY = halfDisplayHeight - 4;
     const nameTextBottomY =
@@ -303,54 +344,78 @@ export default class PermanentArrow {
     const dy = to.y - from.y;
     const distance = Math.hypot(dx, dy);
 
-    this.graphics.clear();
-    if (distance === 0) return;
+    if (distance === 0) {
+      if (this.visible) {
+        this.visible = false;
+        this.dirty = true;
+        if (this.ownsGraphics) this.graphics.clear();
+      }
+      return;
+    }
 
-    const ux = dx / distance;
-    const uy = dy / distance;
-    const px = -uy;
-    const py = ux;
+    this.visible = true;
 
-    const lateralShiftX = px * this.lateralOffset;
-    const lateralShiftY = py * this.lateralOffset;
+    const moved =
+      !Number.isFinite(this.lastFromOrgX) ||
+      !Number.isFinite(this.lastFromOrgY) ||
+      !Number.isFinite(this.lastToOrgX) ||
+      !Number.isFinite(this.lastToOrgY) ||
+      Math.abs(from.x - this.lastFromOrgX) > 0.1 ||
+      Math.abs(from.y - this.lastFromOrgY) > 0.1 ||
+      Math.abs(to.x - this.lastToOrgX) > 0.1 ||
+      Math.abs(to.y - this.lastToOrgY) > 0.1;
 
-    const fromBorderPoint = this.getOrganismBorderPoint(
-      from,
-      ux,
-      uy,
-      lateralShiftX,
-      lateralShiftY,
-    );
-    const toBorderPoint = this.getOrganismBorderPoint(
-      to,
-      -ux,
-      -uy,
-      lateralShiftX,
-      lateralShiftY,
-    );
+    if (moved) {
+      this.lastFromOrgX = from.x;
+      this.lastFromOrgY = from.y;
+      this.lastToOrgX = to.x;
+      this.lastToOrgY = to.y;
 
-    // values used for animation
-    this.fromX = fromBorderPoint.x;
-    this.fromY = fromBorderPoint.y;
-    this.toX = toBorderPoint.x;
-    this.toY = toBorderPoint.y;
+      const ux = dx / distance;
+      const uy = dy / distance;
+      const lateralShiftX = -uy * this.lateralOffset;
+      const lateralShiftY = ux * this.lateralOffset;
 
-    this.updateHitZone();
-    this.redraw();
-    this.updatePulsePosition();
-  }
+      const fromBorderPoint = this.getOrganismBorderPoint(
+        from,
+        ux,
+        uy,
+        lateralShiftX,
+        lateralShiftY,
+      );
+      const toBorderPoint = this.getOrganismBorderPoint(
+        to,
+        -ux,
+        -uy,
+        lateralShiftX,
+        lateralShiftY,
+      );
 
-  public setCursorMode(enabled: boolean): void {
-    this.arrowhitBox.input!.enabled = enabled;
-    if (!enabled) {
-      this.hovered = false;
-      this.redraw();
+      this.fromX = fromBorderPoint.x;
+      this.fromY = fromBorderPoint.y;
+      this.toX = toBorderPoint.x;
+      this.toY = toBorderPoint.y;
+
+      this.updateHitZone();
+      this.dirty = true;
+
+      if (this.ownsGraphics) {
+        this.redrawStandalone();
+      }
+    }
+
+    if (this.pulses.length > 0) {
+      this.updatePulsePosition();
     }
   }
 
-  private redraw(): void {
-    this.graphics.clear();
-    drawArrow(this.graphics, {
+  /**
+   * Appends this arrow's geometry onto a Graphics instance without clearing it.
+   */
+  public draw(targetGraphics: Phaser.GameObjects.Graphics = this.graphics): void {
+    if (!this.visible) return;
+
+    drawArrow(targetGraphics, {
       x1: this.fromX,
       y1: this.fromY,
       x2: this.toX,
@@ -360,6 +425,21 @@ export default class PermanentArrow {
         ? this.thickness + permanentArrowUIConfig.hoverThicknessBonus
         : this.thickness,
     });
+  }
+
+  private redrawStandalone(): void {
+    this.graphics.clear();
+    this.draw(this.graphics);
+    this.dirty = false;
+  }
+
+  public setCursorMode(enabled: boolean): void {
+    this.arrowhitBox.input!.enabled = enabled;
+    if (!enabled && this.hovered) {
+      this.hovered = false;
+      this.dirty = true;
+      if (this.ownsGraphics) this.redrawStandalone();
+    }
   }
 
   private updateHitZone(): void {
@@ -373,12 +453,7 @@ export default class PermanentArrow {
     this.hitBounds.setTo(minX, minY, width, height);
     this.arrowhitBox.setPosition(minX, minY);
     this.arrowhitBox.setSize(width, height);
-    this.arrowhitBox.input!.hitArea = new Phaser.Geom.Rectangle(
-      0,
-      0,
-      width,
-      height,
-    );
+    this.hitAreaRect.setTo(0, 0, width, height);
   }
 
   private isPointOnArrow(x: number, y: number): boolean {
@@ -406,13 +481,13 @@ export default class PermanentArrow {
 
   public destroy(): void {
     for (const pulse of this.pulses) {
-      pulse.tween.stop();
+      pulse.tween.remove();
       pulse.circle.destroy();
     }
-
     this.pulses = [];
-
-    this.graphics.destroy();
+    if (this.ownsGraphics) {
+      this.graphics.destroy();
+    }
     this.arrowhitBox.destroy();
   }
 }

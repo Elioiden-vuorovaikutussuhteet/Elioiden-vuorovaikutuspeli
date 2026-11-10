@@ -12,11 +12,11 @@ export default class CursorManager {
     this.arrowManager = arrowManager;
   }
 
-  public createCursorButton(centerY: number): void {
+  public createCursorButton(centerX: number, topY = 40): void {
     const cursorButton = new cursorbutton(
       this.scene,
-      60,
-      centerY + 150,
+      centerX + 80,
+      topY,
       "cursor",
     );
 

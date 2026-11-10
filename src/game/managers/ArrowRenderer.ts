@@ -4,13 +4,18 @@ import PermanentArrow from "../entities/permanentarrow";
 import { drawArrow } from "../services/DrawArrowService";
 import { getRelation } from "../services/RelationsService";
 import type { Connection } from "../types/Connection";
-import { arrowUIConfig, type ArrowUIConfig } from "../config/uiConfig";
+import {
+  arrowUIConfig,
+  permanentArrowUIConfig,
+  type ArrowUIConfig,
+} from "../config/uiConfig";
 
 export default class ArrowRenderer {
   private scene: Phaser.Scene;
   private uiCamera: Phaser.Cameras.Scene2D.Camera;
   private config: ArrowUIConfig;
   private permanentArrows = new Map<string, PermanentArrow>();
+  private sharedArrowGraphics: Phaser.GameObjects.Graphics;
   private previewArrow: Phaser.GameObjects.Graphics;
 
   constructor(
@@ -21,6 +26,10 @@ export default class ArrowRenderer {
     this.scene = scene;
     this.uiCamera = uiCamera;
     this.config = config;
+
+    this.sharedArrowGraphics = this.scene.add.graphics();
+    this.sharedArrowGraphics.setDepth(permanentArrowUIConfig.graphicsDepth);
+    this.uiCamera.ignore(this.sharedArrowGraphics);
 
     this.previewArrow = this.scene.add.graphics();
     this.previewArrow.setDepth(100);
@@ -44,15 +53,26 @@ export default class ArrowRenderer {
     cursorMode: boolean,
     onArrowClick: (fromId: string, toId: string) => void,
   ): void {
+    const activeKeys = new Set<string>();
+    for (const { from, to } of interactions) {
+      activeKeys.add(this.getKey(from, to));
+    }
+
+    // Clean up arrows that are no longer in interactions
+    for (const [key, arrow] of this.permanentArrows) {
+      if (!activeKeys.has(key)) {
+        arrow.destroy();
+        this.permanentArrows.delete(key);
+      }
+    }
+
     for (const { from, to } of interactions) {
       const first = organismsById.get(from);
       const second = organismsById.get(to);
       if (!first || !second) continue;
 
       const key = this.getKey(from, to);
-      const isBidirectional = interactions.some(
-        (other) => other.from === to && other.to === from,
-      );
+      const isBidirectional = activeKeys.has(this.getKey(to, from));
       const color = this.getRelationColor(from, to);
 
       let arrow = this.permanentArrows.get(key);
@@ -64,6 +84,7 @@ export default class ArrowRenderer {
           to,
           { targetOffset, color, thickness: this.config.permanentThickness },
           () => onArrowClick(from, to),
+          this.sharedArrowGraphics,
         );
         arrow.setCursorMode(cursorMode);
         this.permanentArrows.set(key, arrow);
@@ -77,6 +98,12 @@ export default class ArrowRenderer {
       });
 
       arrow.update(first, second);
+    }
+
+    // Unconditionally clear and redraw shared graphics every frame
+    this.sharedArrowGraphics.clear();
+    for (const arrow of this.permanentArrows.values()) {
+      arrow.draw(this.sharedArrowGraphics);
     }
   }
 
@@ -116,6 +143,10 @@ export default class ArrowRenderer {
     for (const arrow of this.permanentArrows.values()) {
       arrow.setCursorMode(enabled);
     }
+    this.sharedArrowGraphics.clear();
+    for (const arrow of this.permanentArrows.values()) {
+      arrow.draw(this.sharedArrowGraphics);
+    }
   }
 
   public getArrows(): ReadonlyMap<string, PermanentArrow> {
@@ -124,5 +155,14 @@ export default class ArrowRenderer {
 
   public getArrow(fromId: string, toId: string): PermanentArrow | undefined {
     return this.permanentArrows.get(this.getKey(fromId, toId));
+  }
+
+  public destroy(): void {
+    for (const arrow of this.permanentArrows.values()) {
+      arrow.destroy();
+    }
+    this.permanentArrows.clear();
+    this.sharedArrowGraphics.destroy();
+    this.previewArrow.destroy();
   }
 }
