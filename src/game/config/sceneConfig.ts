@@ -76,7 +76,7 @@ export const gameSceneConfig: GameSceneConfig = {
     y: 40,
   },
   hintButton: {
-    x: 240,
+    x: 300,
     y: 40,
   },
   initialOrganismIndex: 0,
