@@ -204,7 +204,6 @@ export default class ArrowManager {
       this.recalculateLayout();
     }
 
-    this.markArrowsDirty();
     this.selectedOrganism = null;
     this.updatePreview();
   }
