@@ -19,8 +19,10 @@ export class ScoreManager {
     this.money = startingMoney;
     this.config = config;
 
+    const scoreX = (scene.scale?.width ?? 800) - this.config.textX;
+
     this.moneyText = scene.add.text(
-      this.config.textX,
+      scoreX,
       this.config.textY,
       this.money.toString(),
       {
@@ -33,7 +35,7 @@ export class ScoreManager {
     this.scene.cameras.main.ignore(this.moneyText);
 
     const coinIcon = scene.add.image?.(
-      this.config.textX,
+      scoreX,
       this.config.textY + this.config.coin.yOffset,
       this.config.coin.texture,
     );
@@ -74,8 +76,11 @@ export class ScoreManager {
 
     const isGain = amount > this.config.change.gainThreshold;
 
+    const scoreX =
+      this.moneyText.x ?? (this.scene.scale?.width ?? 800) - this.config.textX;
+
     const changeText = this.scene.add.text(
-      this.config.textX + this.config.change.xOffset,
+      scoreX + this.config.change.xOffset,
       this.config.textY + this.config.change.startYOffset,
       isGain
         ? `${this.config.change.positivePrefix}${amount}`

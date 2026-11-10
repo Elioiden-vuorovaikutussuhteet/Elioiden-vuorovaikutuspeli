@@ -94,8 +94,8 @@ export default class GameScene extends Phaser.Scene {
       this.scene.launch(this.config.scenes.gameOver);
     };
 
-    this.arrowManager.createArrowButtons(centerY);
-    this.cursorManager.createCursorButton(centerY);
+    this.arrowManager.createArrowButtons(centerX, this.config.infoButton.y);
+    this.cursorManager.createCursorButton(centerX, this.config.infoButton.y);
 
     const initialOrganism = organisms[this.config.initialOrganismIndex];
 
@@ -136,7 +136,7 @@ export default class GameScene extends Phaser.Scene {
 
     const hintbutton = new HintButton(
       this,
-      this.config.hintButton.x,
+      this.scale.width - this.config.hintButton.x,
       this.config.hintButton.y,
     );
     this.cameras.main.ignore(hintbutton);
