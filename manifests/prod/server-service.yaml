@@ -1,0 +1,14 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: server-prod-svc
+  namespace: eliopeli
+spec:
+  selector:
+    app: server-prod
+  ports:
+    - name: http
+      port: 3000
+      targetPort: 3000
+      protocol: TCP
+  type: ClusterIP
