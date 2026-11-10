@@ -16,8 +16,7 @@ export default class OrganismManager {
     private onOrganismSelected: (organism: Organism) => void;
 
     private onHealthChanged?: (
-        x: number,
-        y: number,
+        organism: Organism,
         amount: number
     ) => void;
 
@@ -28,8 +27,7 @@ export default class OrganismManager {
         rightConnections: Connection[],
         onOrganismSelected: (organism: Organism) => void,
         onHealthChanged?: (
-            x: number,
-            y: number,
+            organism: Organism,
             amount: number
         ) => void,
     ){
@@ -42,7 +40,7 @@ export default class OrganismManager {
     }
 
     public createOrganism(x: number, y: number, id: string) {
-        const organism = new Organism(this.scene, id, x, y, this.uiCamera, this.onHealthChanged,);
+        const organism = new Organism(this.scene, id, x, y, this.uiCamera, this.onHealthChanged);
 
         organism.on("organismSelected", this.onOrganismSelected, this);
 

@@ -33,6 +33,8 @@ export default class ArrowManager {
   private selectedOrganism: Organism | null = null;
   private interactions: Connection[];
   private readonly onRightArrowDrawn?: () => void;
+  private greenButton?: ArrowButtons;
+  private redButton?: ArrowButtons;
 
   private readonly defaultOrganismSpawnOrder: readonly string[] = [
     "ants",
@@ -227,19 +229,17 @@ export default class ArrowManager {
     );
   }
 
-  public createArrowButtons(centerY: number): void {
+  public createArrowButtons(centerX: number, topY = 40): void {
     const greenButton = new ArrowButtons(
       this.scene,
-      60,
-      centerY - 50,
+      centerX - 80,
+      topY,
       "greenbutton",
     );
-    const redButton = new ArrowButtons(
-      this.scene,
-      60,
-      centerY + 50,
-      "redbutton",
-    );
+    const redButton = new ArrowButtons(this.scene, centerX, topY, "redbutton");
+
+    this.greenButton = greenButton;
+    this.redButton = redButton;
 
     this.scene.cameras.main.ignore(greenButton);
     this.scene.cameras.main.ignore(redButton);
@@ -247,17 +247,25 @@ export default class ArrowManager {
     greenButton.on("arrowButtonClicked", () => {
       this.arrowColorValue = true;
       this.setCursorMode(false);
+      this.greenButton?.setSelected?.(true);
+      this.redButton?.setSelected?.(false);
     });
 
     redButton.on("arrowButtonClicked", () => {
       this.arrowColorValue = false;
       this.setCursorMode(false);
+      this.redButton?.setSelected?.(true);
+      this.greenButton?.setSelected?.(false);
     });
   }
 
   public setCursorMode(enabled: boolean): void {
     this.cursorMode = enabled;
     this.renderer.setCursorMode(enabled);
+    if (enabled) {
+      this.greenButton?.setSelected?.(false);
+      this.redButton?.setSelected?.(false);
+    }
   }
 
   public getArrowColorValue(): boolean {
@@ -275,6 +283,8 @@ export default class ArrowManager {
   public clearPreview(): void {
     this.renderer.clearPreview();
     this.selectedOrganism = null;
+    this.greenButton?.setSelected?.(false);
+    this.redButton?.setSelected?.(false);
   }
 
   public getArrows(): ReadonlyMap<string, PermanentArrow> {

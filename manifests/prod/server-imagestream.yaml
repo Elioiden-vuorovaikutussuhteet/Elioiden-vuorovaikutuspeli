@@ -1,0 +1,19 @@
+apiVersion: image.openshift.io/v1
+kind: ImageStream
+metadata:
+  name: server
+  namespace: eliopeli
+  labels:
+    app: eliopeli-prod
+spec:
+  lookupPolicy:
+    local: false
+  tags:
+    - name: latest
+      from:
+        kind: DockerImage
+        name: ghcr.io/elioiden-vuorovaikutussuhteet/elioiden-vuorovaikutuspeli:server-latest
+      importPolicy:
+        scheduled: true
+      referencePolicy:
+        type: Local

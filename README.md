@@ -4,32 +4,35 @@
 
 React + TypeScript perusteinen opetuspeli.
 
-# Käyttö
+## Käyttö
 
-## Production 
+### Production
 
-https://eliopeli-prod.ext.ocp-prod-0.k8s.it.helsinki.fi/
+<https://eliopeli-prod.ext.ocp-prod-0.k8s.it.helsinki.fi/>
 
-## Staging 
+### Staging
 
-https://eliopeli-staging.ext.ocp-test-0.k8s.it.helsinki.fi/
+<https://eliopeli-staging.ext.ocp-test-0.k8s.it.helsinki.fi/>
 
-## Docker image
+### Docker image
 
-https://github.com/Elioiden-vuorovaikutussuhteet/Elioiden-vuorovaikutuspeli/pkgs/container/elioiden-vuorovaikutuspeli
+<https://github.com/Elioiden-vuorovaikutussuhteet/Elioiden-vuorovaikutuspeli/pkgs/container/elioiden-vuorovaikutuspeli>
 
-# Docker-käyttö kehitykseen
+## Docker-käyttö kehitykseen
 
 1. Asenna [docker ja docker compose](https://docs.docker.com/engine/install/). Halutessasi lisää itsesi docker-käyttäjäryhmään [ohjeiden mukaisesti](https://docs.docker.com/engine/install/linux-postinstall/). Tällöin et tarvitse sudoa.
 2. Lataa repositorio
 3. Avaa komentorivi latauskansiossa
-```
+
+```bash
 cd Elioiden-vuorovaikutuspeli
 docker compose up
 ```
-4. Kontti rakentuu ja Eliopeli aukeaa osoitteeseen http://localhost:5173. Sen saa suljettua komentorivillä yhdistelmällä ctrl + c. 
-5. Kontti päivittyy automaattisesti, kun koodia muutetaan, joten sitä ei tarvitse uudelleenkäynnistää muutosten välissä. Joskus docker tallentaa kuitenkin vanhentuneen version välimuistiin. Tällöin kontin uudelleenrakennuksen voi pakottaa komennolla
-```
+
+1. Kontti rakentuu ja Eliopeli aukeaa osoitteeseen <http://localhost:5173>. Sen saa suljettua komentorivillä yhdistelmällä ctrl + c.
+2. Kontti päivittyy automaattisesti, kun koodia muutetaan, joten sitä ei tarvitse uudelleenkäynnistää muutosten välissä. Joskus docker tallentaa kuitenkin vanhentuneen version välimuistiin. Tällöin kontin uudelleenrakennuksen voi pakottaa komennolla
+
+```bash
 docker compose up --build -V
 ```
 
@@ -42,7 +45,7 @@ Vaatimukset:
 
 Kloonaa repositorio:
 
-- git clone https://github.com/Elioiden-vuorovaikutussuhteet/Elioiden-vuorovaikutuspeli.git
+- git clone <https://github.com/Elioiden-vuorovaikutussuhteet/Elioiden-vuorovaikutuspeli.git>
 
 Siirry repositorioon:
 
@@ -56,4 +59,12 @@ Aloita kehitysserveri:
 
 - npm run dev
 
-Sivun URL pitäisi tulostua esim. http://localhost:5173/
+Sivun URL pitäisi tulostua esim. <http://localhost:5173/>
+
+Admin sivua varten:
+
+Aloita backend serveri toisessa komentoikkunassa:
+
+- npm run server
+
+Siirry esim. <http://localhost:5173/admin>

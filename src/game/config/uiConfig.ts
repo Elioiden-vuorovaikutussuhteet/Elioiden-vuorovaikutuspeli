@@ -22,6 +22,11 @@ export interface PermanentArrowUIConfig {
   pulseDepth: number;
   pulseAlpha: number;
   pulseDuration: number;
+  pulseColorInsideGlow: number,
+  pulseColorInsideOpacity: number,
+  pulseColorInside: number;
+  pulseColorGlowRadius: number,
+  pulseColorGlowIntensity: number,
 }
 
 export interface ButtonUIConfig {
@@ -55,10 +60,15 @@ export const uiConfig: UIConfig = {
     hitDistanceToleranceOffset: 8,
     pulsePositiveColor: 0x04b504,
     pulseNegativeColor: 0xb83232,
-    pulseRadius: 8,
+    pulseRadius: 2,
     pulseDepth: 101,
     pulseAlpha: 0.8,
     pulseDuration: 1000,
+    pulseColorInsideGlow: 15,
+    pulseColorInsideOpacity: 0.5,
+    pulseColorInside: 0xffffff,
+    pulseColorGlowRadius: 16,
+    pulseColorGlowIntensity: 1,
   },
   buttons: {
     arrowButtonX: 60,

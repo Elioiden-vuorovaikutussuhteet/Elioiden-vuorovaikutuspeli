@@ -30,5 +30,8 @@ spec:
             requests:
               memory: "50Mi"
               cpu: "50m"
+          envFrom:
+            - secretRef:
+                name: admin-auth
  
       

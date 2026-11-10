@@ -1,7 +1,7 @@
 import Phaser from "phaser";
-import ParticleManager from "../managers/ParticleManager";
+import GlowManager from "../managers/GlowManager";
 import Organism from "../entities/organism";
-import { organisms } from "../data/organisms"; // adjust path
+import { organisms } from "../data/organisms";
 import InfoButton from "../entities/infobutton";
 import HintButton from "../entities/hintbutton";
 import CameraManager from "../managers/CameraManager";
@@ -12,6 +12,8 @@ import ConnectionManager from "../managers/ConnectionManager";
 import { ScoreManager } from "../managers/ScoreManager";
 import type { Connection } from "../types/Connection";
 import CursorManager from "../managers/CursorManager";
+import { glowConfig } from "../config/glowConfig";
+import { gameSceneConfig, type GameSceneConfig } from "../config/sceneConfig";
 import RandomEventManager from "../managers/RandomEventManager";
 
 export default class GameScene extends Phaser.Scene {
@@ -19,7 +21,7 @@ export default class GameScene extends Phaser.Scene {
   private uiCamera!: Phaser.Cameras.Scene2D.Camera;
 
   private arrowManager!: ArrowManager;
-  private particleManager!: ParticleManager;
+  private glowManager!: GlowManager;
   private interactionManager!: InteractionManager;
   private organismManager!: OrganismManager;
   private connectionManager!: ConnectionManager;
@@ -27,32 +29,27 @@ export default class GameScene extends Phaser.Scene {
   private cursorManager!: CursorManager;
   private randomEventManager = new RandomEventManager();
   private randomEventsStarted = false;
+  private config: GameSceneConfig;
+  
 
-  constructor() {
-    super("GameScene");
+  constructor(config?: GameSceneConfig) {
+    const resolvedConfig =
+      config && "images" in config ? config : gameSceneConfig;
+    super(resolvedConfig.key);
+    this.config = resolvedConfig;
   }
 
   preload() {
-    this.load.setPath("assets");
-    this.load.image("acacia_sprite", "bullhornacacia.png");
-    this.load.image("amf_sprite", "amf.png");
-    this.load.image("greenbutton", "greenbutton.png");
-    this.load.image("redbutton", "redbutton.png");
-    this.load.image("infobutton_sprite", "altinfo.png");
-    this.load.image("ants_sprite", "ants.png");
-    this.load.image("antfootbacteria_sprite", "antfootbacteria.png");
-    this.load.image("sapota_sprite", "sapota.png");
-    this.load.image("diazotroph_sprite", "diazotroph.png");
-    this.load.image("mycorrhizahelper_sprite", "mycorrhizabacteria.png");
-    this.load.image("pos_particle", "pos_particle.png");
-    this.load.image("neg_particle", "neg_particle.png");
-    this.load.image("cursor", "cursor.png");
+    this.load.setPath(this.config.assetsPath);
+    for (const image of this.config.images) {
+      this.load.image(image.key, image.file);
+    }
   }
 
   create() {
     this.cameraManager = new CameraManager(this);
     this.uiCamera = this.cameraManager.getUICamera();
-    this.scoreManager = new ScoreManager(this, 1000);
+    this.scoreManager = new ScoreManager(this, this.config.startingMoney);
     const centerX = this.cameras.main.centerX;
     const centerY = this.cameras.main.centerY;
 
@@ -60,7 +57,7 @@ export default class GameScene extends Phaser.Scene {
     const rightConnections: Connection[] = [];
     const organismMap = new Map<string, Organism>();
 
-    this.particleManager = new ParticleManager(this, this.uiCamera);
+    this.glowManager = new GlowManager(this, glowConfig);
 
     this.organismManager = new OrganismManager(
       this,
@@ -68,7 +65,7 @@ export default class GameScene extends Phaser.Scene {
       organismMap,
       rightConnections,
       (organism) => this.arrowManager.arrowChecker(organism),
-      (x, y, amount) => this.particleManager.healthChanged(x, y, amount),
+      (organism, amount) => this.glowManager.healthChanged(organism, amount),
     );
     this.interactionManager = new InteractionManager(
       organismMap,
@@ -97,20 +94,21 @@ export default class GameScene extends Phaser.Scene {
     this.cursorManager = new CursorManager(this, this.arrowManager);
 
     this.scoreManager.outOfMoney = () => {
-      this.scene.pause()
-      this.scene.launch("GameOverScene");
+      this.scene.pause();
+      this.scene.launch(this.config.scenes.gameOver);
     };
 
-    this.arrowManager.createArrowButtons(centerY);
-    this.cursorManager.createCursorButton(centerY);
-    //First organism is the first in organisms.ts
-    const initialOrganism = organisms[0];
+    this.arrowManager.createArrowButtons(centerX, this.config.infoButton.y);
+    this.cursorManager.createCursorButton(centerX, this.config.infoButton.y);
+
+    const initialOrganism = organisms[this.config.initialOrganismIndex];
 
     this.organismManager.createOrganism(
-      centerX + initialOrganism.offsetX, centerY + initialOrganism.offsetY, initialOrganism.id
+      centerX + initialOrganism.offsetX,
+      centerY + initialOrganism.offsetY,
+      initialOrganism.id,
     );
 
-    //Eventlistener for: If players clicks on empty space, preview arrow disappears
     this.input.on(
       "pointerdown",
       (
@@ -123,31 +121,35 @@ export default class GameScene extends Phaser.Scene {
       },
     );
 
-    // Pause the game scene when menu is up
     this.scene.pause();
-    this.scene.launch("MenuScene");
-    this.scene.bringToTop("MenuScene");
+    this.scene.launch(this.config.scenes.menu);
+    this.scene.bringToTop(this.config.scenes.menu);
 
-    const infobutton = new InfoButton(this, 40, 40);
-
-    // Make main camera ignore the button so it stays fixed
+    const infobutton = new InfoButton(
+      this,
+      this.config.infoButton.x,
+      this.config.infoButton.y,
+    );
     this.cameras.main.ignore(infobutton);
 
     infobutton.on("infoButtonClicked", () => {
-      this.scene.launch("TutorialScene");
+      this.scene.launch(this.config.scenes.tutorial);
     });
 
-    //Second organism is the second in organisms.ts
-    const secondOrganism = organisms[1];
-    
-    const hintbutton = new HintButton(this, 240, 40);
+    const secondOrganism = organisms[this.config.secondOrganismIndex];
+
+    const hintbutton = new HintButton(
+      this,
+      this.scale.width - this.config.hintButton.x,
+      this.config.hintButton.y,
+    );
     this.cameras.main.ignore(hintbutton);
 
     hintbutton.on("hintButtonClicked", () => {
       const missing = this.connectionManager.getMissingConnections();
       if (missing.length === 0) return;
 
-      this.scoreManager.loseMoney(100);
+      this.scoreManager.loseMoney(this.config.hintCost);
 
       const hint = missing[0];
       organismMap.get(hint.from)?.highlight();
@@ -155,12 +157,13 @@ export default class GameScene extends Phaser.Scene {
     });
 
     this.events.once("menuClosed", () => {
-      // Resume game scene
       this.scene.resume();
-      this.time.delayedCall(3000, () => {
-        console.log(secondOrganism)
+      this.time.delayedCall(this.config.secondOrganismSpawnDelayMs, () => {
+        console.log(secondOrganism);
         this.organismManager.createOrganism(
-          centerX + secondOrganism.offsetX, centerY + secondOrganism.offsetY, secondOrganism.id
+          centerX + secondOrganism.offsetX,
+          centerY + secondOrganism.offsetY,
+          secondOrganism.id,
         );
       });
     });

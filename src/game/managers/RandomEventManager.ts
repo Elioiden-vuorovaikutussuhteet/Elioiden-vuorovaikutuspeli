@@ -1,5 +1,5 @@
-import Phaser from "phaser";
-import type { RandomEventData } from "../data/RandomEvents";
+//import Phaser from "phaser";
+//import type { RandomEventData } from "../data/RandomEvents";
 import type Organism from "../entities/organism";
 
 
@@ -21,4 +21,6 @@ export default class RandomEventManager {
 
     }
 
-}
+    }
+
+    
