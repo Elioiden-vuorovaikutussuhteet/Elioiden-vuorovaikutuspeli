@@ -282,7 +282,7 @@ describe("GameScene", () => {
 
     expect(HintButton).toHaveBeenCalledWith(
       scene,
-      gameSceneConfig.hintButton.x,
+      scene.scale.width - gameSceneConfig.hintButton.x,
       gameSceneConfig.hintButton.y,
     );
 
