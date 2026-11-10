@@ -344,16 +344,16 @@ describe("GameScene", () => {
     expect(ArrowButtons).toHaveBeenNthCalledWith(
       1,
       scene,
-      60,
-      450,
+      420,
+      40,
       "greenbutton",
     );
 
     expect(ArrowButtons).toHaveBeenNthCalledWith(
       2,
       scene,
-      60,
-      550,
+      500,
+      40,
       "redbutton",
     );
   });

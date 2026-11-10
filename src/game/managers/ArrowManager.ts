@@ -225,19 +225,14 @@ export default class ArrowManager {
     );
   }
 
-  public createArrowButtons(centerY: number): void {
+  public createArrowButtons(centerX: number, topY = 40): void {
     const greenButton = new ArrowButtons(
       this.scene,
-      60,
-      centerY - 50,
+      centerX - 80,
+      topY,
       "greenbutton",
     );
-    const redButton = new ArrowButtons(
-      this.scene,
-      60,
-      centerY + 50,
-      "redbutton",
-    );
+    const redButton = new ArrowButtons(this.scene, centerX, topY, "redbutton");
 
     this.greenButton = greenButton;
     this.redButton = redButton;

@@ -37,7 +37,7 @@ export interface ScoreConfig {
 }
 
 export const scoreConfig: ScoreConfig = {
-  textX: 100,
+  textX: 140,
   textY: 25,
   fontSize: "30px",
   fontColor: "#000000",

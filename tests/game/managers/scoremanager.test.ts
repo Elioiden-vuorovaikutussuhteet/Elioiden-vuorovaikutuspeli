@@ -27,11 +27,14 @@ describe("ScoreManager", () => {
   let mockTweensAdd: ReturnType<typeof vi.fn>;
   let mockCameraIgnore: ReturnType<typeof vi.fn>;
 
+  const screenWidth = 800;
+  const expectedScoreX = screenWidth - scoreConfig.textX;
+
   beforeEach(() => {
     vi.clearAllMocks();
 
     mockMoneyText = {
-      x: scoreConfig.textX,
+      x: expectedScoreX,
       width: 80,
       setText: vi.fn(),
       destroy: vi.fn(),
@@ -53,6 +56,9 @@ describe("ScoreManager", () => {
     let textCallCount = 0;
 
     mockScene = {
+      scale: {
+        width: screenWidth,
+      },
       add: {
         text: vi.fn(() => {
           textCallCount += 1;
@@ -77,7 +83,7 @@ describe("ScoreManager", () => {
     expect(manager.money).toBe(1000);
 
     expect(mockScene.add.text).toHaveBeenCalledWith(
-      scoreConfig.textX,
+      expectedScoreX,
       scoreConfig.textY,
       "1000",
       {
@@ -88,7 +94,7 @@ describe("ScoreManager", () => {
     );
 
     expect(mockScene.add.image).toHaveBeenCalledWith(
-      scoreConfig.textX,
+      expectedScoreX,
       scoreConfig.textY + scoreConfig.coin.yOffset,
       scoreConfig.coin.texture,
     );
@@ -101,7 +107,7 @@ describe("ScoreManager", () => {
     expect(mockCoinIcon.setScale).toHaveBeenCalledWith(scoreConfig.coin.scale);
 
     expect(mockCoinIcon.setX).toHaveBeenCalledWith(
-      scoreConfig.textX + 80 + scoreConfig.coin.gap,
+      expectedScoreX + 80 + scoreConfig.coin.gap,
     );
 
     expect(mockCameraIgnore).toHaveBeenCalledWith(mockMoneyText);
@@ -120,11 +126,11 @@ describe("ScoreManager", () => {
     );
 
     expect(mockCoinIcon.setX).toHaveBeenLastCalledWith(
-      scoreConfig.textX + 80 + scoreConfig.coin.gap,
+      expectedScoreX + 80 + scoreConfig.coin.gap,
     );
 
     expect(mockScene.add.text).toHaveBeenLastCalledWith(
-      scoreConfig.textX + scoreConfig.change.xOffset,
+      expectedScoreX + scoreConfig.change.xOffset,
       scoreConfig.textY + scoreConfig.change.startYOffset,
       `${scoreConfig.change.positivePrefix}${scoreConfig.gainAmount}`,
       {
