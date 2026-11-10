@@ -30,15 +30,14 @@ export default class GlowManager {
 
     const color = amount > 0 ? this.config.positiveGlow : this.config.negativeGlow;
 
-    //2 is lower quality
-    const glow = organism.filters!.external.addGlow(color, undefined, undefined, undefined, undefined, 2);
+    const glow = organism.filters!.external.addGlow(color, undefined, undefined, undefined, undefined, this.config.glowQuality);
     glow.setPaddingOverride(null);
-    const duplicateGlow = organism.duplicateContainer.filters!.external.addGlow(color, undefined, undefined, undefined, undefined, 2);
+    const duplicateGlow = organism.duplicateContainer.filters!.external.addGlow(color, undefined, undefined, undefined, undefined, this.config.glowQuality);
     duplicateGlow.setPaddingOverride(null);
 
-    const whiteGlow = organism.filters!.internal.addGlow(this.config.whiteGlow, undefined, undefined, undefined, undefined, 2)
+    const whiteGlow = organism.filters!.internal.addGlow(this.config.whiteGlow, undefined, undefined, undefined, undefined, this.config.glowQuality)
     whiteGlow.setPaddingOverride(null);
-    const duplicateWhiteGlow = organism.duplicateContainer.filters!.internal.addGlow(this.config.whiteGlow, undefined, undefined, undefined, undefined, 2);
+    const duplicateWhiteGlow = organism.duplicateContainer.filters!.internal.addGlow(this.config.whiteGlow, undefined, undefined, undefined, undefined, this.config.glowQuality);
     duplicateWhiteGlow.setPaddingOverride(null);
 
     const outerGlow = this.scene.tweens.add({
