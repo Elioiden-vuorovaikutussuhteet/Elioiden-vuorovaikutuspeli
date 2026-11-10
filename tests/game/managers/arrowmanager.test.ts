@@ -30,7 +30,7 @@ const {
   const mockCursorButtonOn = vi.fn();
 
   const MockOrganism = vi.fn(function (
-    ...[scene, id, x, y]: ConstructorParameters<typeof Organism>
+    ...[_scene, id, x, y]: ConstructorParameters<typeof Organism>
   ) {
     return {
       organismData: {
@@ -42,6 +42,8 @@ const {
       x,
       y,
       HP: 100,
+      hp: 100,
+      previousHP: 100,
       nameText: {},
       on: mockOrganismOn,
       changeHealth: vi.fn(),
@@ -117,10 +119,13 @@ vi.mock("../../../src/game/services/DrawArrowService", () => ({
 const { MockPermanentArrow } = vi.hoisted(() => ({
   MockPermanentArrow: vi.fn(function () {
     return {
+      dirty: false,
       setStyle: vi.fn(),
       update: vi.fn(),
+      draw: vi.fn(),
       playPulse: vi.fn(),
       setCursorMode: vi.fn(),
+      destroy: vi.fn(),
     };
   }),
 }));
@@ -194,6 +199,7 @@ describe("GameScene", () => {
         fillStyle: vi.fn(),
         lineBetween: vi.fn(),
         fillTriangle: vi.fn(),
+        destroy: vi.fn(),
       }),
 
       particles: vi.fn().mockReturnValue({
@@ -383,6 +389,7 @@ describe("ArrowManager interactions", () => {
       fillStyle: vi.fn(),
       lineBetween: vi.fn(),
       fillTriangle: vi.fn(),
+      destroy: vi.fn(),
     };
 
     previewArrow = {
@@ -392,6 +399,7 @@ describe("ArrowManager interactions", () => {
       fillStyle: vi.fn(),
       lineBetween: vi.fn(),
       fillTriangle: vi.fn(),
+      destroy: vi.fn(),
     };
 
     (scene as any).scale = {
@@ -410,8 +418,12 @@ describe("ArrowManager interactions", () => {
       launch: vi.fn(),
     };
 
+    // 1st call in ArrowRenderer is sharedArrowGraphics (permanentArrows), 2nd is previewArrow
     (scene as any).add = {
-      graphics: vi.fn().mockReturnValue(previewArrow),
+      graphics: vi
+        .fn()
+        .mockReturnValueOnce(permanentArrows)
+        .mockReturnValue(previewArrow),
     };
 
     uiCamera = {
@@ -461,6 +473,8 @@ describe("ArrowManager interactions", () => {
       x,
       y,
       HP: 100,
+      hp: 100,
+      previousHP: 100,
       changeHealth: vi.fn(),
       changeScale: vi.fn(),
       setPosition: vi.fn((newX: number, newY: number) => {
@@ -472,25 +486,25 @@ describe("ArrowManager interactions", () => {
     return org as unknown as Organism;
   };
 
-  it("valitsee ensimmäisen organismin", async () => {
-  const first = organism("tree", 100, 100);
+  it("selects the first organism", async () => {
+    const first = organism("tree", 100, 100);
 
-  arrowManager.arrowChecker(first);
-  arrowManager.update();
+    arrowManager.arrowChecker(first);
+    arrowManager.update();
 
-  expect(drawArrow).toHaveBeenCalledWith(
-    expect.anything(),
-    expect.objectContaining({
-      x1: 100,
-      y1: 100,
-      color: 0x064f15,
-      thickness: 2,
-      lateralOffset: 0,
-    }),
-  );
-});
+    expect(drawArrow).toHaveBeenCalledWith(
+      expect.anything(),
+      expect.objectContaining({
+        x1: 100,
+        y1: 100,
+        color: 0x064f15,
+        thickness: 2,
+        lateralOffset: 0,
+      }),
+    );
+  });
 
-  it("luo positiivisen vuorovaikutuksen", () => {
+  it("creates a positive interaction", () => {
     vi.mocked(getRelation).mockReturnValue({
       value: 1,
       mult: 1,
@@ -502,21 +516,20 @@ describe("ArrowManager interactions", () => {
     arrowManager.arrowChecker(first);
     arrowManager.arrowChecker(second);
 
-    expect(interactions).toEqual([
-      { from: "tree", to: "shroom" },
-    ]);
+    expect(interactions).toEqual([{ from: "tree", to: "shroom" }]);
 
     expect(PermanentArrow).toHaveBeenCalled();
-    expect(arrowManager.getArrow("tree", "shroom")?.update)
-      .toHaveBeenCalled();
-
-    expect((scene as any).scene.launch).toHaveBeenCalledWith(
-      "PopupScene",
-      { textId: "tree-shroom" },
+    expect(arrowManager.getArrow("tree", "shroom")?.update).toHaveBeenCalled();
+    expect(arrowManager.getArrow("tree", "shroom")?.draw).toHaveBeenCalledWith(
+      permanentArrows,
     );
+
+    expect((scene as any).scene.launch).toHaveBeenCalledWith("PopupScene", {
+      textId: "tree-shroom",
+    });
   });
 
-  it("luo negatiiviselle vuorovaikutukselle punaisen nuolen", () => {
+  it("creates a red arrow for a negative interaction", () => {
     vi.mocked(getRelation).mockReturnValue({
       value: -1,
       mult: 1,
@@ -538,16 +551,12 @@ describe("ArrowManager interactions", () => {
       }),
     );
 
-    expect((scene as any).scene.launch).toHaveBeenCalledWith(
-      "PopupScene",
-      { textId: "tree-ant" },
-    );
     expect((scene as any).scene.launch).toHaveBeenCalledWith("PopupScene", {
       textId: "tree-ant",
     });
   });
 
-  it("ei lisää samaa vuorovaikutusta kahdesti", () => {
+  it("does not add the same interaction twice", () => {
     vi.mocked(getRelation).mockReturnValue({
       value: 1,
       mult: 1,
@@ -564,7 +573,7 @@ describe("ArrowManager interactions", () => {
     expect(interactions).toHaveLength(1);
   });
 
-  it("ei luo vuorovaikutusta samaan organismiin", () => {
+  it("does not create an interaction with the same organism", () => {
     const first = organism("tree");
 
     arrowManager.arrowChecker(first);
@@ -575,7 +584,7 @@ describe("ArrowManager interactions", () => {
   });
 
   // make and move to connectionmanager.test.ts
-  it("tunnistaa oikeat yhteydet", () => {
+  it("recognizes valid connections", () => {
     vi.mocked(connectionManager.checkConnections).mockReturnValue(true);
 
     const first = organism("tree");
@@ -593,7 +602,7 @@ describe("ArrowManager interactions", () => {
   });
 
   // make and move to connectionmanager.test.ts
-  it("hylkää puuttuvan yhteyden", () => {
+  it("rejects a missing connection", () => {
     (scene as any).rightConnections = [{ from: "tree", to: "shroom" }];
     (scene as any).interactions = [];
 
@@ -616,7 +625,7 @@ describe("ArrowManager interactions", () => {
     ]);
   });
 
-  it("tyhjentää esikatselunuolen valinnan jälkeen", () => {
+  it("clears the preview arrow after selection", () => {
     vi.mocked(getRelation).mockReturnValue({
       value: 1,
       mult: 1,
@@ -663,7 +672,7 @@ describe("ArrowManager interactions", () => {
     expect(second.x).toBeLessThan(1100);
   });
 
-  it("clmaps organisms to the world bounds", () => {
+  it("clamps organisms to the world bounds", () => {
     vi.mocked(getRelation).mockReturnValue({ value: 1, mult: 1 });
 
     const outOfBoundsOrg = organism("tree", 10, 2000);
@@ -683,7 +692,7 @@ describe("ArrowManager interactions", () => {
   });
 
   it("redraws permanent arrows when organisms move", () => {
-    vi.mocked(getRelation).mockReturnValue({value: 1, mult: 1});
+    vi.mocked(getRelation).mockReturnValue({ value: 1, mult: 1 });
 
     const first = organism("tree", 200, 300);
     const second = organism("shroom", 600, 300);
@@ -719,23 +728,17 @@ describe("ArrowManager interactions", () => {
 
     expect(
       arrowManager.getArrow("tree", "shroom")?.setStyle,
-    ).toHaveBeenLastCalledWith(
-      expect.objectContaining({ lateralOffset: 0 }),
-    );
+    ).toHaveBeenLastCalledWith(expect.objectContaining({ lateralOffset: 0 }));
 
     arrowManager.arrowChecker(second);
     arrowManager.arrowChecker(first);
 
     expect(
       arrowManager.getArrow("tree", "shroom")?.setStyle,
-    ).toHaveBeenLastCalledWith(
-      expect.objectContaining({ lateralOffset: 25 }),
-    );
+    ).toHaveBeenLastCalledWith(expect.objectContaining({ lateralOffset: 25 }));
 
     expect(
       arrowManager.getArrow("shroom", "tree")?.setStyle,
-    ).toHaveBeenLastCalledWith(
-      expect.objectContaining({ lateralOffset: 25 }),
-    );
+    ).toHaveBeenLastCalledWith(expect.objectContaining({ lateralOffset: 25 }));
   });
 });
