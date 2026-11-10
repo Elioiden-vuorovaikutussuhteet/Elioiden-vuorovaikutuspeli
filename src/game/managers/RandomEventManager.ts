@@ -1,5 +1,4 @@
-//import Phaser from "phaser";
-//import type { RandomEventData } from "../data/RandomEvents";
+import Phaser from "phaser";
 import type Organism from "../entities/organism";
 
 
@@ -9,14 +8,14 @@ import type Organism from "../entities/organism";
 export default class RandomEventManager {
 
 
-     public startRandomEvents(organisms: Organism[]): void{
-        // Timers or other triggers can be later added here
+     public startRandomEvents(_scene: Phaser.Scene,organisms: Organism[]): void{
         this.triggerRandomEvent(organisms);
-     }
+    }
 
-     public triggerRandomEvent(organisms: Organism[]): void {
-        if (organisms.length === 0) return;
-        //organisms: Organism[]
+    public triggerRandomEvent(_organisms: Organism[]): void {
+        void _organisms;
+
+        console.log("RANDOM EVENT STARTED")
         //choose crandom event, select viable random target, apply event
 
     }
