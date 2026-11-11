@@ -35,7 +35,7 @@ const [activeTab, setActiveTab] = useState("camera");
 // - Possibly load saved configurations from the backend instead of using section.defaults.
 // - Possibly separate saved values from the current edited values.
 const [configValues, setConfigValues] = useState<
-    Record<string, any>
+    Record<string, unknown>
   >(() =>
     Object.fromEntries(
       configRegistry.flatMap((config) =>
@@ -52,7 +52,7 @@ const [configValues, setConfigValues] = useState<
   function handleConfigChange(
     configId: string,
     sectionId: string,
-    values: Record<string, any>
+    values: Record<string, unknown>
   ) {
     const key = `${configId}.${sectionId}`;
 

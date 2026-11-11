@@ -3,9 +3,9 @@ import { Box, TextField, Switch, FormControlLabel, Typography } from "@mui/mater
 import { z } from "zod";
 
 interface DynamicFormProps {
-  schema: z.ZodObject<any>;
-  defaults: Record<string, any>;
-  onChange?: (values: Record<string, any>) => void;
+  schema: z.ZodObject<z.ZodRawShape>;
+  defaults: Record<string, unknown>;
+  onChange?: (values: Record<string, unknown>) => void;
 }
 
 export default function DynamicForm({
@@ -16,7 +16,7 @@ export default function DynamicForm({
 
   const [values, setValues] = useState(defaults);
 
-  function handleChange(key: string, value: any) {
+  function handleChange(key: string, value: unknown) {
     const updated = {
       ...values,
       [key]: value,
