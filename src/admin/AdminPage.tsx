@@ -27,6 +27,47 @@ async function handleLogout() {
     console.error("Logout failed:", error);
   }
 }
+// For future database use:
+// - Load profiles from backend
+const [profiles, setProfiles] = useState([
+  { id: "default", name: "Default" },
+]);
+
+const [activeProfile, setActiveProfile] = useState("default");
+
+const [newProfileName, setNewProfileName] = useState("");
+const [showAddProfile, setShowAddProfile] = useState(false);
+
+// For future database use:
+// - Change local profile adding to an API request
+function handleAddProfile() {
+  const name = newProfileName.trim();
+
+  if (!name) return;
+
+  const id = crypto.randomUUID();
+
+  setProfiles((previous) => [
+    ...previous,
+    { id, name },
+  ]);
+
+  setConfigValues((previous) => ({
+    ...previous,
+    [id]: Object.fromEntries(
+      configRegistry.flatMap((config) =>
+        config.sections.map((section) => [
+          `${config.id}.${section.id}`,
+          structuredClone(section.defaults),
+        ])
+      )
+    ),
+  }));
+
+  setActiveProfile(id);
+  setNewProfileName("");
+  setShowAddProfile(false);
+}
 
 const [activeParentTab, setActiveParentTab] = useState("config");
 const [activeTab, setActiveTab] = useState("camera");
@@ -34,18 +75,19 @@ const [activeTab, setActiveTab] = useState("camera");
 // For future config saving:
 // - Possibly load saved configurations from the backend instead of using section.defaults.
 // - Possibly separate saved values from the current edited values.
+// - Associate each configuration with its corresponding profile.
 const [configValues, setConfigValues] = useState<
-    Record<string, unknown>
-  >(() =>
-    Object.fromEntries(
-      configRegistry.flatMap((config) =>
-        config.sections.map((section) => [
-          `${config.id}.${section.id}`,
-          section.defaults,
-        ])
-      )
+  Record<string, Record<string, unknown>>
+>(() => ({
+  default: Object.fromEntries(
+    configRegistry.flatMap((config) =>
+      config.sections.map((section) => [
+        `${config.id}.${section.id}`,
+        section.defaults,
+      ])
     )
-  );
+  ),
+}));
 
   // For future config saving:
   // - Trigger autosave or mark the configuration as edited here.
@@ -58,7 +100,10 @@ const [configValues, setConfigValues] = useState<
 
     setConfigValues((previous) => ({
       ...previous,
-      [key]: values,
+      [activeProfile]: {
+        ...previous[activeProfile],
+        [key]: values,
+      },
     }));
   }
 
@@ -87,6 +132,39 @@ const [configValues, setConfigValues] = useState<
       <button onClick={handleLogout}>
         Logout
       </button>
+
+      <Box sx={{ mt: 3, display: "flex", gap: 2, alignItems: "center" }}>
+        <Typography>Profile:</Typography>
+
+        <select
+          value={activeProfile}
+          onChange={(e) => setActiveProfile(e.target.value)}
+        >
+          {profiles.map((profile) => (
+            <option key={profile.id} value={profile.id}>
+              {profile.name}
+            </option>
+          ))}
+        </select>
+
+        <button onClick={() => setShowAddProfile(!showAddProfile)}>
+          + Add Profile
+        </button>
+      </Box>
+
+      {showAddProfile && (
+        <Box sx={{ mt: 2, display: "flex", gap: 2 }}>
+          <input
+            value={newProfileName}
+            onChange={(e) => setNewProfileName(e.target.value)}
+            placeholder="Profile name"
+          />
+
+          <button onClick={handleAddProfile}>
+            Create
+          </button>
+        </Box>
+      )}
 
       <Box sx={{ mt: 3 }}>
         {/* Parent tabs */}
@@ -126,9 +204,10 @@ const [configValues, setConfigValues] = useState<
                       </Typography>
 
                       <DynamicForm
+                        key={`${activeProfile}-${activeConfig.id}-${section.id}`}
                         schema={section.schema}
                         defaults={
-                          (configValues[key] as Record<string, unknown>) ??
+                          (configValues[activeProfile]?.[key] as Record<string, unknown>) ??
                           section.defaults
                         }
                         onChange={(values) =>
