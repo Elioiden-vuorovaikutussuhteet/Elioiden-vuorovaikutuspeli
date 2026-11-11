@@ -83,7 +83,7 @@ const [configValues, setConfigValues] = useState<
     configRegistry.flatMap((config) =>
       config.sections.map((section) => [
         `${config.id}.${section.id}`,
-        section.defaults,
+        structuredClone(section.defaults),
       ])
     )
   ),
