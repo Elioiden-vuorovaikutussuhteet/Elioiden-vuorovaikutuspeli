@@ -1,7 +1,31 @@
+import {
+  ArrowUIConfigSchema,
+  PermanentArrowUIConfigSchema,
+  arrowUIConfig,
+  permanentArrowUIConfig,
+} from "./arrowConfig";
+import {
+  ButtonLayoutUIConfigSchema,
+  ArrowButtonUIConfigSchema,
+  CursorButtonUIConfigSchema,
+  InfoButtonUIConfigSchema,
+  CloseButtonUIConfigSchema,
+  HintButtonUIConfigSchema,
+  buttonUIConfig,
+  arrowButtonUIConfig,
+  cursorButtonUIConfig,
+  infoButtonUIConfig,
+  closeButtonUIConfig,
+  hintButtonUIConfig,
+} from "./buttonConfig";
 import { CameraConfigSchema, cameraConfig } from "./cameraConfig";
 import { ForceLayoutConfigSchema, DEFAULT_FORCE_CONFIG } from "./forceConfig";
 import { GlowConfigSchema, glowConfig } from "./glowConfig";
-import { InteractionConfigSchema, interactionConfig } from "./interactionConfig";
+import {
+  InteractionConfigSchema,
+  interactionConfig,
+} from "./interactionConfig";
+import { OrganismUIConfigSchema, organismUIConfig } from "./organismConfig";
 import {
   GameSceneConfigSchema,
   MenuSceneConfigSchema,
@@ -67,6 +91,18 @@ export const configRegistry = [
     ],
   },
   {
+    id: "organism",
+    label: "Organism",
+    sections: [
+      {
+        id: "organism",
+        label: "Organism Settings",
+        schema: OrganismUIConfigSchema,
+        defaults: organismUIConfig,
+      },
+    ],
+  },
+  {
     id: "scene",
     label: "Scene",
     sections: [
@@ -123,6 +159,54 @@ export const configRegistry = [
         label: "UI Settings",
         schema: UIConfigSchema,
         defaults: uiConfig,
+      },
+      {
+        id: "arrows",
+        label: "Arrows",
+        schema: ArrowUIConfigSchema,
+        defaults: arrowUIConfig,
+      },
+      {
+        id: "permanentArrow",
+        label: "Permanent Arrow",
+        schema: PermanentArrowUIConfigSchema,
+        defaults: permanentArrowUIConfig,
+      },
+      {
+        id: "buttonLayout",
+        label: "Button Layout",
+        schema: ButtonLayoutUIConfigSchema,
+        defaults: buttonUIConfig,
+      },
+      {
+        id: "arrowButton",
+        label: "Arrow Button",
+        schema: ArrowButtonUIConfigSchema,
+        defaults: arrowButtonUIConfig,
+      },
+      {
+        id: "cursorButton",
+        label: "Cursor Button",
+        schema: CursorButtonUIConfigSchema,
+        defaults: cursorButtonUIConfig,
+      },
+      {
+        id: "infoButton",
+        label: "Info Button",
+        schema: InfoButtonUIConfigSchema,
+        defaults: infoButtonUIConfig,
+      },
+      {
+        id: "closeButton",
+        label: "Close Button",
+        schema: CloseButtonUIConfigSchema,
+        defaults: closeButtonUIConfig,
+      },
+      {
+        id: "hintButton",
+        label: "Hint Button",
+        schema: HintButtonUIConfigSchema,
+        defaults: hintButtonUIConfig,
       },
     ],
   },
