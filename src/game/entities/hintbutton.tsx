@@ -1,23 +1,20 @@
 import Phaser from "phaser";
+import BaseButtonContainer from "./basebuttoncontainer";
 
-export default class HintButton extends Phaser.GameObjects.Container {
-  constructor(scene: Phaser.Scene, x: number, y: number) {
-    super(scene, x, y);
-
-    const buttonWidth = 130;
-    const buttonHeight = 36;
-    const cornerRadius = 10;
+export default class HintButton extends BaseButtonContainer {
+  constructor(scene: Phaser.Scene, x: number, y: number){
+    super(scene, x, y, "hintButtonClicked", 130, 36, 10);
 
     const background = scene.add.graphics();
     const drawBackground = (alpha: number) => {
       background.clear();
       background.fillStyle(0x000000, alpha);
       background.fillRoundedRect(
-        -buttonWidth / 2,
-        -buttonHeight / 2,
-        buttonWidth,
-        buttonHeight,
-        cornerRadius,
+        -this.buttonWidth / 2,
+        -this.buttonHeight / 2,
+        this.buttonWidth,
+        this.buttonHeight,
+        this.cornerRadius,
       );
     };
     drawBackground(0.7);
@@ -25,11 +22,11 @@ export default class HintButton extends Phaser.GameObjects.Container {
     const border = scene.add.graphics();
     border.lineStyle(3, 0xffffff, 1);
     border.strokeRoundedRect(
-      -buttonWidth / 2,
-      -buttonHeight / 2,
-      buttonWidth,
-      buttonHeight,
-      cornerRadius,
+      -this.buttonWidth / 2,
+      -this.buttonHeight / 2,
+      this.buttonWidth,
+      this.buttonHeight,
+      this.cornerRadius,
     );
 
     const text = scene.add
@@ -51,14 +48,6 @@ export default class HintButton extends Phaser.GameObjects.Container {
 
     this.add([background, border, text, coin]);
 
-    this.setSize(buttonWidth, buttonHeight);
-    this.setInteractive({ useHandCursor: true });
-    this.setScrollFactor(0);
-
-    this.on("pointerdown", () => {
-      this.emit("hintButtonClicked", this);
-    });
-
     this.on("pointerover", () => {
       drawBackground(0.9);
     });
@@ -66,7 +55,5 @@ export default class HintButton extends Phaser.GameObjects.Container {
     this.on("pointerout", () => {
       drawBackground(0.7);
     });
-
-    scene.add.existing(this);
   }
 }

@@ -1,25 +1,8 @@
 import Phaser from "phaser";
+import BaseButtonSprite from "./basebuttonsprite";
 
-export default class CursorButton extends Phaser.GameObjects.Sprite {
-  constructor(scene: Phaser.Scene, x: number, y: number, button: string) {
-    super(scene, x, y, button);
-
-    this.setScale(0.05);
-
-    this.setInteractive();
-    this.setScrollFactor(0);
-
-    this.on("pointerover", () => {
-      this.setAlpha(0.8);
-    });
-
-    this.on("pointerout", () => {
-      this.setAlpha(1);
-    });
-    this.on("pointerdown", () => {
-      this.emit("cursorButtonClicked", this);
-    });
-
-    scene.add.existing(this);
+export default class CursorButton extends BaseButtonSprite {
+  constructor(scene: Phaser.Scene, x: number, y: number, texture: string) {
+    super(scene, x, y, texture, "cursorButtonClicked", 0.05);
   }
 }
