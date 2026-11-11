@@ -127,7 +127,10 @@ const [configValues, setConfigValues] = useState<
 
                       <DynamicForm
                         schema={section.schema}
-                        defaults={configValues[key]}
+                        defaults={
+                          (configValues[key] as Record<string, unknown>) ??
+                          section.defaults
+                        }
                         onChange={(values) =>
                           handleConfigChange(
                             activeConfig.id,

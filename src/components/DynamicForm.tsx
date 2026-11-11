@@ -71,7 +71,7 @@ export default function DynamicForm({
               label={key}
               control={
                 <Switch
-                  checked={currentValue ?? false}
+                  checked={typeof currentValue === "boolean" ? currentValue : false}
                   onChange={(e) =>
                     handleChange(key, e.target.checked)
                   }
@@ -91,7 +91,13 @@ export default function DynamicForm({
 
               <DynamicForm
                 schema={field}
-                defaults={currentValue ?? {}}
+                defaults={
+                  typeof currentValue === "object" &&
+                  currentValue !== null &&
+                  !Array.isArray(currentValue)
+                    ? currentValue as Record<string, unknown>
+                    : {}
+                }
                 onChange={(nestedValues) =>
                   handleChange(key, nestedValues)
                 }
