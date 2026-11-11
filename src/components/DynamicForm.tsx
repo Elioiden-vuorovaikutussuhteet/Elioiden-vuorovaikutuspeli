@@ -1,0 +1,107 @@
+import { useState } from "react";
+import { Box, TextField, Switch, FormControlLabel, Typography } from "@mui/material";
+import { z } from "zod";
+
+interface DynamicFormProps {
+  schema: z.ZodObject<any>;
+  defaults: Record<string, any>;
+  onChange?: (values: Record<string, any>) => void;
+}
+
+export default function DynamicForm({
+  schema,
+  defaults,
+  onChange,
+}: DynamicFormProps) {
+
+  const [values, setValues] = useState(defaults);
+
+  function handleChange(key: string, value: any) {
+    const updated = {
+      ...values,
+      [key]: value,
+    };
+
+    setValues(updated);
+    onChange?.(updated);
+  }
+
+  return (
+    <Box sx={{ display: "flex", flexDirection: "column", gap: 2, mt: 2 }}>
+      {Object.entries(schema.shape).map(([key, field]) => {
+
+        const currentValue = values[key];
+
+        // Number fields
+        if (field instanceof z.ZodNumber) {
+          return (
+            <TextField
+              key={key}
+              label={key}
+              type="number"
+              value={currentValue ?? ""}
+              onChange={(e) =>
+                handleChange(key, Number(e.target.value))
+              }
+              fullWidth
+            />
+          );
+        }
+
+        // String fields
+        if (field instanceof z.ZodString) {
+          return (
+            <TextField
+              key={key}
+              label={key}
+              value={currentValue ?? ""}
+              onChange={(e) =>
+                handleChange(key, e.target.value)
+              }
+              fullWidth
+            />
+          );
+        }
+
+        // Boolean fields
+        if (field instanceof z.ZodBoolean) {
+          return (
+            <FormControlLabel
+              key={key}
+              label={key}
+              control={
+                <Switch
+                  checked={currentValue ?? false}
+                  onChange={(e) =>
+                    handleChange(key, e.target.checked)
+                  }
+                />
+              }
+            />
+          );
+        }
+
+        // Nested objects
+        if (field instanceof z.ZodObject) {
+          return (
+            <Box key={key} sx={{ border: 1, borderColor: "divider", borderRadius: 2, p: 2 }}>
+              <Typography variant="subtitle1" sx={{ mb: 2 }}>
+                {key}
+              </Typography>
+
+              <DynamicForm
+                schema={field}
+                defaults={currentValue ?? {}}
+                onChange={(nestedValues) =>
+                  handleChange(key, nestedValues)
+                }
+              />
+            </Box>
+          );
+        }
+
+        return null;
+      })}
+    </Box>
+  );
+}

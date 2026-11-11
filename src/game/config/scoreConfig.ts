@@ -1,40 +1,44 @@
-export interface ScoreConfig {
-  textX: number;
-  textY: number;
-  fontSize: string;
-  fontColor: string;
-  fontStyle: string;
-  gainAmount: number;
-  defaultLoseAmount: number;
+import { z } from "zod";
 
-  minMoney: number;
+export const ScoreConfigSchema = z.object({
+  textX: z.number(),
+  textY: z.number(),
+  fontSize: z.string(),
+  fontColor: z.string(),
+  fontStyle: z.string(),
+  gainAmount: z.number(),
+  defaultLoseAmount: z.number(),
 
-  coin: {
-    texture: string;
-    yOffset: number;
-    originX: number;
-    originY: number;
-    scale: number;
-    gap: number;
-    fallbackTextWidth: number;
-  };
+  minMoney: z.number(),
 
-  change: {
-    gainThreshold: number;
-    positivePrefix: string;
-    xOffset: number;
-    startYOffset: number;
-    fontSize: string;
-    gainColor: string;
-    lossColor: string;
-    fontStyle: string;
-    gainEndYOffset: number;
-    lossEndYOffset: number;
-    endAlpha: number;
-    duration: number;
-    ease: string;
-  };
-}
+  coin: z.object({
+    texture: z.string(),
+    yOffset: z.number(),
+    originX: z.number(),
+    originY: z.number(),
+    scale: z.number(),
+    gap: z.number(),
+    fallbackTextWidth: z.number(),
+  }),
+
+  change: z.object({
+    gainThreshold: z.number(),
+    positivePrefix: z.string(),
+    xOffset: z.number(),
+    startYOffset: z.number(),
+    fontSize: z.string(),
+    gainColor: z.string(),
+    lossColor: z.string(),
+    fontStyle: z.string(),
+    gainEndYOffset: z.number(),
+    lossEndYOffset: z.number(),
+    endAlpha: z.number(),
+    duration: z.number(),
+    ease: z.string(),
+  }),
+});
+
+export type ScoreConfig = z.infer<typeof ScoreConfigSchema>;
 
 export const scoreConfig: ScoreConfig = {
   textX: 140,

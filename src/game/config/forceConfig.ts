@@ -1,21 +1,25 @@
-export interface ForceLayoutConfig {
-  linkDistance: number;
-  linkStrength: number;
-  chargeStrength: number;
-  chargeDistanceMax: number;
-  collideRadius: number;
-  collideStrength: number;
-  centerX: number;
-  centerY: number;
-  centerStrength: number;
-  alphaDecay: number;
-  reheatAlpha: number;
-  worldWidth: number;
-  worldHeight: number;
-  padding: number;
-  arrowTargetOffset: number;
-  distanceMax: number;
-}
+import { z } from "zod";
+
+export const ForceLayoutConfigSchema = z.object({
+  linkDistance: z.number(),
+  linkStrength: z.number(),
+  chargeStrength: z.number(),
+  chargeDistanceMax: z.number(),
+  collideRadius: z.number(),
+  collideStrength: z.number(),
+  centerX: z.number(),
+  centerY: z.number(),
+  centerStrength: z.number(),
+  alphaDecay: z.number(),
+  reheatAlpha: z.number(),
+  worldWidth: z.number(),
+  worldHeight: z.number(),
+  padding: z.number(),
+  arrowTargetOffset: z.number(),
+  distanceMax: z.number(),
+});
+
+export type ForceLayoutConfig = z.infer<typeof ForceLayoutConfigSchema>;
 
 export const DEFAULT_FORCE_CONFIG: ForceLayoutConfig = {
   linkDistance: 500,

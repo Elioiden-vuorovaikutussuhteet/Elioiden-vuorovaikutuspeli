@@ -18,6 +18,9 @@
     "test:watch": "vitest"
   },
   "dependencies": {
+    "@emotion/react": "^11.14.0",
+    "@emotion/styled": "^11.14.1",
+    "@mui/material": "^9.5.0",
     "bcrypt": "^6.0.0",
     "d3-force": "^3.0.0",
     "dotenv": "^18.0.9",
@@ -28,7 +31,8 @@
     "phaser": "^4.2.1",
     "react": "^19.3.1",
     "react-dom": "^19.3.1",
-    "react-router-dom": "^7.18.5"
+    "react-router-dom": "^7.18.5",
+    "zod": "^4.6.7"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",

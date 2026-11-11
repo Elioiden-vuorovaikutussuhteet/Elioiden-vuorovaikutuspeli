@@ -1,15 +1,21 @@
-export interface GlowConfig {
-  positiveGlow: number,
-  negativeGlow: number,
-  whiteGlow: number,
-  glowQuality: number,
-  outerOuterStrength: number,
-  innerOuterStrength: number,
-  outerDuration: number,
-  innerDuration: number,
-  loop: number,
-  ease: string,
-}
+import { z } from "zod";
+
+export const GlowConfigSchema = z.object({
+  positiveGlow: z.number().int().min(0).max(0xffffff),
+  negativeGlow: z.number().int().min(0).max(0xffffff),
+  whiteGlow: z.number().int().min(0).max(0xffffff),
+
+  glowQuality: z.number(),
+  outerOuterStrength: z.number(),
+  innerOuterStrength: z.number(),
+  outerDuration: z.number(),
+  innerDuration: z.number(),
+  loop: z.number(),
+
+  ease: z.string(),
+});
+
+export type GlowConfig = z.infer<typeof GlowConfigSchema>;
 
 export const glowConfig: GlowConfig = {
   positiveGlow: 0x04b504,
@@ -22,4 +28,4 @@ export const glowConfig: GlowConfig = {
   innerDuration: 300,
   loop: 0,
   ease: "Sine.inOut",
-}
+};
