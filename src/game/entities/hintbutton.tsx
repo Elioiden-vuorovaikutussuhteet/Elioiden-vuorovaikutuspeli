@@ -1,14 +1,28 @@
 import Phaser from "phaser";
 import BaseButtonContainer from "./basebuttoncontainer";
+import { hintButtonUIConfig, type HintButtonUIConfig } from "../config";
 
 export default class HintButton extends BaseButtonContainer {
-  constructor(scene: Phaser.Scene, x: number, y: number){
-    super(scene, x, y, "hintButtonClicked", 130, 36, 10);
+  constructor(
+    scene: Phaser.Scene,
+    x: number,
+    y: number,
+    config: HintButtonUIConfig = hintButtonUIConfig,
+  ) {
+    super(
+      scene,
+      x,
+      y,
+      config.clickEvent,
+      config.width,
+      config.height,
+      config.cornerRadius,
+    );
 
     const background = scene.add.graphics();
     const drawBackground = (alpha: number) => {
       background.clear();
-      background.fillStyle(0x000000, alpha);
+      background.fillStyle(config.backgroundColor, alpha);
       background.fillRoundedRect(
         -this.buttonWidth / 2,
         -this.buttonHeight / 2,
@@ -17,10 +31,10 @@ export default class HintButton extends BaseButtonContainer {
         this.cornerRadius,
       );
     };
-    drawBackground(0.7);
+    drawBackground(config.defaultAlpha);
 
     const border = scene.add.graphics();
-    border.lineStyle(3, 0xffffff, 1);
+    border.lineStyle(config.borderWidth, config.borderColor, config.borderAlpha);
     border.strokeRoundedRect(
       -this.buttonWidth / 2,
       -this.buttonHeight / 2,
@@ -30,30 +44,34 @@ export default class HintButton extends BaseButtonContainer {
     );
 
     const text = scene.add
-      .text(0, 0, "Hint 100", {
-        fontFamily: "monospace",
-        fontSize: "15px",
-        color: "#ffffff",
+      .text(0, 0, config.label, {
+        fontFamily: config.fontFamily,
+        fontSize: config.fontSize,
+        color: config.textColor,
       })
       .setOrigin(0, 0.5);
 
-    const coin = scene.add.image(0, 0, "coin").setOrigin(0, 0.5).setScale(0.4);
+    const coin = scene.add
+      .image(0, 0, config.coinTexture)
+      .setOrigin(0, 0.5)
+      .setScale(config.coinScale);
 
-    const gap = 6;
-    const totalWidth = (text.width ?? 72) + gap + (coin.displayWidth ?? 19);
+    const textWidth = text.width ?? config.fallbackTextWidth;
+    const coinWidth = coin.displayWidth ?? config.fallbackCoinWidth;
+    const totalWidth = textWidth + config.gap + coinWidth;
     const startX = -totalWidth / 2;
 
     text.setX(startX);
-    coin.setX(startX + (text.width ?? 72) + gap);
+    coin.setX(startX + textWidth + config.gap);
 
     this.add([background, border, text, coin]);
 
     this.on("pointerover", () => {
-      drawBackground(0.9);
+      drawBackground(config.hoverAlpha);
     });
 
     this.on("pointerout", () => {
-      drawBackground(0.7);
+      drawBackground(config.defaultAlpha);
     });
   }
 }
