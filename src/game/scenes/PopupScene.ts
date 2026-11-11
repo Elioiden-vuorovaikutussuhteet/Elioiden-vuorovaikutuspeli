@@ -84,7 +84,7 @@ export default class PopupScene extends Phaser.Scene {
 
     const sections = [
       { content: this.popupData.title, style: text.title },
-      { content: this.popupData.relation, style: text.relation },
+      { content: `${this.popupData.relation} relation`, style: text.relation },
       { content: this.popupData.description, style: text.description },
     ];
 
