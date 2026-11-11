@@ -1,8 +1,8 @@
 import { z } from "zod";
 
 export const ArrowUIConfigSchema = z.object({
-  positiveColor: z.number().int().min(0).max(0xffffff),
-  negativeColor: z.number().int().min(0).max(0xffffff),
+  positiveColor: z.number().int().min(0).max(0xffffff).meta({ input: "color" }),
+  negativeColor: z.number().int().min(0).max(0xffffff).meta({ input: "color" }),
   permanentThickness: z.number(),
   previewThickness: z.number(),
   bidirectionalOffset: z.number(),
@@ -17,14 +17,14 @@ export const PermanentArrowUIConfigSchema = z.object({
   graphicsDepth: z.number(),
   hitZoneDepth: z.number(),
 
-  hoverColor: z.number().int().min(0).max(0xffffff),
+  hoverColor: z.number().int().min(0).max(0xffffff).meta({ input: "color" }),
   hoverThicknessBonus: z.number(),
 
   hitBoxPaddingOffset: z.number(),
   hitDistanceToleranceOffset: z.number(),
 
-  pulsePositiveColor: z.number().int().min(0).max(0xffffff),
-  pulseNegativeColor: z.number().int().min(0).max(0xffffff),
+  pulsePositiveColor: z.number().int().min(0).max(0xffffff).meta({ input: "color" }),
+  pulseNegativeColor: z.number().int().min(0).max(0xffffff).meta({ input: "color" }),
   pulseRadius: z.number(),
   pulseDepth: z.number(),
   pulseAlpha: z.number(),
@@ -32,7 +32,7 @@ export const PermanentArrowUIConfigSchema = z.object({
 
   pulseColorInsideGlow: z.number(),
   pulseColorInsideOpacity: z.number(),
-  pulseColorInside: z.number().int().min(0).max(0xffffff),
+  pulseColorInside: z.number().int().min(0).max(0xffffff).meta({ input: "color" }),
   pulseColorGlowRadius: z.number(),
   pulseColorGlowIntensity: z.number(),
 });

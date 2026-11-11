@@ -10,10 +10,10 @@ export type AssetEntry = z.infer<typeof AssetEntrySchema>;
 
 export const OverlayBoxStyleSchema = z.object({
   cornerRadius: z.number(),
-  backgroundColor: z.number().int().min(0).max(0xffffff),
+  backgroundColor: z.number().int().min(0).max(0xffffff).meta({ input: "color" }),
   backgroundAlpha: z.number(),
   borderWidth: z.number(),
-  borderColor: z.number().int().min(0).max(0xffffff),
+  borderColor: z.number().int().min(0).max(0xffffff).meta({ input: "color" }),
   borderAlpha: z.number(),
 });
 
@@ -100,7 +100,7 @@ export const MenuSceneConfigSchema = OverlayBoxStyleSchema.extend({
     fontFamily: z.string(),
     fontSize: z.string(),
     fontStyle: z.string(),
-    color: z.string(),
+    color: z.string().meta({ input: "color" }),
     origin: z.number(),
   }),
 });
@@ -141,7 +141,7 @@ export const TutorialSceneConfigSchema = OverlayBoxStyleSchema.extend({
     fontSizeRatio: z.number(),
     maxFontSize: z.number(),
     fontStyle: z.string(),
-    color: z.string(),
+    color: z.string().meta({ input: "color" }),
     wordWrapWidthRatio: z.number(),
     align: z.string(),
     originX: z.number(),
@@ -205,7 +205,7 @@ export const GameOverSceneConfigSchema = OverlayBoxStyleSchema.extend({
     fontFamily: z.string(),
     fontSize: z.string(),
     fontStyle: z.string(),
-    color: z.string(),
+    color: z.string().meta({ input: "color" }),
     origin: z.number(),
   }),
   retryButton: z.object({
@@ -214,7 +214,7 @@ export const GameOverSceneConfigSchema = OverlayBoxStyleSchema.extend({
     fontFamily: z.string(),
     fontSize: z.string(),
     fontStyle: z.string(),
-    color: z.string(),
+    color: z.string().meta({ input: "color" }),
     origin: z.number(),
   }),
 });
@@ -262,7 +262,7 @@ export const PopupSceneConfigSchema = OverlayBoxStyleSchema.extend({
     fontFamily: z.string(),
     fontSizeRatio: z.number(),
     maxFontSize: z.number(),
-    color: z.string(),
+    color: z.string().meta({ input: "color" }),
     wordWrapWidthRatio: z.number(),
     align: z.string(),
     originX: z.number(),

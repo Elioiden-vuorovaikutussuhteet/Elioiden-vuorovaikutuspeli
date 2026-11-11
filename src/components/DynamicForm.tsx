@@ -34,6 +34,30 @@ export default function DynamicForm({
 
         // Number fields
         if (field instanceof z.ZodNumber) {
+          const isColor = field.meta()?.input === "color";
+
+          if (isColor) {
+            const hexValue =
+              `#${Number(currentValue ?? 0).toString(16).padStart(6, "0")}`;
+
+            return (
+              <Box key={key}>
+                <Typography variant="body2" sx={{ mb: 1 }}>
+                  {key}
+                </Typography>
+
+                <TextField
+                  type="color"
+                  value={hexValue}
+                  onChange={(e) => {
+                    handleChange(key, parseInt(e.target.value.slice(1), 16));
+                  }}
+                  fullWidth
+                />
+              </Box>
+            );
+          }
+
           return (
             <TextField
               key={key}

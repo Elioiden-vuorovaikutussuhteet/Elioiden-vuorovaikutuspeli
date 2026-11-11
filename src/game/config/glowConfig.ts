@@ -1,9 +1,9 @@
 import { z } from "zod";
 
 export const GlowConfigSchema = z.object({
-  positiveGlow: z.number().int().min(0).max(0xffffff),
-  negativeGlow: z.number().int().min(0).max(0xffffff),
-  whiteGlow: z.number().int().min(0).max(0xffffff),
+  positiveGlow: z.number().int().min(0).max(0xffffff).meta({ input: "color" }),
+  negativeGlow: z.number().int().min(0).max(0xffffff).meta({ input: "color" }),
+  whiteGlow: z.number().int().min(0).max(0xffffff).meta({ input: "color" }),
 
   glowQuality: z.number(),
   outerOuterStrength: z.number(),
