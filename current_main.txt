@@ -1,0 +1,1791 @@
+=== FILE: src/game/config/cameraConfig.ts ===
+import { z } from "zod";
+
+export const CameraConfigSchema = z.object({
+  minZoom: z.number(),
+  maxZoom: z.number(),
+  zoomInFactor: z.number(),
+  zoomOutFactor: z.number(),
+  speed: z.number(),
+});
+
+export type CameraConfig = z.infer<typeof CameraConfigSchema>;
+
+export const cameraConfig: CameraConfig = {
+  minZoom: 0.5,
+  maxZoom: 2.0,
+  zoomInFactor: 1.1,
+  zoomOutFactor: 0.9,
+  speed: 10,
+};
+=== FILE: src/game/config/forceConfig.ts ===
+import { z } from "zod";
+
+export const ForceLayoutConfigSchema = z.object({
+  linkDistance: z.number(),
+  linkStrength: z.number(),
+  chargeStrength: z.number(),
+  chargeDistanceMax: z.number(),
+  collideRadius: z.number(),
+  collideStrength: z.number(),
+  centerX: z.number(),
+  centerY: z.number(),
+  centerStrength: z.number(),
+  alphaDecay: z.number(),
+  reheatAlpha: z.number(),
+  worldWidth: z.number(),
+  worldHeight: z.number(),
+  padding: z.number(),
+  arrowTargetOffset: z.number(),
+  distanceMax: z.number(),
+});
+
+export type ForceLayoutConfig = z.infer<typeof ForceLayoutConfigSchema>;
+
+export const DEFAULT_FORCE_CONFIG: ForceLayoutConfig = {
+  linkDistance: 500,
+  linkStrength: 0.9,
+  chargeStrength: -1000,
+  chargeDistanceMax: 500,
+  collideRadius: 180,
+  collideStrength: 0.9,
+  centerX: 960,
+  centerY: 540,
+  centerStrength: 0.02,
+  alphaDecay: 0.03,
+  reheatAlpha: 0.5,
+  worldWidth: 1920,
+  worldHeight: 1080,
+  padding: 150,
+  arrowTargetOffset: 65,
+  distanceMax: 500,
+};
+=== FILE: src/game/config/sceneConfig.ts ===
+
+import { z } from "zod";
+
+export const AssetEntrySchema = z.object({
+  key: z.string(),
+  file: z.string(),
+});
+
+export type AssetEntry = z.infer<typeof AssetEntrySchema>;
+
+export const OverlayBoxStyleSchema = z.object({
+  cornerRadius: z.number(),
+  backgroundColor: z.number().int().min(0).max(0xffffff).meta({ input: "color" }),
+  backgroundAlpha: z.number(),
+  borderWidth: z.number(),
+  borderColor: z.number().int().min(0).max(0xffffff).meta({ input: "color" }),
+  borderAlpha: z.number(),
+});
+
+export type OverlayBoxStyle = z.infer<typeof OverlayBoxStyleSchema>;
+
+export const defaultOverlayBoxStyle: OverlayBoxStyle = {
+  cornerRadius: 30,
+  backgroundColor: 0x000000,
+  backgroundAlpha: 0.7,
+  borderWidth: 8,
+  borderColor: 0xffffff,
+  borderAlpha: 1,
+};
+
+export const GameSceneConfigSchema = z.object({
+  key: z.string(),
+  scenes: z.object({
+    menu: z.string(),
+    tutorial: z.string(),
+    gameOver: z.string(),
+  }),
+  assetsPath: z.string(),
+  images: z.array(AssetEntrySchema),
+  startingMoney: z.number(),
+  hintCost: z.number(),
+  infoButton: z.object({
+    x: z.number(),
+    y: z.number(),
+  }),
+  hintButton: z.object({
+    x: z.number(),
+    y: z.number(),
+  }),
+  initialOrganismIndex: z.number(),
+  secondOrganismIndex: z.number(),
+  secondOrganismSpawnDelayMs: z.number(),
+  randomEventSpawnDelayMs: z.number(),
+});
+
+export type GameSceneConfig = z.infer<typeof GameSceneConfigSchema>;
+
+export const gameSceneConfig: GameSceneConfig = {
+  key: "GameScene",
+  scenes: {
+    menu: "MenuScene",
+    tutorial: "TutorialScene",
+    gameOver: "GameOverScene",
+  },
+  assetsPath: "assets",
+  images: [
+    { key: "acacia_sprite", file: "bullhornacacia.png" },
+    { key: "amf_sprite", file: "amf.png" },
+    { key: "greenbutton", file: "greenbutton.png" },
+    { key: "redbutton", file: "redbutton.png" },
+    { key: "infobutton_sprite", file: "altinfo.png" },
+    { key: "ants_sprite", file: "ants.png" },
+    { key: "antfootbacteria_sprite", file: "antfootbacteria.png" },
+    { key: "sapota_sprite", file: "sapota.png" },
+    { key: "diazotroph_sprite", file: "diazotroph.png" },
+    { key: "mycorrhizahelper_sprite", file: "mycorrhizabacteria.png" },
+    { key: "pos_particle", file: "pos_particle.png" },
+    { key: "neg_particle", file: "neg_particle.png" },
+    { key: "cursor", file: "cursor.png" },
+    { key: "coin", file: "coin.png" },
+  ],
+  startingMoney: 1000,
+  hintCost: 100,
+  infoButton: { x: 40, y: 40 },
+  hintButton: { x: 300, y: 40 },
+  initialOrganismIndex: 0,
+  secondOrganismIndex: 1,
+  secondOrganismSpawnDelayMs: 3000,
+  randomEventSpawnDelayMs: 3000,
+};
+
+export const MenuSceneConfigSchema = OverlayBoxStyleSchema.extend({
+  key: z.string(),
+  targetSceneKey: z.string(),
+  closeEvent: z.string(),
+  width: z.number(),
+  height: z.number(),
+  text: z.object({
+    label: z.string(),
+    fontFamily: z.string(),
+    fontSize: z.string(),
+    fontStyle: z.string(),
+    color: z.string().meta({ input: "color" }),
+    origin: z.number(),
+  }),
+});
+
+export type MenuSceneConfig = z.infer<typeof MenuSceneConfigSchema>;
+
+export const menuSceneConfig: MenuSceneConfig = {
+  ...defaultOverlayBoxStyle,
+  key: "MenuScene",
+  targetSceneKey: "GameScene",
+  closeEvent: "menuClosed",
+  width: 400,
+  height: 200,
+  text: {
+    label: "Start Game",
+    fontFamily: "monospace",
+    fontSize: "30px",
+    fontStyle: "bold",
+    color: "#ffffff",
+    origin: 0.5,
+  },
+};
+
+export const TutorialSceneConfigSchema = OverlayBoxStyleSchema.extend({
+  key: z.string(),
+  assetsPath: z.string(),
+  images: z.array(AssetEntrySchema),
+  widthRatio: z.number(),
+  maxWidth: z.number(),
+  heightRatio: z.number(),
+  maxHeight: z.number(),
+  leftMarginRatio: z.number(),
+  topOffsetDivisor: z.number(),
+  text: z.object({
+    content: z.string(),
+    topOffsetRatio: z.number(),
+    fontFamily: z.string(),
+    fontSizeRatio: z.number(),
+    maxFontSize: z.number(),
+    fontStyle: z.string(),
+    color: z.string().meta({ input: "color" }),
+    wordWrapWidthRatio: z.number(),
+    align: z.string(),
+    originX: z.number(),
+    originY: z.number(),
+  }),
+  closeButton: z.object({
+    bottomOffset: z.number(),
+    event: z.string(),
+  }),
+});
+
+export type TutorialSceneConfig = z.infer<typeof TutorialSceneConfigSchema>;
+
+export const tutorialSceneConfig: TutorialSceneConfig = {
+  ...defaultOverlayBoxStyle,
+  key: "TutorialScene",
+  assetsPath: "assets",
+  images: [{ key: "close_button_sprite", file: "closebutton.png" }],
+  widthRatio: 0.3,
+  maxWidth: 450,
+  heightRatio: 0.7,
+  maxHeight: 600,
+  leftMarginRatio: 0.05,
+  topOffsetDivisor: 4,
+  text: {
+    content: [
+      "Select whether you want",
+      "to draw a positive",
+      "or a negative relation",
+      "by clicking on",
+      "the corresponding icon",
+      "and then choosing your",
+      "starting and end organism.",
+    ].join("\n"),
+    topOffsetRatio: 0.15,
+    fontFamily: "monospace",
+    fontSizeRatio: 0.015,
+    maxFontSize: 25,
+    fontStyle: "bold",
+    color: "#ffffff",
+    wordWrapWidthRatio: 0.8,
+    align: "center",
+    originX: 0.5,
+    originY: 0,
+  },
+  closeButton: {
+    bottomOffset: 50,
+    event: "closeButtonClicked",
+  },
+};
+
+export const GameOverSceneConfigSchema = OverlayBoxStyleSchema.extend({
+  key: z.string(),
+  scenesToStop: z.array(z.string()),
+  restartSceneKey: z.string(),
+  width: z.number(),
+  height: z.number(),
+  titleText: z.object({
+    label: z.string(),
+    offsetY: z.number(),
+    fontFamily: z.string(),
+    fontSize: z.string(),
+    fontStyle: z.string(),
+    color: z.string().meta({ input: "color" }),
+    origin: z.number(),
+  }),
+  retryButton: z.object({
+    label: z.string(),
+    offsetY: z.number(),
+    fontFamily: z.string(),
+    fontSize: z.string(),
+    fontStyle: z.string(),
+    color: z.string().meta({ input: "color" }),
+    origin: z.number(),
+  }),
+});
+
+export type GameOverSceneConfig = z.infer<typeof GameOverSceneConfigSchema>;
+
+export const gameOverSceneConfig: GameOverSceneConfig = {
+  ...defaultOverlayBoxStyle,
+  key: "GameOverScene",
+  scenesToStop: ["PopupScene"],
+  restartSceneKey: "GameScene",
+  width: 400,
+  height: 200,
+  titleText: {
+    label: "GAME OVER",
+    offsetY: -30,
+    fontFamily: "monospace",
+    fontSize: "30px",
+    fontStyle: "bold",
+    color: "#ffffff",
+    origin: 0.5,
+  },
+  retryButton: {
+    label: "Try again",
+    offsetY: 30,
+    fontFamily: "monospace",
+    fontSize: "20px",
+    fontStyle: "bold",
+    color: "#fffff0",
+    origin: 0.5,
+  },
+};
+
+export const PopupSceneConfigSchema = OverlayBoxStyleSchema.extend({
+  key: z.string(),
+  assetsPath: z.string(),
+  images: z.array(AssetEntrySchema),
+  widthRatio: z.number(),
+  maxWidth: z.number(),
+  heightRatio: z.number(),
+  maxHeight: z.number(),
+  rightMarginRatio: z.number(),
+  topOffsetDivisor: z.number(),
+  text: z.object({
+    fontFamily: z.string(),
+    fontSizeRatio: z.number(),
+    maxFontSize: z.number(),
+    color: z.string().meta({ input: "color" }),
+    wordWrapWidthRatio: z.number(),
+    align: z.string(),
+    originX: z.number(),
+    originY: z.number(),
+    title: z.object({
+      topOffsetRatio: z.number(),
+      fontStyle: z.string(),
+    }),
+    relation: z.object({
+      topOffsetRatio: z.number(),
+      fontStyle: z.string(),
+    }),
+    description: z.object({
+      topOffsetRatio: z.number(),
+      fontStyle: z.string(),
+    }),
+  }),
+  closeButton: z.object({
+    bottomOffset: z.number(),
+    event: z.string(),
+  }),
+});
+
+export type PopupSceneConfig = z.infer<typeof PopupSceneConfigSchema>;
+
+export const popupSceneConfig: PopupSceneConfig = {
+  ...defaultOverlayBoxStyle,
+  key: "PopupScene",
+  assetsPath: "assets",
+  images: [{ key: "close_button_sprite", file: "closebutton.png" }],
+  widthRatio: 0.4,
+  maxWidth: 700,
+  heightRatio: 0.28,
+  maxHeight: 200,
+  rightMarginRatio: 0.03,
+  topOffsetDivisor: 4,
+  text: {
+    fontFamily: "monospace",
+    fontSizeRatio: 0.011,
+    maxFontSize: 15,
+    color: "#ffffff",
+    wordWrapWidthRatio: 0.88,
+    align: "center",
+    originX: 0.5,
+    originY: 0,
+    title: {
+      topOffsetRatio: 0.07,
+      fontStyle: "bold",
+    },
+    relation: {
+      topOffsetRatio: 0.2,
+      fontStyle: "bold",
+    },
+    description: {
+      topOffsetRatio: 0.34,
+      fontStyle: "",
+    },
+  },
+  closeButton: {
+    bottomOffset: 30,
+    event: "closeButtonClicked",
+  },
+};
+
+=== FILE: src/game/config/uiConfig.ts ===
+import { z } from "zod";
+
+export const ArrowUIConfigSchema = z.object({
+  positiveColor: z.number().int().min(0).max(0xffffff).meta({ input: "color" }),
+  negativeColor: z.number().int().min(0).max(0xffffff).meta({ input: "color" }),
+  permanentThickness: z.number(),
+  previewThickness: z.number(),
+  bidirectionalOffset: z.number(),
+});
+
+export type ArrowUIConfig = z.infer<typeof ArrowUIConfigSchema>;
+
+export const PermanentArrowUIConfigSchema = z.object({
+  defaultTargetOffset: z.number(),
+  defaultThickness: z.number(),
+  defaultLateralOffset: z.number(),
+  graphicsDepth: z.number(),
+  hitZoneDepth: z.number(),
+
+  hoverColor: z.number().int().min(0).max(0xffffff).meta({ input: "color" }),
+  hoverThicknessBonus: z.number(),
+
+  hitBoxPaddingOffset: z.number(),
+  hitDistanceToleranceOffset: z.number(),
+
+  pulsePositiveColor: z.number().int().min(0).max(0xffffff).meta({ input: "color" }),
+  pulseNegativeColor: z.number().int().min(0).max(0xffffff).meta({ input: "color" }),
+  pulseRadius: z.number(),
+  pulseDepth: z.number(),
+  pulseAlpha: z.number(),
+  pulseDuration: z.number(),
+
+  pulseColorInsideGlow: z.number(),
+  pulseColorInsideOpacity: z.number(),
+  pulseColorInside: z.number().int().min(0).max(0xffffff).meta({ input: "color" }),
+  pulseColorGlowRadius: z.number(),
+  pulseColorGlowIntensity: z.number(),
+});
+
+export type PermanentArrowUIConfig = z.infer<
+  typeof PermanentArrowUIConfigSchema
+>;
+
+export const ButtonUIConfigSchema = z.object({
+  arrowButtonX: z.number(),
+  arrowButtonYOffset: z.number(),
+});
+
+export type ButtonUIConfig = z.infer<typeof ButtonUIConfigSchema>;
+
+export const UIConfigSchema = z.object({
+  arrows: ArrowUIConfigSchema,
+  permanentArrow: PermanentArrowUIConfigSchema,
+  buttons: ButtonUIConfigSchema,
+});
+
+export type UIConfig = z.infer<typeof UIConfigSchema>;
+
+export const uiConfig: UIConfig = {
+  arrows: {
+    positiveColor: 0x064f15,
+    negativeColor: 0xed0924,
+    permanentThickness: 8,
+    previewThickness: 2,
+    bidirectionalOffset: 25,
+  },
+
+  permanentArrow: {
+    defaultTargetOffset: 65,
+    defaultThickness: 8,
+    defaultLateralOffset: 0,
+    graphicsDepth: 100,
+    hitZoneDepth: 99,
+    hoverColor: 0xffffff,
+    hoverThicknessBonus: 4,
+    hitBoxPaddingOffset: 6,
+    hitDistanceToleranceOffset: 8,
+    pulsePositiveColor: 0x04b504,
+    pulseNegativeColor: 0xb83232,
+    pulseRadius: 2,
+    pulseDepth: 101,
+    pulseAlpha: 0.8,
+    pulseDuration: 1000,
+    pulseColorInsideGlow: 15,
+    pulseColorInsideOpacity: 0.5,
+    pulseColorInside: 0xffffff,
+    pulseColorGlowRadius: 16,
+    pulseColorGlowIntensity: 1,
+  },
+
+  buttons: {
+    arrowButtonX: 60,
+    arrowButtonYOffset: 50,
+  },
+};
+
+export const arrowUIConfig = uiConfig.arrows;
+export const permanentArrowUIConfig = uiConfig.permanentArrow;
+export const buttonUIConfig = uiConfig.buttons;
+=== FILE: src/game/config/scoreConfig.ts ===
+import { z } from "zod";
+
+export const ScoreConfigSchema = z.object({
+  textX: z.number(),
+  textY: z.number(),
+  fontSize: z.string(),
+  fontColor: z.string().meta({ input: "color" }),
+  fontStyle: z.string(),
+  gainAmount: z.number(),
+  defaultLoseAmount: z.number(),
+
+  minMoney: z.number(),
+
+  coin: z.object({
+    texture: z.string(),
+    yOffset: z.number(),
+    originX: z.number(),
+    originY: z.number(),
+    scale: z.number(),
+    gap: z.number(),
+    fallbackTextWidth: z.number(),
+  }),
+
+  change: z.object({
+    gainThreshold: z.number(),
+    positivePrefix: z.string(),
+    xOffset: z.number(),
+    startYOffset: z.number(),
+    fontSize: z.string(),
+    gainColor: z.string().meta({ input: "color" }),
+    lossColor: z.string().meta({ input: "color" }),
+    fontStyle: z.string(),
+    gainEndYOffset: z.number(),
+    lossEndYOffset: z.number(),
+    endAlpha: z.number(),
+    duration: z.number(),
+    ease: z.string(),
+  }),
+});
+
+export type ScoreConfig = z.infer<typeof ScoreConfigSchema>;
+
+export const scoreConfig: ScoreConfig = {
+  textX: 140,
+  textY: 25,
+  fontSize: "30px",
+  fontColor: "#000000",
+  fontStyle: "bold",
+  gainAmount: 10,
+  defaultLoseAmount: 20,
+  minMoney: 0,
+
+  coin: {
+    texture: "coin",
+    yOffset: 15,
+    originX: 0,
+    originY: 0.5,
+    scale: 0.65,
+    gap: 8,
+    fallbackTextWidth: 75,
+  },
+
+  change: {
+    gainThreshold: 0,
+    positivePrefix: "+",
+    xOffset: 10,
+    startYOffset: 35,
+    fontSize: "24px",
+    gainColor: "#067d1d",
+    lossColor: "#d91616",
+    fontStyle: "bold",
+    gainEndYOffset: 20,
+    lossEndYOffset: 55,
+    endAlpha: 0,
+    duration: 900,
+    ease: "Cubic.easeOut",
+  },
+};
+=== FILE: src/game/config/configRegistry.ts ===
+import { CameraConfigSchema, cameraConfig } from "./cameraConfig";
+import { ForceLayoutConfigSchema, DEFAULT_FORCE_CONFIG } from "./forceConfig";
+import { GlowConfigSchema, glowConfig } from "./glowConfig";
+import { InteractionConfigSchema, interactionConfig } from "./interactionConfig";
+import {
+  GameSceneConfigSchema,
+  MenuSceneConfigSchema,
+  TutorialSceneConfigSchema,
+  GameOverSceneConfigSchema,
+  PopupSceneConfigSchema,
+  gameSceneConfig,
+  menuSceneConfig,
+  tutorialSceneConfig,
+  gameOverSceneConfig,
+  popupSceneConfig,
+} from "./sceneConfig";
+import { ScoreConfigSchema, scoreConfig } from "./scoreConfig";
+import { UIConfigSchema, uiConfig } from "./uiConfig";
+
+export const configRegistry = [
+  {
+    id: "camera",
+    label: "Camera",
+    sections: [
+      {
+        id: "camera",
+        label: "Camera Settings",
+        schema: CameraConfigSchema,
+        defaults: cameraConfig,
+      },
+    ],
+  },
+  {
+    id: "force",
+    label: "Force",
+    sections: [
+      {
+        id: "force",
+        label: "Force Layout",
+        schema: ForceLayoutConfigSchema,
+        defaults: DEFAULT_FORCE_CONFIG,
+      },
+    ],
+  },
+  {
+    id: "glow",
+    label: "Glow",
+    sections: [
+      {
+        id: "glow",
+        label: "Glow Settings",
+        schema: GlowConfigSchema,
+        defaults: glowConfig,
+      },
+    ],
+  },
+  {
+    id: "interaction",
+    label: "Interaction",
+    sections: [
+      {
+        id: "interaction",
+        label: "Interaction Settings",
+        schema: InteractionConfigSchema,
+        defaults: interactionConfig,
+      },
+    ],
+  },
+  {
+    id: "scene",
+    label: "Scene",
+    sections: [
+      {
+        id: "game",
+        label: "Game Scene",
+        schema: GameSceneConfigSchema,
+        defaults: gameSceneConfig,
+      },
+      {
+        id: "menu",
+        label: "Menu Scene",
+        schema: MenuSceneConfigSchema,
+        defaults: menuSceneConfig,
+      },
+      {
+        id: "tutorial",
+        label: "Tutorial Scene",
+        schema: TutorialSceneConfigSchema,
+        defaults: tutorialSceneConfig,
+      },
+      {
+        id: "gameOver",
+        label: "Game Over Scene",
+        schema: GameOverSceneConfigSchema,
+        defaults: gameOverSceneConfig,
+      },
+      {
+        id: "popup",
+        label: "Popup Scene",
+        schema: PopupSceneConfigSchema,
+        defaults: popupSceneConfig,
+      },
+    ],
+  },
+  {
+    id: "score",
+    label: "Score",
+    sections: [
+      {
+        id: "score",
+        label: "Score Settings",
+        schema: ScoreConfigSchema,
+        defaults: scoreConfig,
+      },
+    ],
+  },
+  {
+    id: "ui",
+    label: "UI",
+    sections: [
+      {
+        id: "ui",
+        label: "UI Settings",
+        schema: UIConfigSchema,
+        defaults: uiConfig,
+      },
+    ],
+  },
+] as const;
+=== FILE: src/game/config/interactionConfig.ts ===
+import { z } from "zod";
+
+export const InteractionConfigSchema = z.object({
+  pulseWaitTime: z.number(),
+  initialBaseHealthChange: z.number(),
+  hpNormalizationDivisor: z.number(),
+});
+
+export type InteractionConfig = z.infer<typeof InteractionConfigSchema>;
+
+export const interactionConfig: InteractionConfig = {
+  pulseWaitTime: 1000,
+  initialBaseHealthChange: 5,
+  hpNormalizationDivisor: 100,
+};
+=== FILE: src/game/config/index.ts ===
+export * from "./cameraConfig";
+export * from "./forceConfig";
+export * from "./glowConfig";
+export * from "./interactionConfig";
+export * from "./sceneConfig";
+export * from "./scoreConfig";
+export * from "./uiConfig";
+=== FILE: src/game/config/glowConfig.ts ===
+import { z } from "zod";
+
+export const GlowConfigSchema = z.object({
+  positiveGlow: z.number().int().min(0).max(0xffffff).meta({ input: "color" }),
+  negativeGlow: z.number().int().min(0).max(0xffffff).meta({ input: "color" }),
+  whiteGlow: z.number().int().min(0).max(0xffffff).meta({ input: "color" }),
+
+  glowQuality: z.number(),
+  outerOuterStrength: z.number(),
+  innerOuterStrength: z.number(),
+  outerDuration: z.number(),
+  innerDuration: z.number(),
+  loop: z.number(),
+
+  ease: z.string(),
+});
+
+export type GlowConfig = z.infer<typeof GlowConfigSchema>;
+
+export const glowConfig: GlowConfig = {
+  positiveGlow: 0x04b504,
+  negativeGlow: 0xb83232,
+  whiteGlow: 0xffffff,
+  glowQuality: 2,
+  outerOuterStrength: 30,
+  innerOuterStrength: 3,
+  outerDuration: 400,
+  innerDuration: 300,
+  loop: 0,
+  ease: "Sine.inOut",
+};
+=== FILE: src/game/entities/arrowbuttons.tsx ===
+import Phaser from "phaser";
+import BaseButtonSprite from "./basebuttonsprite";
+
+export default class ArrowButton extends BaseButtonSprite {
+  private selected = false;
+
+  constructor(scene: Phaser.Scene, x: number, y: number, texture: string) {
+    super(scene, x, y, texture, "arrowButtonClicked", 0.1);
+  }
+
+  protected override handlePointerOut(): void {
+    this.setAlpha(this.selected ? 0.8 : 1);
+  };
+
+  public setSelected(selected: boolean): void {
+    this.selected = selected;
+    this.setAlpha(selected ? 0.8 : 1);
+  }
+}
+
+=== FILE: src/game/entities/organism.tsx ===
+import Phaser from "phaser";
+import { organisms } from "../data/organisms";
+import type { OrganismData } from "../data/organisms";
+
+export function getOrganismData(type: string) {
+  const data = organisms.find((item) => item.id === type);
+  // Get the specific organisms data from organisms.ts based on the type used in constructor
+
+  if (!data) {
+    throw new Error(`Organism type "${type}" not found`);
+  }
+
+  return data;
+}
+
+export default class Organism extends Phaser.GameObjects.Sprite {
+  public readonly organismData: OrganismData;
+
+  public readonly nameText: Phaser.GameObjects.Text;
+
+  private uiCamera?: Phaser.Cameras.Scene2D.Camera;
+
+  public hp = 100;
+  public previousHP = this.hp;
+  private baseScale = 1;
+  private breakpoint = 10;
+
+  private duplicates: Phaser.GameObjects.Sprite[] = [];
+  public duplicateContainer: Phaser.GameObjects.Container;
+  private hintGlow!: Phaser.Filters.Glow;
+
+  private onHealthChanged?: (organism: Organism, amount: number) => void;
+
+  private debugHealth: boolean;
+  private debugHealthText?: Phaser.GameObjects.Text;
+
+  constructor(
+    scene: Phaser.Scene,
+    id: string,
+    x: number,
+    y: number,
+    uiCamera?: Phaser.Cameras.Scene2D.Camera,
+    onHealthChanged?: (organism: Organism, amount: number) => void,
+  ) {
+    super(scene, x, y, getOrganismData(id).texture);
+
+    const organismData = getOrganismData(id);
+
+    this.onHealthChanged = onHealthChanged;
+
+    // true to see previousHP, changeHealth() call and current hp
+    this.debugHealth = false;
+    this.uiCamera = uiCamera;
+
+    this.duplicateContainer = scene.add.container(x, y);
+    if (uiCamera) {
+      uiCamera.ignore(this.duplicateContainer);
+    }
+
+    this.organismData = organismData;
+
+    this.baseScale = organismData.default_scale;
+
+    this.setScale(organismData.default_scale);
+
+    this.setInteractive();
+
+    this.enableFilters();
+
+    this.on("pointerdown", () => {
+      this.emit("organismSelected", this);
+    });
+
+    const glow = this.filters!.internal.addGlow(
+      0xffffff,
+      5,
+      0,
+      1,
+      false,
+      10,
+      10,
+    );
+
+    glow.active = false;
+
+    this.hintGlow = this.filters!.internal.addGlow(
+      0xffff00,
+      5,
+      0,
+      1,
+      false,
+      10,
+      10,
+    );
+
+    this.hintGlow.active = false;
+
+    this.hintGlow = this.filters!.internal.addGlow(
+      0xffff00,
+      5,
+      0,
+      1,
+      false,
+      10,
+      10,
+    );
+
+    this.hintGlow.active = false;
+
+    this.on("pointerover", () => {
+      glow.active = true;
+    });
+
+    this.on("pointerout", () => {
+      glow.active = false;
+    });
+
+    scene.add.existing(this);
+
+    this.nameText = scene.add
+      .text(x, y + this.displayHeight / 2 + 20, organismData.name, {
+        fontFamily: "monospace",
+        fontSize: "18px",
+        color: "#000000",
+        align: "center",
+      })
+      .setOrigin(0.5);
+
+    if (uiCamera) {
+      uiCamera.ignore(this.nameText);
+    }
+  }
+
+  public changeScale() {
+    const sensitivity = 0.5;
+
+    const healthRatio = 1 + ((this.hp - 100) / 100) * sensitivity;
+
+    const newScale = this.baseScale * Math.max(0.1, healthRatio);
+
+    this.scene.tweens.add({
+      targets: [this, this.duplicateContainer],
+      scale: newScale,
+      duration: 500,
+      ease: "Sine.easeInOut",
+      onUpdate: () => {
+        this.nameText.setPosition(this.x, this.y + this.displayHeight / 2 + 20);
+      },
+    });
+  }
+
+  private updateDuplicates() {
+    if (this.hp > 100 + this.breakpoint) {
+      const duplicate = this.scene.add.sprite(0, 0, this.organismData.texture);
+
+      duplicate.setScale(this.baseScale * 0.5);
+
+      this.duplicateContainer.add(duplicate);
+      this.duplicates.push(duplicate);
+
+      this.positionDuplicates();
+
+      this.breakpoint *= 2;
+    }
+
+    while (this.duplicates.length > 0 && this.hp <= 100 + this.breakpoint / 2) {
+      const duplicate = this.duplicates.pop();
+
+      if (duplicate) {
+        duplicate.destroy();
+      }
+
+      this.breakpoint /= 2;
+      this.positionDuplicates();
+    }
+  }
+
+  private positionDuplicates() {
+    const count = this.duplicates.length;
+
+    const radius = Math.min(this.displayWidth * 0.65, 100);
+
+    const startAngle = (170 * Math.PI) / 180; // 170° (just below horizontal left)
+    const arcSpan = (200 * Math.PI) / 180; // 200° sweep over the top to 10° (right)
+
+    this.duplicates.forEach((duplicate, index) => {
+      const progress = count === 1 ? 0.5 : index / (count - 1);
+      const angle = startAngle + progress * arcSpan;
+
+      const x = Math.cos(angle) * radius;
+      const y = Math.sin(angle) * radius;
+
+      duplicate.setPosition(x, y);
+    });
+  }
+
+  public getDuplicateContainer() {
+    return this.duplicateContainer;
+  }
+
+  public changeHealth(totalChange: number) {
+    if (totalChange === 0) return;
+
+    this.previousHP = this.hp;
+    this.hp += totalChange;
+
+    if (this.debugHealth) {
+      const debugMessage =
+        `Previous HP: ${this.previousHP}\n` +
+        `changeHealth(${totalChange})\n` +
+        `New HP: ${this.hp}`;
+
+      if (this.debugHealthText) {
+        this.debugHealthText.setText(debugMessage);
+        this.debugHealthText.setPosition(
+          this.x,
+          this.y - this.displayHeight / 2 - 20,
+        );
+      } else {
+        this.debugHealthText = this.scene.add
+          .text(this.x, this.y - this.displayHeight / 2 - 20, debugMessage, {
+            fontFamily: "monospace",
+            fontSize: "14px",
+            color: "#1605fa",
+            backgroundColor: "#ffffff",
+            padding: { x: 6, y: 4 },
+            align: "left",
+          })
+          .setOrigin(0.5, 1)
+          .setDepth(1000);
+
+        if (this.uiCamera) {
+          this.uiCamera.ignore(this.debugHealthText);
+        }
+      }
+    }
+
+    this.onHealthChanged?.(this, totalChange);
+
+    if (this.organismData.growth_types.includes("multiply")) {
+      this.updateDuplicates();
+    }
+    if (this.organismData.growth_types.includes("grow")) {
+      this.changeScale();
+    }
+  }
+
+  // Move organism
+  public override setPosition(
+    x: number,
+    y?: number,
+    z?: number,
+    w?: number,
+  ): this {
+    super.setPosition(x, y, z, w);
+
+    const currentX = this.x;
+    const currentY = this.y;
+
+    // Move the duplicate container to the organism's new position
+    if (this.duplicateContainer) {
+      this.duplicateContainer.setPosition(currentX, currentY);
+    }
+
+    // Keep name text aligned below the organism
+    if (this.nameText) {
+      const textOffsetY = this.displayHeight / 2 + 20;
+      this.nameText.setPosition(currentX, currentY + textOffsetY);
+    }
+
+    return this;
+  }
+
+  // Cleanup if organism is detroyed
+  public override destroy(fromScene?: boolean): void {
+    if (this.duplicateContainer) {
+      this.duplicateContainer.destroy(fromScene);
+    }
+    if (this.nameText) {
+      this.nameText.destroy(fromScene);
+    }
+    super.destroy(fromScene);
+  }
+
+  public highlight(duration = 2000) {
+    this.hintGlow.active = true;
+    this.scene.time.delayedCall(duration, () => {
+      this.hintGlow.active = false;
+    });
+  }
+
+  update() {}
+}
+
+=== FILE: src/game/entities/closebutton.tsx ===
+import Phaser from "phaser";
+import BaseButtonContainer from "./basebuttoncontainer";
+
+export default class CloseButton extends BaseButtonContainer {
+  constructor(scene: Phaser.Scene, x: number, y: number, label = "Close") {
+    super(scene, x, y, "closeButtonClicked", 90, 32, 10);
+
+    const background = scene.add.graphics();
+    const drawBackground = (alpha: number) => {
+      background.clear();
+      background.fillStyle(0x000000, alpha);
+      background.fillRoundedRect(
+        -this.buttonWidth / 2,
+        -this.buttonHeight / 2,
+        this.buttonWidth,
+        this.buttonHeight,
+        this.cornerRadius,
+      );
+    };
+    drawBackground(0.7);
+
+    const border = scene.add.graphics();
+    border.lineStyle(2, 0xffffff, 1);
+    border.strokeRoundedRect(
+      -this.buttonWidth / 2,
+      -this.buttonHeight / 2,
+      this.buttonWidth,
+      this.buttonHeight,
+      this.cornerRadius,
+    );
+
+    const text = scene.add
+      .text(0, 0, label, {
+        fontFamily: "monospace",
+        fontSize: "15px",
+        fontStyle: "bold",
+        color: "#ffffff",
+      })
+      .setOrigin(0.5);
+
+    this.add([background, border, text]);
+
+    this.on("pointerover", () => {
+      drawBackground(0.9);
+      text.setColor("#cccccc");
+    });
+
+    this.on("pointerout", () => {
+      drawBackground(0.7);
+      text.setColor("#ffffff");
+    });
+  }
+}
+
+=== FILE: src/game/entities/hintbutton.tsx ===
+import Phaser from "phaser";
+import BaseButtonContainer from "./basebuttoncontainer";
+
+export default class HintButton extends BaseButtonContainer {
+  constructor(scene: Phaser.Scene, x: number, y: number){
+    super(scene, x, y, "hintButtonClicked", 130, 36, 10);
+
+    const background = scene.add.graphics();
+    const drawBackground = (alpha: number) => {
+      background.clear();
+      background.fillStyle(0x000000, alpha);
+      background.fillRoundedRect(
+        -this.buttonWidth / 2,
+        -this.buttonHeight / 2,
+        this.buttonWidth,
+        this.buttonHeight,
+        this.cornerRadius,
+      );
+    };
+    drawBackground(0.7);
+
+    const border = scene.add.graphics();
+    border.lineStyle(3, 0xffffff, 1);
+    border.strokeRoundedRect(
+      -this.buttonWidth / 2,
+      -this.buttonHeight / 2,
+      this.buttonWidth,
+      this.buttonHeight,
+      this.cornerRadius,
+    );
+
+    const text = scene.add
+      .text(0, 0, "Hint 100", {
+        fontFamily: "monospace",
+        fontSize: "15px",
+        color: "#ffffff",
+      })
+      .setOrigin(0, 0.5);
+
+    const coin = scene.add.image(0, 0, "coin").setOrigin(0, 0.5).setScale(0.4);
+
+    const gap = 6;
+    const totalWidth = (text.width ?? 72) + gap + (coin.displayWidth ?? 19);
+    const startX = -totalWidth / 2;
+
+    text.setX(startX);
+    coin.setX(startX + (text.width ?? 72) + gap);
+
+    this.add([background, border, text, coin]);
+
+    this.on("pointerover", () => {
+      drawBackground(0.9);
+    });
+
+    this.on("pointerout", () => {
+      drawBackground(0.7);
+    });
+  }
+}
+
+=== FILE: src/game/entities/basebuttoncontainer.ts ===
+import Phaser from "phaser";
+
+export default class BaseButtonContainer extends Phaser.GameObjects.Container {
+    private eventName: string;
+    protected buttonWidth: number;
+    protected buttonHeight: number;
+    protected cornerRadius: number;
+
+    constructor(
+        scene: Phaser.Scene,
+        x: number,
+        y: number,
+        eventName: string,
+        buttonWidth: number,
+        buttonHeight: number,
+        cornerRadius: number,
+    ) {
+        super(scene, x, y);
+
+        this.eventName = eventName;
+        this.buttonWidth = buttonWidth;
+        this.buttonHeight = buttonHeight;
+        this.cornerRadius = cornerRadius
+
+        this.setSize(buttonWidth, buttonHeight);
+        this.setInteractive({ useHandCursor: true });
+        this.setScrollFactor(0);
+
+        this.on("pointerdown", this.handlePointerDown, this);
+
+        scene.add.existing(this);
+    }
+
+    private handlePointerDown(): void {
+        this.emit(this.eventName, this);
+    }
+}
+
+=== FILE: src/game/entities/cursorbutton.tsx ===
+import Phaser from "phaser";
+import BaseButtonSprite from "./basebuttonsprite";
+
+export default class CursorButton extends BaseButtonSprite {
+  constructor(scene: Phaser.Scene, x: number, y: number, texture: string) {
+    super(scene, x, y, texture, "cursorButtonClicked", 0.05);
+  }
+}
+
+=== FILE: src/game/entities/permanentarrow.tsx ===
+import Phaser from "phaser";
+import type Organism from "./organism";
+import { drawArrow } from "../services/DrawArrowService";
+import { arrowUIConfig, permanentArrowUIConfig } from "../config/uiConfig";
+
+export interface PermanentArrowConfig {
+  targetOffset?: number;
+  color?: number;
+  thickness?: number;
+  lateralOffset?: number;
+}
+
+interface PulseAnimation {
+  circle: Phaser.GameObjects.Arc;
+  progress: number;
+  tween: Phaser.Tweens.Tween;
+}
+
+const textureAlphaCache = new Map<
+  string,
+  { width: number; height: number; data: Uint8ClampedArray }
+>();
+
+export default class PermanentArrow {
+  public readonly key: string;
+  public readonly fromId: string;
+  public readonly toId: string;
+  public readonly graphics: Phaser.GameObjects.Graphics;
+  public dirty = true;
+
+  private readonly ownsGraphics: boolean;
+  private readonly scene: Phaser.Scene;
+  private readonly uiCamera: Phaser.Cameras.Scene2D.Camera;
+  private readonly arrowhitBox: Phaser.GameObjects.Zone;
+  private readonly onClicked: () => void;
+
+  private targetOffset: number;
+  private color: number;
+  private thickness: number;
+  private lateralOffset: number;
+
+  private pulses: PulseAnimation[] = [];
+
+  private fromX = 0;
+  private fromY = 0;
+  private toX = 0;
+  private toY = 0;
+  private lastFromOrgX = NaN;
+  private lastFromOrgY = NaN;
+  private lastToOrgX = NaN;
+  private lastToOrgY = NaN;
+  private visible = false;
+
+  private hitBounds = new Phaser.Geom.Rectangle();
+  private hitAreaRect = new Phaser.Geom.Rectangle(0, 0, 1, 1);
+  private hovered = false;
+
+  constructor(
+    scene: Phaser.Scene,
+    uiCamera: Phaser.Cameras.Scene2D.Camera,
+    fromId: string,
+    toId: string,
+    config: PermanentArrowConfig = {},
+    onClicked: () => void = () => undefined,
+    sharedGraphics?: Phaser.GameObjects.Graphics,
+  ) {
+    this.scene = scene;
+    this.uiCamera = uiCamera;
+    this.onClicked = onClicked;
+
+    this.fromId = fromId;
+    this.toId = toId;
+    this.key = JSON.stringify([fromId, toId]);
+
+    this.targetOffset =
+      config.targetOffset ?? permanentArrowUIConfig.defaultTargetOffset;
+    this.color = config.color ?? arrowUIConfig.positiveColor;
+    this.thickness =
+      config.thickness ?? permanentArrowUIConfig.defaultThickness;
+    this.lateralOffset =
+      config.lateralOffset ?? permanentArrowUIConfig.defaultLateralOffset;
+
+    if (sharedGraphics) {
+      this.graphics = sharedGraphics;
+      this.ownsGraphics = false;
+    } else {
+      this.graphics = this.scene.add.graphics();
+      this.graphics.setDepth(permanentArrowUIConfig.graphicsDepth);
+      this.uiCamera.ignore(this.graphics);
+      this.ownsGraphics = true;
+    }
+
+    this.arrowhitBox = this.scene.add.zone(0, 0, 1, 1);
+    this.arrowhitBox.setOrigin(0);
+    this.arrowhitBox.setDepth(permanentArrowUIConfig.hitZoneDepth);
+    this.arrowhitBox.setInteractive(
+      this.hitAreaRect,
+      (_hitArea, x, y) =>
+        this.isPointOnArrow(x + this.hitBounds.x, y + this.hitBounds.y),
+    );
+    this.arrowhitBox.on("pointerover", () => {
+      this.hovered = true;
+      this.dirty = true;
+      if (this.ownsGraphics) this.redrawStandalone();
+    });
+    this.arrowhitBox.on("pointerout", () => {
+      this.hovered = false;
+      this.dirty = true;
+      if (this.ownsGraphics) this.redrawStandalone();
+    });
+    this.arrowhitBox.on("pointerdown", () => this.onClicked());
+    this.arrowhitBox.input!.enabled = false;
+    this.uiCamera.ignore(this.arrowhitBox);
+  }
+
+  public setStyle(config: Partial<PermanentArrowConfig>): void {
+    let changed = false;
+    if (config.targetOffset !== undefined && config.targetOffset !== this.targetOffset) {
+      this.targetOffset = config.targetOffset;
+      changed = true;
+    }
+    if (config.color !== undefined && config.color !== this.color) {
+      this.color = config.color;
+      changed = true;
+    }
+    if (config.thickness !== undefined && config.thickness !== this.thickness) {
+      this.thickness = config.thickness;
+      changed = true;
+    }
+    if (config.lateralOffset !== undefined && config.lateralOffset !== this.lateralOffset) {
+      this.lateralOffset = config.lateralOffset;
+      changed = true;
+    }
+    if (changed) {
+      this.lastFromOrgX = NaN;
+      this.dirty = true;
+    }
+  }
+
+  public playPulse(healthChange: number): void {
+    const color =
+      healthChange >= 0
+        ? permanentArrowUIConfig.pulsePositiveColor
+        : permanentArrowUIConfig.pulseNegativeColor;
+
+    const circle = this.scene.add.circle(
+      this.fromX,
+      this.fromY,
+      permanentArrowUIConfig.pulseRadius,
+      color,
+    );
+
+    circle.setStrokeStyle(
+      permanentArrowUIConfig.pulseColorGlowRadius || 8,
+      color,
+      0.35,
+    );
+    circle.setBlendMode(Phaser.BlendModes.ADD);
+    circle.setDepth(permanentArrowUIConfig.pulseDepth);
+    circle.setAlpha(permanentArrowUIConfig.pulseAlpha);
+    this.uiCamera.ignore(circle);
+
+    const pulse: PulseAnimation = {
+      circle,
+      progress: 0,
+      tween: undefined as unknown as Phaser.Tweens.Tween,
+    };
+
+    pulse.tween = this.scene.tweens.add({
+      targets: pulse,
+      progress: 1,
+      duration: permanentArrowUIConfig.pulseDuration,
+      ease: "Linear",
+      onComplete: () => {
+        circle.destroy();
+        this.pulses = this.pulses.filter((p) => p !== pulse);
+      },
+    });
+
+    this.pulses.push(pulse);
+  }
+
+  private updatePulsePosition(): void {
+    for (const pulse of this.pulses) {
+      const t = pulse.progress;
+      pulse.circle.setPosition(
+        this.fromX + (this.toX - this.fromX) * t,
+        this.fromY + (this.toY - this.fromY) * t,
+      );
+    }
+  }
+
+  private getOrganismPixelAlpha(
+    organism: Organism,
+    worldX: number,
+    worldY: number,
+  ): number {
+    const scaleX = organism.scaleX || 1;
+    const scaleY = organism.scaleY || 1;
+    const textureWidth = organism.width ?? 0;
+    const textureHeight = organism.height ?? 0;
+    if (textureWidth <= 0 || textureHeight <= 0) return 255;
+
+    const textureX = Math.round(
+      (worldX - organism.x) / scaleX + textureWidth / 2,
+    );
+    const textureY = Math.round(
+      (worldY - organism.y) / scaleY + textureHeight / 2,
+    );
+
+    if (
+      textureX < 0 ||
+      textureX >= textureWidth ||
+      textureY < 0 ||
+      textureY >= textureHeight
+    ) {
+      return 0;
+    }
+
+    const textureKey = organism.texture?.key ?? organism.organismData?.texture;
+    if (!textureKey) return 255;
+
+    let cached = textureAlphaCache.get(textureKey);
+    if (!cached && this.scene.textures?.exists(textureKey)) {
+      const tex = this.scene.textures.get(textureKey);
+      const sourceImage = tex.getSourceImage() as HTMLImageElement | HTMLCanvasElement;
+      if (sourceImage && typeof document !== "undefined") {
+        const canvas = document.createElement("canvas");
+        canvas.width = textureWidth;
+        canvas.height = textureHeight;
+        const ctx = canvas.getContext("2d");
+        if (ctx) {
+          ctx.drawImage(sourceImage, 0, 0);
+          cached = {
+            width: textureWidth,
+            height: textureHeight,
+            data: ctx.getImageData(0, 0, textureWidth, textureHeight).data,
+          };
+          textureAlphaCache.set(textureKey, cached);
+        }
+      }
+    }
+
+    if (cached) {
+      return cached.data[(textureY * cached.width + textureX) * 4 + 3] ?? 0;
+    }
+
+    const getPixelAlpha = this.scene.textures?.getPixelAlpha;
+    return typeof getPixelAlpha === "function"
+      ? (getPixelAlpha.call(this.scene.textures, textureX, textureY, textureKey) ?? 0)
+      : 255;
+  }
+
+  private getOrganismBorderPoint(
+    organism: Organism,
+    ux: number,
+    uy: number,
+    lateralShiftX: number,
+    lateralShiftY: number,
+  ): { x: number; y: number } {
+    const halfDisplayWidth = (organism.displayWidth ?? 0) / 2;
+    const halfDisplayHeight = (organism.displayHeight ?? 0) / 2;
+
+    if (halfDisplayWidth <= 0 || halfDisplayHeight <= 0) {
+      return {
+        x: organism.x + lateralShiftX + ux * this.targetOffset,
+        y: organism.y + lateralShiftY + uy * this.targetOffset,
+      };
+    }
+
+    const borderPadding = 10;
+    const maxSpriteDistance = Math.hypot(halfDisplayWidth, halfDisplayHeight);
+    let spriteBorderDistance = 0;
+
+    for (
+      let distanceFromCenter = maxSpriteDistance;
+      distanceFromCenter >= 0;
+      distanceFromCenter -= 2
+    ) {
+      const worldX = organism.x + lateralShiftX + ux * distanceFromCenter;
+      const worldY = organism.y + lateralShiftY + uy * distanceFromCenter;
+      if (this.getOrganismPixelAlpha(organism, worldX, worldY) > 10) {
+        spriteBorderDistance = distanceFromCenter + borderPadding;
+        break;
+      }
+    }
+
+    const halfNameTextWidth =
+      (organism.nameText?.width ?? 0) / 2 + borderPadding;
+    const nameTextBottomOffset =
+      organism.nameText?.y !== undefined
+        ? organism.nameText.y -
+        organism.y +
+        (organism.nameText.height ?? 20) / 2
+        : halfDisplayHeight + 35;
+    const nameTextTopY = halfDisplayHeight - 4;
+    const nameTextBottomY =
+      Math.max(halfDisplayHeight, nameTextBottomOffset) + borderPadding;
+
+    const minDistanceX =
+      ux > 1e-6
+        ? (-halfNameTextWidth - lateralShiftX) / ux
+        : ux < -1e-6
+          ? (halfNameTextWidth - lateralShiftX) / ux
+          : -Infinity;
+    const maxDistanceX =
+      ux > 1e-6
+        ? (halfNameTextWidth - lateralShiftX) / ux
+        : ux < -1e-6
+          ? (-halfNameTextWidth - lateralShiftX) / ux
+          : Infinity;
+
+    const minDistanceY =
+      uy > 1e-6
+        ? (nameTextTopY - lateralShiftY) / uy
+        : uy < -1e-6
+          ? (nameTextBottomY - lateralShiftY) / uy
+          : -Infinity;
+    const maxDistanceY =
+      uy > 1e-6
+        ? (nameTextBottomY - lateralShiftY) / uy
+        : uy < -1e-6
+          ? (nameTextTopY - lateralShiftY) / uy
+          : Infinity;
+
+    const boxEntryDistance = Math.max(minDistanceX, minDistanceY);
+    const boxExitDistance = Math.min(maxDistanceX, maxDistanceY);
+    const nameTextBorderDistance =
+      boxExitDistance >= Math.max(0, boxEntryDistance) ? boxExitDistance : 0;
+
+    const borderDistance = Math.max(
+      spriteBorderDistance,
+      nameTextBorderDistance,
+    );
+
+    return {
+      x: organism.x + lateralShiftX + ux * borderDistance,
+      y: organism.y + lateralShiftY + uy * borderDistance,
+    };
+  }
+
+  public update(from: Organism, to: Organism): void {
+    const dx = to.x - from.x;
+    const dy = to.y - from.y;
+    const distance = Math.hypot(dx, dy);
+
+    if (distance === 0) {
+      if (this.visible) {
+        this.visible = false;
+        this.dirty = true;
+        if (this.ownsGraphics) this.graphics.clear();
+      }
+      return;
+    }
+
+    this.visible = true;
+
+    const moved =
+      !Number.isFinite(this.lastFromOrgX) ||
+      !Number.isFinite(this.lastFromOrgY) ||
+      !Number.isFinite(this.lastToOrgX) ||
+      !Number.isFinite(this.lastToOrgY) ||
+      Math.abs(from.x - this.lastFromOrgX) > 0.1 ||
+      Math.abs(from.y - this.lastFromOrgY) > 0.1 ||
+      Math.abs(to.x - this.lastToOrgX) > 0.1 ||
+      Math.abs(to.y - this.lastToOrgY) > 0.1;
+
+    if (moved) {
+      this.lastFromOrgX = from.x;
+      this.lastFromOrgY = from.y;
+      this.lastToOrgX = to.x;
+      this.lastToOrgY = to.y;
+
+      const ux = dx / distance;
+      const uy = dy / distance;
+      const lateralShiftX = -uy * this.lateralOffset;
+      const lateralShiftY = ux * this.lateralOffset;
+
+      const fromBorderPoint = this.getOrganismBorderPoint(
+        from,
+        ux,
+        uy,
+        lateralShiftX,
+        lateralShiftY,
+      );
+      const toBorderPoint = this.getOrganismBorderPoint(
+        to,
+        -ux,
+        -uy,
+        lateralShiftX,
+        lateralShiftY,
+      );
+
+      this.fromX = fromBorderPoint.x;
+      this.fromY = fromBorderPoint.y;
+      this.toX = toBorderPoint.x;
+      this.toY = toBorderPoint.y;
+
+      this.updateHitZone();
+      this.dirty = true;
+
+      if (this.ownsGraphics) {
+        this.redrawStandalone();
+      }
+    }
+
+    if (this.pulses.length > 0) {
+      this.updatePulsePosition();
+    }
+  }
+
+  /**
+   * Appends this arrow's geometry onto a Graphics instance without clearing it.
+   */
+  public draw(targetGraphics: Phaser.GameObjects.Graphics = this.graphics): void {
+    if (!this.visible) return;
+
+    drawArrow(targetGraphics, {
+      x1: this.fromX,
+      y1: this.fromY,
+      x2: this.toX,
+      y2: this.toY,
+      color: this.hovered ? permanentArrowUIConfig.hoverColor : this.color,
+      thickness: this.hovered
+        ? this.thickness + permanentArrowUIConfig.hoverThicknessBonus
+        : this.thickness,
+    });
+  }
+
+  private redrawStandalone(): void {
+    this.graphics.clear();
+    this.draw(this.graphics);
+    this.dirty = false;
+  }
+
+  public setCursorMode(enabled: boolean): void {
+    this.arrowhitBox.input!.enabled = enabled;
+    if (!enabled && this.hovered) {
+      this.hovered = false;
+      this.dirty = true;
+      if (this.ownsGraphics) this.redrawStandalone();
+    }
+  }
+
+  private updateHitZone(): void {
+    const padding =
+      this.thickness + permanentArrowUIConfig.hitBoxPaddingOffset;
+    const minX = Math.min(this.fromX, this.toX) - padding;
+    const minY = Math.min(this.fromY, this.toY) - padding;
+    const width = Math.max(1, Math.abs(this.toX - this.fromX) + padding * 2);
+    const height = Math.max(1, Math.abs(this.toY - this.fromY) + padding * 2);
+
+    this.hitBounds.setTo(minX, minY, width, height);
+    this.arrowhitBox.setPosition(minX, minY);
+    this.arrowhitBox.setSize(width, height);
+    this.hitAreaRect.setTo(0, 0, width, height);
+  }
+
+  private isPointOnArrow(x: number, y: number): boolean {
+    const dx = this.toX - this.fromX;
+    const dy = this.toY - this.fromY;
+    const lengthSquared = dx * dx + dy * dy;
+
+    if (lengthSquared === 0) return false;
+
+    const projection = Math.max(
+      0,
+      Math.min(
+        1,
+        ((x - this.fromX) * dx + (y - this.fromY) * dy) / lengthSquared,
+      ),
+    );
+    const closestX = this.fromX + projection * dx;
+    const closestY = this.fromY + projection * dy;
+
+    return (
+      Math.hypot(x - closestX, y - closestY) <=
+      this.thickness + permanentArrowUIConfig.hitDistanceToleranceOffset
+    );
+  }
+
+  public destroy(): void {
+    for (const pulse of this.pulses) {
+      pulse.tween.remove();
+      pulse.circle.destroy();
+    }
+    this.pulses = [];
+    if (this.ownsGraphics) {
+      this.graphics.destroy();
+    }
+    this.arrowhitBox.destroy();
+  }
+}
+=== FILE: src/game/entities/basebuttonsprite.ts ===
+import Phaser from "phaser";
+
+export default class BaseButtonSprite extends Phaser.GameObjects.Sprite {
+    private eventName: string;
+
+    constructor(
+        scene: Phaser.Scene,
+        x: number,
+        y: number,
+        texture: string,
+        eventName: string,
+        scale: number,
+    ) {
+        super(scene, x, y, texture);
+        this.eventName = eventName;
+        this.setScale(scale);
+        this.setInteractive();
+        this.setScrollFactor(0);
+
+        this.on("pointerover", this.handlePointerOver, this);
+        this.on("pointerout", this.handlePointerOut, this);
+        this.on("pointerdown", this.handlePointerDown, this);
+        
+        scene.add.existing(this);
+    }
+
+    protected handlePointerOver(): void {
+        this.setAlpha(0.8);
+    }
+
+    protected handlePointerOut(): void {
+        this.setAlpha(1);
+    }
+    
+    private handlePointerDown(): void {
+        this.emit(this.eventName, this)
+        
+    }
+}
+
+=== FILE: src/game/entities/infobutton.tsx ===
+import Phaser from "phaser";
+import BaseButtonSprite from "./basebuttonsprite";
+
+export default class InfoButton extends BaseButtonSprite {
+    constructor (scene: Phaser.Scene, x: number, y: number) {
+        super(scene, x, y, "infobutton_sprite", "infoButtonClicked", 0.05);
+    }
+
+    protected override handlePointerOver(): void {
+            this.setTint(0x777777);
+    };
+
+    protected override handlePointerOut(): void {
+        this.clearTint();
+    }
+}
+
