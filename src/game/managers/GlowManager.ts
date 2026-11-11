@@ -7,38 +7,87 @@ export default class GlowManager {
   private activeGlows = new Map<
     Organism,
     {
-      glows: Phaser.Filters.Glow[],
-      tweens: Phaser.Tweens.Tween[];}
+      glows: Phaser.Filters.Glow[];
+      tweens: Phaser.Tweens.Tween[];
+    }
   >();
   private config: GlowConfig;
 
-  constructor(
-    scene: Phaser.Scene,
-    config: GlowConfig = glowConfig,
-  ) {
+  constructor(scene: Phaser.Scene, config: GlowConfig = glowConfig) {
     this.scene = scene;
     this.config = config;
   }
 
-  public healthChanged(organism: Organism, amount: number,): void {
+  public healthChanged(organism: Organism, amount: number): void {
     if (amount === 0) return;
 
-    this.removeGlow(organism);
+    const color =
+      amount > 0 ? this.config.positiveGlow : this.config.negativeGlow;
 
-    organism.enableFilters();
-    organism.duplicateContainer.enableFilters();
+    // Reuse active shaders and restart tweens if already glowing
+    const existing = this.activeGlows.get(organism);
+    if (existing) {
+      existing.glows[0].color = color;
+      existing.glows[1].color = color;
+      existing.tweens.forEach((tween) => tween.restart());
+      return;
+    }
 
-    const color = amount > 0 ? this.config.positiveGlow : this.config.negativeGlow;
+    if (!organism.filters) {
+      organism.enableFilters();
+    }
+    if (!organism.duplicateContainer.filters) {
+      organism.duplicateContainer.enableFilters();
+    }
 
-    const glow = organism.filters!.external.addGlow(color, undefined, undefined, undefined, undefined, this.config.glowQuality);
+    organism.renderFilters = true;
+    organism.duplicateContainer.renderFilters = true;
+
+    // 1. Add inner white glow first so it renders directly around the sprite
+    const whiteGlow = organism.filters!.internal.addGlow(
+      this.config.whiteGlow,
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      this.config.glowQuality,
+    );
+    whiteGlow.setPaddingOverride(null);
+
+    const duplicateWhiteGlow =
+      organism.duplicateContainer.filters!.internal.addGlow(
+        this.config.whiteGlow,
+        undefined,
+        undefined,
+        undefined,
+        undefined,
+        this.config.glowQuality,
+      );
+    duplicateWhiteGlow.setPaddingOverride(null);
+
+    // 2. Add colored outer glow second so it wraps around the white glow pass
+    const glow = organism.filters!.internal.addGlow(
+      color,
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      this.config.glowQuality,
+    );
     glow.setPaddingOverride(null);
-    const duplicateGlow = organism.duplicateContainer.filters!.external.addGlow(color, undefined, undefined, undefined, undefined, this.config.glowQuality);
+
+    const duplicateGlow = organism.duplicateContainer.filters!.internal.addGlow(
+      color,
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      this.config.glowQuality,
+    );
     duplicateGlow.setPaddingOverride(null);
 
-    const whiteGlow = organism.filters!.internal.addGlow(this.config.whiteGlow, undefined, undefined, undefined, undefined, this.config.glowQuality)
-    whiteGlow.setPaddingOverride(null);
-    const duplicateWhiteGlow = organism.duplicateContainer.filters!.internal.addGlow(this.config.whiteGlow, undefined, undefined, undefined, undefined, this.config.glowQuality);
-    duplicateWhiteGlow.setPaddingOverride(null);
+    const isOuterLonger =
+      this.config.outerDuration >= this.config.innerDuration;
 
     const outerGlow = this.scene.tweens.add({
       targets: [glow, duplicateGlow],
@@ -46,11 +95,9 @@ export default class GlowManager {
       duration: this.config.outerDuration,
       yoyo: true,
       loop: this.config.loop,
-      ease:"Sine.inOut",
-      onComplete: () => {
-      this.removeGlow(organism);
-    }
-  });
+      ease: "Sine.inOut",
+      onComplete: isOuterLonger ? () => this.removeGlow(organism) : undefined,
+    });
 
     const innerGlow = this.scene.tweens.add({
       targets: [whiteGlow, duplicateWhiteGlow],
@@ -59,9 +106,8 @@ export default class GlowManager {
       yoyo: true,
       loop: this.config.loop,
       ease: "Sine.inOut",
-      onComplete: () => {
-        this.removeGlow(organism);
-    }});
+      onComplete: !isOuterLonger ? () => this.removeGlow(organism) : undefined,
+    });
 
     this.activeGlows.set(organism, {
       glows: [glow, duplicateGlow, whiteGlow, duplicateWhiteGlow],
@@ -76,14 +122,18 @@ export default class GlowManager {
     active.tweens.forEach((tween) => tween.stop());
     active.glows.forEach((glow) => glow.destroy());
 
+    organism.filters?.internal.clear?.();
+    organism.duplicateContainer.filters?.internal.clear?.();
+
+    organism.renderFilters = false;
+    organism.duplicateContainer.renderFilters = false;
+
     this.activeGlows.delete(organism);
   }
 
   public destroy(): void {
-    this.activeGlows.forEach(({ glows, tweens }) => {
-      tweens.forEach((tween) => tween.stop());
-      glows.forEach((glow) => glow.destroy());
-    });
-    this.activeGlows.clear();
+    for (const organism of this.activeGlows.keys()) {
+      this.removeGlow(organism);
+    }
   }
 }
