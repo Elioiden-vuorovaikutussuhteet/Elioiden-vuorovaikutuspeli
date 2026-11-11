@@ -32,6 +32,7 @@ export default class ArrowManager {
   private cursorMode = false;
   private selectedOrganism: Organism | null = null;
   private interactions: Connection[];
+  private readonly onRightArrowDrawn?: () => void;
   private greenButton?: ArrowButtons;
   private redButton?: ArrowButtons;
 
@@ -57,6 +58,7 @@ export default class ArrowManager {
     scoreManager: ScoreManager,
     interactions: Connection[],
     forceConfig: Partial<ForceLayoutConfig> = {},
+    onRightArrowDrawn?: () => void,
   ) {
     this.scene = scene;
     this.renderer = new ArrowRenderer(scene, uiCamera);
@@ -65,6 +67,7 @@ export default class ArrowManager {
     this.organismManager = organismManager;
     this.scoreManager = scoreManager;
     this.interactions = interactions;
+    this.onRightArrowDrawn = onRightArrowDrawn;
 
     this.forceLayout = new ForceLayoutManager(
       scene.scale.width,
@@ -166,7 +169,9 @@ export default class ArrowManager {
 
       if (isCorrect) {
         this.interactions.push({ from: firstId, to: secondId });
+        this.recalculateLayout();
         this.redrawPermanentArrows();
+        this.arrowsDirty = false;
 
         const textId = getInteractionId(firstId, secondId);
         this.scene.scene.launch("PopupScene", { textId });
@@ -205,7 +210,7 @@ export default class ArrowManager {
     }
 
     this.selectedOrganism = null;
-    this.updatePreview();
+    this.onRightArrowDrawn?.();
   }
 
   public redrawPermanentArrows(): void {
@@ -273,6 +278,10 @@ export default class ArrowManager {
     this.arrowColorValue = value;
   }
 
+  public areAllOrganismsSpawned(): boolean {
+    return this.nextOrganismToSpawn >= this.organismSpawnOrder.length;
+  }
+
   public clearPreview(): void {
     this.renderer.clearPreview();
     this.selectedOrganism = null;
@@ -329,5 +338,6 @@ export default class ArrowManager {
       this.redrawPermanentArrows();
       this.arrowsDirty = false;
     }
+    this.updatePreview();
   }
 }

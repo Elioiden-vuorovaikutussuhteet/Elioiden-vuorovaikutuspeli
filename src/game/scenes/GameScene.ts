@@ -14,7 +14,7 @@ import type { Connection } from "../types/Connection";
 import CursorManager from "../managers/CursorManager";
 import { glowConfig } from "../config/glowConfig";
 import { gameSceneConfig, type GameSceneConfig } from "../config/sceneConfig";
-//import RandomEventManager from "../managers/RandomEventManager";
+import RandomEventManager from "../managers/RandomEventManager";
 
 export default class GameScene extends Phaser.Scene {
   private cameraManager!: CameraManager;
@@ -27,8 +27,10 @@ export default class GameScene extends Phaser.Scene {
   private connectionManager!: ConnectionManager;
   private scoreManager!: ScoreManager;
   private cursorManager!: CursorManager;
+  private randomEventManager = new RandomEventManager();
+  private randomEventsStarted = false;
   private config: GameSceneConfig;
-  //private randomEventManager = new RandomEventManager();
+  
 
   constructor(config?: GameSceneConfig) {
     const resolvedConfig =
@@ -43,7 +45,7 @@ export default class GameScene extends Phaser.Scene {
       this.load.image(image.key, image.file);
     }
   }
-
+   
   create() {
     this.cameraManager = new CameraManager(this);
     this.uiCamera = this.cameraManager.getUICamera();
@@ -77,7 +79,7 @@ export default class GameScene extends Phaser.Scene {
       rightConnections,
       interactions,
     );
-
+    //undefined is needed for forceConfig
     this.arrowManager = new ArrowManager(
       this,
       this.uiCamera,
@@ -86,8 +88,19 @@ export default class GameScene extends Phaser.Scene {
       this.organismManager,
       this.scoreManager,
       interactions,
+      undefined,
+      this.updateGameCompletion.bind(this),
     );
     this.cursorManager = new CursorManager(this, this.arrowManager);
+
+    // creates random event spawning command if game started in development mode
+    if (import.meta.env?.DEV && typeof window !== "undefined") {
+      window.spawnRandomEvent = () => {
+        this.randomEventManager.triggerRandomEvent(
+          this.organismManager.getOrganisms(),
+        );
+      };
+    }
 
     this.scoreManager.outOfMoney = () => {
       this.scene.pause();
@@ -166,7 +179,19 @@ export default class GameScene extends Phaser.Scene {
     });
   }
 
-  //TODO: method for random event start when all arrows have been drawn
+  //this starts random events after all organisms have spawned & all right arrows have been drawn
+  private updateGameCompletion(): void {
+    const gameComplete =
+      this.arrowManager.areAllOrganismsSpawned() &&
+      this.connectionManager.checkConnections();
+
+    if (!gameComplete || this.randomEventsStarted) return;
+
+    this.randomEventsStarted = true;
+    this.time.delayedCall(this.config.randomEventSpawnDelayMs, () => {
+      this.randomEventManager.startRandomEvents(this, this.organismManager.getOrganisms());
+    });
+  }
 
   update() {
     this.cameraManager.update();
