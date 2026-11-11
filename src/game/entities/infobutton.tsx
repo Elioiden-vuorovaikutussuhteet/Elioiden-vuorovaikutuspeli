@@ -1,7 +1,7 @@
 import Phaser from "phaser";
-import Button from "./button";
+import BaseButtonSprite from "./basebuttonsprite";
 
-export default class InfoButton extends Button {
+export default class InfoButton extends BaseButtonSprite {
     constructor (scene: Phaser.Scene, x: number, y: number) {
         super(scene, x, y, "infobutton_sprite", "infoButtonClicked", 0.05);
     }

@@ -1,6 +1,6 @@
 import Phaser from "phaser";
 
-export default class Button extends Phaser.GameObjects.Sprite {
+export default class BaseButtonSprite extends Phaser.GameObjects.Sprite {
     private eventName: string;
 
     constructor(

@@ -1,7 +1,7 @@
 import Phaser from "phaser";
-import Button from "./button";
+import BaseButtonSprite from "./basebuttonsprite";
 
-export default class ArrowButton extends Button {
+export default class ArrowButton extends BaseButtonSprite {
   private selected = false;
 
   constructor(scene: Phaser.Scene, x: number, y: number, texture: string) {

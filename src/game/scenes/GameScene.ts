@@ -88,7 +88,7 @@ export default class GameScene extends Phaser.Scene {
       this.organismManager,
       this.scoreManager,
       interactions,
-      undefined,
+      { centerY: this.scale.height * 0.4 },
       this.updateGameCompletion.bind(this),
     );
     this.cursorManager = new CursorManager(this, this.arrowManager);
