@@ -23,7 +23,7 @@ describe("GlowManager", () => {
 
   const createMockFilterList = () => ({
     addGlow: vi.fn((color: number) => createMockGlow(color)),
-    clear: vi.fn(),
+    remove: vi.fn(),
   });
 
   const createMockOrganism = (): Organism => {
@@ -38,8 +38,9 @@ describe("GlowManager", () => {
 
     const duplicateContainer = {
       filters: null as typeof dupFilters | null,
-      renderFilters: false,
-      enableFilters: vi.fn(function (this: { filters: typeof dupFilters | null }) {
+      enableFilters: vi.fn(function (this: {
+        filters: typeof dupFilters | null;
+      }) {
         this.filters = dupFilters;
         return this;
       }),
@@ -47,8 +48,9 @@ describe("GlowManager", () => {
 
     const organism = {
       filters: null as typeof orgFilters | null,
-      renderFilters: false,
-      enableFilters: vi.fn(function (this: { filters: typeof orgFilters | null }) {
+      enableFilters: vi.fn(function (this: {
+        filters: typeof orgFilters | null;
+      }) {
         this.filters = orgFilters;
         return this;
       }),
@@ -95,8 +97,6 @@ describe("GlowManager", () => {
 
     expect(organism.enableFilters).toHaveBeenCalledOnce();
     expect(organism.duplicateContainer.enableFilters).toHaveBeenCalledOnce();
-    expect(organism.renderFilters).toBe(true);
-    expect(organism.duplicateContainer.renderFilters).toBe(true);
 
     expect(organism.filters!.internal.addGlow).toHaveBeenNthCalledWith(
       1,
@@ -138,26 +138,44 @@ describe("GlowManager", () => {
     expect(outerGlowInstance.color).toBe(glowConfig.negativeGlow);
   });
 
-  it("clears internal filters and disables renderFilters on tween completion", () => {
+  it("removes only its own internal filters and destroys glows on tween completion", () => {
     const organism = createMockOrganism();
 
     glowManager.healthChanged(organism, -10);
 
-    const onComplete = (
-      mockTweens[0].config.onComplete ?? mockTweens[1].config.onComplete
-    ) as () => void;
+    const whiteGlow = vi.mocked(organism.filters!.internal.addGlow).mock
+      .results[0].value;
+    const outerGlow = vi.mocked(organism.filters!.internal.addGlow).mock
+      .results[1].value;
+    const dupWhiteGlow = vi.mocked(
+      organism.duplicateContainer.filters!.internal.addGlow,
+    ).mock.results[0].value;
+    const dupOuterGlow = vi.mocked(
+      organism.duplicateContainer.filters!.internal.addGlow,
+    ).mock.results[1].value;
+
+    const onComplete = (mockTweens[0].config.onComplete ??
+      mockTweens[1].config.onComplete) as () => void;
     expect(onComplete).toBeTypeOf("function");
 
     onComplete();
 
     expect(mockTweens[0].stop).toHaveBeenCalledOnce();
     expect(mockTweens[1].stop).toHaveBeenCalledOnce();
-    expect(organism.filters!.internal.clear).toHaveBeenCalledOnce();
+
+    expect(organism.filters!.internal.remove).toHaveBeenCalledWith(outerGlow);
+    expect(organism.filters!.internal.remove).toHaveBeenCalledWith(whiteGlow);
     expect(
-      organism.duplicateContainer.filters!.internal.clear,
-    ).toHaveBeenCalledOnce();
-    expect(organism.renderFilters).toBe(false);
-    expect(organism.duplicateContainer.renderFilters).toBe(false);
+      organism.duplicateContainer.filters!.internal.remove,
+    ).toHaveBeenCalledWith(dupOuterGlow);
+    expect(
+      organism.duplicateContainer.filters!.internal.remove,
+    ).toHaveBeenCalledWith(dupWhiteGlow);
+
+    expect(outerGlow.destroy).toHaveBeenCalledOnce();
+    expect(whiteGlow.destroy).toHaveBeenCalledOnce();
+    expect(dupOuterGlow.destroy).toHaveBeenCalledOnce();
+    expect(dupWhiteGlow.destroy).toHaveBeenCalledOnce();
   });
 
   it("cleans up all active glows and tweens on destroy()", () => {
@@ -169,9 +187,7 @@ describe("GlowManager", () => {
 
     glowManager.destroy();
 
-    expect(first.filters!.internal.clear).toHaveBeenCalledOnce();
-    expect(second.filters!.internal.clear).toHaveBeenCalledOnce();
-    expect(first.renderFilters).toBe(false);
-    expect(second.renderFilters).toBe(false);
+    expect(first.filters!.internal.remove).toHaveBeenCalledTimes(2);
+    expect(second.filters!.internal.remove).toHaveBeenCalledTimes(2);
   });
 });
