@@ -47,9 +47,9 @@ export default class PopupScene extends Phaser.Scene {
       this.config.maxHeight,
     );
 
-    const rightMargin = width * this.config.rightMarginRatio;
-    const menuX = width - menuWidth - rightMargin;
-    const menuY = (height - menuHeight) / this.config.topOffsetDivisor;
+    const bottomMargin = height * this.config.rightMarginRatio;
+    const menuX = (width - menuWidth) / 2;
+    const menuY = height - menuHeight - bottomMargin;
 
     const background = this.add.graphics();
     background.fillStyle(
