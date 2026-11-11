@@ -118,7 +118,6 @@ export default class GameScene extends Phaser.Scene {
       initialOrganism.id,
     );
 
-    //Eventlistener for: If players clicks on empty space, preview arrow disappears
     this.input.on(
       "pointerdown",
       (
