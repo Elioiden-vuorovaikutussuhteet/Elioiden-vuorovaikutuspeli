@@ -126,8 +126,10 @@ export default class ForceLayoutManager {
       .alpha(cfg.reheatAlpha);
   }
 
-  public step(): void {
-    if (this.simulation.alpha() <= this.simulation.alphaMin()) return;
+  public step(): boolean {
+    if (this.simulation.alpha() <= this.simulation.alphaMin()) {
+      return false;
+    }
 
     this.simulation.tick();
 
@@ -140,6 +142,7 @@ export default class ForceLayoutManager {
       node.y = clampedY;
       node.organism.setPosition(clampedX, clampedY);
     }
+    return true;
   }
 
   private syncNodes(organisms: Organism[]): ForceNode[] {
