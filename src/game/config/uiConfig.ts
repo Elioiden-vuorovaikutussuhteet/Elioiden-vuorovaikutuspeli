@@ -1,44 +1,60 @@
-export interface ArrowUIConfig {
-  positiveColor: number;
-  negativeColor: number;
-  permanentThickness: number;
-  previewThickness: number;
-  bidirectionalOffset: number;
-}
+import { z } from "zod";
 
-export interface PermanentArrowUIConfig {
-  defaultTargetOffset: number;
-  defaultThickness: number;
-  defaultLateralOffset: number;
-  graphicsDepth: number;
-  hitZoneDepth: number;
-  hoverColor: number;
-  hoverThicknessBonus: number;
-  hitBoxPaddingOffset: number;
-  hitDistanceToleranceOffset: number;
-  pulsePositiveColor: number;
-  pulseNegativeColor: number;
-  pulseRadius: number;
-  pulseDepth: number;
-  pulseAlpha: number;
-  pulseDuration: number;
-  pulseColorInsideGlow: number,
-  pulseColorInsideOpacity: number,
-  pulseColorInside: number;
-  pulseColorGlowRadius: number,
-  pulseColorGlowIntensity: number,
-}
+export const ArrowUIConfigSchema = z.object({
+  positiveColor: z.number().int().min(0).max(0xffffff).meta({ input: "color" }),
+  negativeColor: z.number().int().min(0).max(0xffffff).meta({ input: "color" }),
+  permanentThickness: z.number(),
+  previewThickness: z.number(),
+  bidirectionalOffset: z.number(),
+});
 
-export interface ButtonUIConfig {
-  arrowButtonX: number;
-  arrowButtonYOffset: number;
-}
+export type ArrowUIConfig = z.infer<typeof ArrowUIConfigSchema>;
 
-export interface UIConfig {
-  arrows: ArrowUIConfig;
-  permanentArrow: PermanentArrowUIConfig;
-  buttons: ButtonUIConfig;
-}
+export const PermanentArrowUIConfigSchema = z.object({
+  defaultTargetOffset: z.number(),
+  defaultThickness: z.number(),
+  defaultLateralOffset: z.number(),
+  graphicsDepth: z.number(),
+  hitZoneDepth: z.number(),
+
+  hoverColor: z.number().int().min(0).max(0xffffff).meta({ input: "color" }),
+  hoverThicknessBonus: z.number(),
+
+  hitBoxPaddingOffset: z.number(),
+  hitDistanceToleranceOffset: z.number(),
+
+  pulsePositiveColor: z.number().int().min(0).max(0xffffff).meta({ input: "color" }),
+  pulseNegativeColor: z.number().int().min(0).max(0xffffff).meta({ input: "color" }),
+  pulseRadius: z.number(),
+  pulseDepth: z.number(),
+  pulseAlpha: z.number(),
+  pulseDuration: z.number(),
+
+  pulseColorInsideGlow: z.number(),
+  pulseColorInsideOpacity: z.number(),
+  pulseColorInside: z.number().int().min(0).max(0xffffff).meta({ input: "color" }),
+  pulseColorGlowRadius: z.number(),
+  pulseColorGlowIntensity: z.number(),
+});
+
+export type PermanentArrowUIConfig = z.infer<
+  typeof PermanentArrowUIConfigSchema
+>;
+
+export const ButtonUIConfigSchema = z.object({
+  arrowButtonX: z.number(),
+  arrowButtonYOffset: z.number(),
+});
+
+export type ButtonUIConfig = z.infer<typeof ButtonUIConfigSchema>;
+
+export const UIConfigSchema = z.object({
+  arrows: ArrowUIConfigSchema,
+  permanentArrow: PermanentArrowUIConfigSchema,
+  buttons: ButtonUIConfigSchema,
+});
+
+export type UIConfig = z.infer<typeof UIConfigSchema>;
 
 export const uiConfig: UIConfig = {
   arrows: {
@@ -48,6 +64,7 @@ export const uiConfig: UIConfig = {
     previewThickness: 2,
     bidirectionalOffset: 25,
   },
+
   permanentArrow: {
     defaultTargetOffset: 65,
     defaultThickness: 8,
@@ -70,6 +87,7 @@ export const uiConfig: UIConfig = {
     pulseColorGlowRadius: 16,
     pulseColorGlowIntensity: 1,
   },
+
   buttons: {
     arrowButtonX: 60,
     arrowButtonYOffset: 50,

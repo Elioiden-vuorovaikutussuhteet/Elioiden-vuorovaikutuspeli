@@ -1,14 +1,18 @@
-export interface OrganismData {
-  id: string;
-  name: string;
-  texture: string;
-  default_scale: number;
-  growth_types: string[];
-  offsetX: number;
-  offsetY: number;
-}
+import { z } from "zod";
 
-export const organisms: OrganismData[] = [
+export const OrganismSchema = z.object({
+  id: z.string().min(1),
+  name: z.string().min(1),
+  texture: z.string().min(1),
+  default_scale: z.number().positive(),
+  growth_types: z.array(z.string()),
+  offsetX: z.number(),
+  offsetY: z.number(),
+});
+
+export type OrganismData = z.infer<typeof OrganismSchema>;
+
+export const organisms = z.array(OrganismSchema).parse([
   {
     id: "acacia",
     name: "Bullhorn Acacia",
@@ -72,7 +76,7 @@ export const organisms: OrganismData[] = [
     offsetX: 400,
     offsetY: 300,
   },
-];
+]);
 
 export const organismDataMap = new Map<string, OrganismData>(
   organisms.map((org) => [org.id, org]),

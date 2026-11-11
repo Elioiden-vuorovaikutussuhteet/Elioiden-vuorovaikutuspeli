@@ -1,16 +1,23 @@
-export interface AssetEntry {
-  key: string;
-  file: string;
-}
 
-export interface OverlayBoxStyle {
-  cornerRadius: number;
-  backgroundColor: number;
-  backgroundAlpha: number;
-  borderWidth: number;
-  borderColor: number;
-  borderAlpha: number;
-}
+import { z } from "zod";
+
+export const AssetEntrySchema = z.object({
+  key: z.string(),
+  file: z.string(),
+});
+
+export type AssetEntry = z.infer<typeof AssetEntrySchema>;
+
+export const OverlayBoxStyleSchema = z.object({
+  cornerRadius: z.number(),
+  backgroundColor: z.number().int().min(0).max(0xffffff).meta({ input: "color" }),
+  backgroundAlpha: z.number(),
+  borderWidth: z.number(),
+  borderColor: z.number().int().min(0).max(0xffffff).meta({ input: "color" }),
+  borderAlpha: z.number(),
+});
+
+export type OverlayBoxStyle = z.infer<typeof OverlayBoxStyleSchema>;
 
 export const defaultOverlayBoxStyle: OverlayBoxStyle = {
   cornerRadius: 30,
@@ -21,30 +28,32 @@ export const defaultOverlayBoxStyle: OverlayBoxStyle = {
   borderAlpha: 1,
 };
 
-export interface GameSceneConfig {
-  key: string;
-  scenes: {
-    menu: string;
-    tutorial: string;
-    gameOver: string;
-  };
-  assetsPath: string;
-  images: AssetEntry[];
-  startingMoney: number;
-  hintCost: number;
-  infoButton: {
-    x: number;
-    y: number;
-  };
-  hintButton: {
-    x: number;
-    y: number;
-  };
-  initialOrganismIndex: number;
-  secondOrganismIndex: number;
-  secondOrganismSpawnDelayMs: number;
-  randomEventSpawnDelayMs: number;
-}
+export const GameSceneConfigSchema = z.object({
+  key: z.string(),
+  scenes: z.object({
+    menu: z.string(),
+    tutorial: z.string(),
+    gameOver: z.string(),
+  }),
+  assetsPath: z.string(),
+  images: z.array(AssetEntrySchema),
+  startingMoney: z.number(),
+  hintCost: z.number(),
+  infoButton: z.object({
+    x: z.number(),
+    y: z.number(),
+  }),
+  hintButton: z.object({
+    x: z.number(),
+    y: z.number(),
+  }),
+  initialOrganismIndex: z.number(),
+  secondOrganismIndex: z.number(),
+  secondOrganismSpawnDelayMs: z.number(),
+  randomEventSpawnDelayMs: z.number(),
+});
+
+export type GameSceneConfig = z.infer<typeof GameSceneConfigSchema>;
 
 export const gameSceneConfig: GameSceneConfig = {
   key: "GameScene",
@@ -72,35 +81,31 @@ export const gameSceneConfig: GameSceneConfig = {
   ],
   startingMoney: 1000,
   hintCost: 100,
-  infoButton: {
-    x: 40,
-    y: 40,
-  },
-  hintButton: {
-    x: 300,
-    y: 40,
-  },
+  infoButton: { x: 40, y: 40 },
+  hintButton: { x: 300, y: 40 },
   initialOrganismIndex: 0,
   secondOrganismIndex: 1,
   secondOrganismSpawnDelayMs: 3000,
   randomEventSpawnDelayMs: 100,
 };
 
-export interface MenuSceneConfig extends OverlayBoxStyle {
-  key: string;
-  targetSceneKey: string;
-  closeEvent: string;
-  width: number;
-  height: number;
-  text: {
-    label: string;
-    fontFamily: string;
-    fontSize: string;
-    fontStyle: string;
-    color: string;
-    origin: number;
-  };
-}
+export const MenuSceneConfigSchema = OverlayBoxStyleSchema.extend({
+  key: z.string(),
+  targetSceneKey: z.string(),
+  closeEvent: z.string(),
+  width: z.number(),
+  height: z.number(),
+  text: z.object({
+    label: z.string(),
+    fontFamily: z.string(),
+    fontSize: z.string(),
+    fontStyle: z.string(),
+    color: z.string().meta({ input: "color" }),
+    origin: z.number(),
+  }),
+});
+
+export type MenuSceneConfig = z.infer<typeof MenuSceneConfigSchema>;
 
 export const menuSceneConfig: MenuSceneConfig = {
   ...defaultOverlayBoxStyle,
@@ -119,34 +124,36 @@ export const menuSceneConfig: MenuSceneConfig = {
   },
 };
 
-export interface TutorialSceneConfig extends OverlayBoxStyle {
-  key: string;
-  assetsPath: string;
-  images: AssetEntry[];
-  widthRatio: number;
-  maxWidth: number;
-  heightRatio: number;
-  maxHeight: number;
-  leftMarginRatio: number;
-  topOffsetDivisor: number;
-  text: {
-    content: string;
-    topOffsetRatio: number;
-    fontFamily: string;
-    fontSizeRatio: number;
-    maxFontSize: number;
-    fontStyle: string;
-    color: string;
-    wordWrapWidthRatio: number;
-    align: string;
-    originX: number;
-    originY: number;
-  };
-  closeButton: {
-    bottomOffset: number;
-    event: string;
-  };
-}
+export const TutorialSceneConfigSchema = OverlayBoxStyleSchema.extend({
+  key: z.string(),
+  assetsPath: z.string(),
+  images: z.array(AssetEntrySchema),
+  widthRatio: z.number(),
+  maxWidth: z.number(),
+  heightRatio: z.number(),
+  maxHeight: z.number(),
+  leftMarginRatio: z.number(),
+  topOffsetDivisor: z.number(),
+  text: z.object({
+    content: z.string(),
+    topOffsetRatio: z.number(),
+    fontFamily: z.string(),
+    fontSizeRatio: z.number(),
+    maxFontSize: z.number(),
+    fontStyle: z.string(),
+    color: z.string().meta({ input: "color" }),
+    wordWrapWidthRatio: z.number(),
+    align: z.string(),
+    originX: z.number(),
+    originY: z.number(),
+  }),
+  closeButton: z.object({
+    bottomOffset: z.number(),
+    event: z.string(),
+  }),
+});
+
+export type TutorialSceneConfig = z.infer<typeof TutorialSceneConfigSchema>;
 
 export const tutorialSceneConfig: TutorialSceneConfig = {
   ...defaultOverlayBoxStyle,
@@ -186,31 +193,33 @@ export const tutorialSceneConfig: TutorialSceneConfig = {
   },
 };
 
-export interface GameOverSceneConfig extends OverlayBoxStyle {
-  key: string;
-  scenesToStop: string[];
-  restartSceneKey: string;
-  width: number;
-  height: number;
-  titleText: {
-    label: string;
-    offsetY: number;
-    fontFamily: string;
-    fontSize: string;
-    fontStyle: string;
-    color: string;
-    origin: number;
-  };
-  retryButton: {
-    label: string;
-    offsetY: number;
-    fontFamily: string;
-    fontSize: string;
-    fontStyle: string;
-    color: string;
-    origin: number;
-  };
-}
+export const GameOverSceneConfigSchema = OverlayBoxStyleSchema.extend({
+  key: z.string(),
+  scenesToStop: z.array(z.string()),
+  restartSceneKey: z.string(),
+  width: z.number(),
+  height: z.number(),
+  titleText: z.object({
+    label: z.string(),
+    offsetY: z.number(),
+    fontFamily: z.string(),
+    fontSize: z.string(),
+    fontStyle: z.string(),
+    color: z.string().meta({ input: "color" }),
+    origin: z.number(),
+  }),
+  retryButton: z.object({
+    label: z.string(),
+    offsetY: z.number(),
+    fontFamily: z.string(),
+    fontSize: z.string(),
+    fontStyle: z.string(),
+    color: z.string().meta({ input: "color" }),
+    origin: z.number(),
+  }),
+});
+
+export type GameOverSceneConfig = z.infer<typeof GameOverSceneConfigSchema>;
 
 export const gameOverSceneConfig: GameOverSceneConfig = {
   ...defaultOverlayBoxStyle,
@@ -239,43 +248,45 @@ export const gameOverSceneConfig: GameOverSceneConfig = {
   },
 };
 
-export interface PopupSceneConfig extends OverlayBoxStyle {
-  key: string;
-  assetsPath: string;
-  images: AssetEntry[];
-  widthRatio: number;
-  maxWidth: number;
-  heightRatio: number;
-  maxHeight: number;
-  rightMarginRatio: number;
-  topOffsetDivisor: number;
-  text: {
-    fontFamily: string;
-    fontSizeRatio: number;
-    maxFontSize: number;
-    color: string;
-    wordWrapWidthRatio: number;
-    align: string;
-    originX: number;
-    originY: number;
-    title: {
-      topOffsetRatio: number;
-      fontStyle: string;
-    };
-    relation: {
-      topOffsetRatio: number;
-      fontStyle: string;
-    };
-    description: {
-      topOffsetRatio: number;
-      fontStyle: string;
-    };
-  };
-  closeButton: {
-    bottomOffset: number;
-    event: string;
-  };
-}
+export const PopupSceneConfigSchema = OverlayBoxStyleSchema.extend({
+  key: z.string(),
+  assetsPath: z.string(),
+  images: z.array(AssetEntrySchema),
+  widthRatio: z.number(),
+  maxWidth: z.number(),
+  heightRatio: z.number(),
+  maxHeight: z.number(),
+  rightMarginRatio: z.number(),
+  topOffsetDivisor: z.number(),
+  text: z.object({
+    fontFamily: z.string(),
+    fontSizeRatio: z.number(),
+    maxFontSize: z.number(),
+    color: z.string().meta({ input: "color" }),
+    wordWrapWidthRatio: z.number(),
+    align: z.string(),
+    originX: z.number(),
+    originY: z.number(),
+    title: z.object({
+      topOffsetRatio: z.number(),
+      fontStyle: z.string(),
+    }),
+    relation: z.object({
+      topOffsetRatio: z.number(),
+      fontStyle: z.string(),
+    }),
+    description: z.object({
+      topOffsetRatio: z.number(),
+      fontStyle: z.string(),
+    }),
+  }),
+  closeButton: z.object({
+    bottomOffset: z.number(),
+    event: z.string(),
+  }),
+});
+
+export type PopupSceneConfig = z.infer<typeof PopupSceneConfigSchema>;
 
 export const popupSceneConfig: PopupSceneConfig = {
   ...defaultOverlayBoxStyle,

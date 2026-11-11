@@ -1,8 +1,12 @@
-export interface PopupText {
-  title: string;
-  relation: string;
-  description: string;
-}
+import { z } from "zod"
+
+export const popupTextSchema = z.object({
+  title: z.string(),
+  relation: z.string(),
+  description: z.string(),
+});
+
+export type PopupText = z.infer<typeof popupTextSchema>;
 
 export function getInteractionId(first: string, second: string): string {
   return `${first}-${second}`;
