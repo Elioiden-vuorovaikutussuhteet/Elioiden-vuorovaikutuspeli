@@ -1,9 +1,13 @@
-export interface organismsRelations {
-  source: string;
-  target: string;
-  value: -1 | 0 | 1;
-  mult: number;
-}
+import { z } from "zod";
+
+export const organismsRelationsSchema = z.object({
+  source: z.string(),
+  target: z.string(),
+  value: z.union([z.literal(-1), z.literal(0), z.literal(1)]),
+  mult: z.number(),
+});
+
+export type organismsRelations = z.infer<typeof organismsRelationsSchema>;
 
 export const relations: organismsRelations[] = [
   { source: "acacia", target: "amf", value: 1, mult: 1 },
