@@ -24,7 +24,6 @@ export default class GlowManager {
     const color =
       amount > 0 ? this.config.positiveGlow : this.config.negativeGlow;
 
-    // Reuse active shaders and restart tweens if already glowing
     const existing = this.activeGlows.get(organism);
     if (existing) {
       existing.glows[0].color = color;
@@ -40,10 +39,6 @@ export default class GlowManager {
       organism.duplicateContainer.enableFilters();
     }
 
-    organism.renderFilters = true;
-    organism.duplicateContainer.renderFilters = true;
-
-    // 1. Add inner white glow first so it renders directly around the sprite
     const whiteGlow = organism.filters!.internal.addGlow(
       this.config.whiteGlow,
       undefined,
@@ -65,7 +60,6 @@ export default class GlowManager {
       );
     duplicateWhiteGlow.setPaddingOverride(null);
 
-    // 2. Add colored outer glow second so it wraps around the white glow pass
     const glow = organism.filters!.internal.addGlow(
       color,
       undefined,
@@ -120,13 +114,15 @@ export default class GlowManager {
     if (!active) return;
 
     active.tweens.forEach((tween) => tween.stop());
-    active.glows.forEach((glow) => glow.destroy());
 
-    organism.filters?.internal.clear?.();
-    organism.duplicateContainer.filters?.internal.clear?.();
+    const [glow, duplicateGlow, whiteGlow, duplicateWhiteGlow] = active.glows;
 
-    organism.renderFilters = false;
-    organism.duplicateContainer.renderFilters = false;
+    organism.filters?.internal.remove?.(glow);
+    organism.filters?.internal.remove?.(whiteGlow);
+    organism.duplicateContainer.filters?.internal.remove?.(duplicateGlow);
+    organism.duplicateContainer.filters?.internal.remove?.(duplicateWhiteGlow);
+
+    active.glows.forEach((g) => g.destroy());
 
     this.activeGlows.delete(organism);
   }
