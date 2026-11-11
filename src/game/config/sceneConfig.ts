@@ -86,7 +86,7 @@ export const gameSceneConfig: GameSceneConfig = {
   initialOrganismIndex: 0,
   secondOrganismIndex: 1,
   secondOrganismSpawnDelayMs: 3000,
-  randomEventSpawnDelayMs: 100,
+  randomEventSpawnDelayMs: 3000,
 };
 
 export const MenuSceneConfigSchema = OverlayBoxStyleSchema.extend({

@@ -95,6 +95,24 @@ export default class ArrowManager {
     this.renderer.playPulse(fromId, toId, hpChange);
   }
 
+  public playRandomEventPulses(
+  organismIds: string[],
+  hpChange: number,
+  ): void {
+  for (const interaction of this.interactions) {
+    const affectsFrom = organismIds.includes(interaction.from);
+    const affectsTo = organismIds.includes(interaction.to);
+
+    if (affectsFrom || affectsTo) {
+      this.playArrowPulseAnimation(
+        interaction.from,
+        interaction.to,
+        hpChange,
+      );
+    }
+  }
+}
+
   public setForceConfig(newConfig: Partial<ForceLayoutConfig>): void {
     this.forceLayout.setConfig(
       newConfig,
