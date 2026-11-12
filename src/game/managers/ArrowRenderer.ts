@@ -53,6 +53,8 @@ export default class ArrowRenderer {
     cursorMode: boolean,
     onArrowClick: (fromId: string, toId: string) => void,
   ): void {
+    let structureChanged = false;
+
     const activeKeys = new Set<string>();
     for (const { from, to } of interactions) {
       activeKeys.add(this.getKey(from, to));
@@ -63,6 +65,7 @@ export default class ArrowRenderer {
       if (!activeKeys.has(key)) {
         arrow.destroy();
         this.permanentArrows.delete(key);
+        structureChanged = true;
       }
     }
 
@@ -76,6 +79,7 @@ export default class ArrowRenderer {
       const color = this.getRelationColor(from, to);
 
       let arrow = this.permanentArrows.get(key);
+
       if (!arrow) {
         arrow = new PermanentArrow(
           this.scene,
@@ -88,6 +92,7 @@ export default class ArrowRenderer {
         );
         arrow.setCursorMode(cursorMode);
         this.permanentArrows.set(key, arrow);
+        structureChanged = true;
       }
 
       arrow.setStyle({
@@ -100,7 +105,19 @@ export default class ArrowRenderer {
       arrow.update(first, second);
     }
 
-    // Unconditionally clear and redraw shared graphics every frame
+    let needsRedraw = structureChanged;
+    // Check if any arrow needs a redraw even with no structure change
+    if (!needsRedraw) {
+      for (const arrow of this.permanentArrows.values()) {
+        if (arrow.getDirty()) {
+          needsRedraw = true;
+          break;
+        }
+      }
+    }
+
+    if (!needsRedraw) return;
+
     this.sharedArrowGraphics.clear();
     for (const arrow of this.permanentArrows.values()) {
       arrow.draw(this.sharedArrowGraphics);
