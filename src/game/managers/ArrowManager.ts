@@ -337,7 +337,7 @@ export default class ArrowManager {
 
   private areArrowsDirty(): boolean {
     for (const arrow of this.getArrows().values()) {
-      if (arrow.getDirty()) return true;
+      if (arrow.getDirty?.() ?? true) return true;
     }
     return false;
   }

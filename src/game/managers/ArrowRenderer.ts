@@ -109,7 +109,7 @@ export default class ArrowRenderer {
     // Check if any arrow needs a redraw even with no structure change
     if (!needsRedraw) {
       for (const arrow of this.permanentArrows.values()) {
-        if (arrow.getDirty()) {
+        if (arrow.getDirty?.() ?? true) {
           needsRedraw = true;
           break;
         }
