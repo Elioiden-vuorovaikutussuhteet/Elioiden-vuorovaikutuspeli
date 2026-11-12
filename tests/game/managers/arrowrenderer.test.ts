@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import { describe, it, expect, vi, beforeEach, type Mock } from "vitest";
 import type Phaser from "phaser";
 
 vi.mock("phaser", () => ({
@@ -9,12 +9,14 @@ const mockPermanentArrowInstances: Array<{
   fromId: string;
   toId: string;
   onClick: () => void;
-  setStyle: ReturnType<typeof vi.fn>;
-  update: ReturnType<typeof vi.fn>;
-  draw: ReturnType<typeof vi.fn>;
-  playPulse: ReturnType<typeof vi.fn>;
-  setCursorMode: ReturnType<typeof vi.fn>;
-  destroy: ReturnType<typeof vi.fn>;
+  getDirty: Mock<() => boolean>;
+  setDirty: Mock<(val?: boolean) => void>;
+  setStyle: Mock<(...args: unknown[]) => void>;
+  update: Mock<(...args: unknown[]) => void>;
+  draw: Mock<(...args: unknown[]) => void>;
+  playPulse: Mock<(...args: unknown[]) => void>;
+  setCursorMode: Mock<(...args: unknown[]) => void>;
+  destroy: Mock<() => void>;
 }> = [];
 
 vi.mock("../../../src/game/entities/permanentarrow", () => ({
@@ -26,16 +28,23 @@ vi.mock("../../../src/game/entities/permanentarrow", () => ({
     _style: unknown,
     onClick: () => void,
   ) {
+    let dirty = true;
     const instance = {
       fromId,
       toId,
       onClick,
-      setStyle: vi.fn(),
-      update: vi.fn(),
-      draw: vi.fn(),
-      playPulse: vi.fn(),
-      setCursorMode: vi.fn(),
-      destroy: vi.fn(),
+      getDirty: vi.fn<() => boolean>(() => dirty),
+      setDirty: vi.fn<(val?: boolean) => void>((val = true) => {
+        dirty = val;
+      }),
+      setStyle: vi.fn<(...args: unknown[]) => void>(),
+      update: vi.fn<(...args: unknown[]) => void>(),
+      draw: vi.fn<(...args: unknown[]) => void>(() => {
+        dirty = false;
+      }),
+      playPulse: vi.fn<(...args: unknown[]) => void>(),
+      setCursorMode: vi.fn<(...args: unknown[]) => void>(),
+      destroy: vi.fn<() => void>(),
     };
     mockPermanentArrowInstances.push(instance);
     return instance;
@@ -63,14 +72,14 @@ describe("ArrowRenderer", () => {
   let mockScene: Phaser.Scene;
   let mockUiCamera: Phaser.Cameras.Scene2D.Camera;
   let mockSharedGraphics: {
-    setDepth: ReturnType<typeof vi.fn>;
-    clear: ReturnType<typeof vi.fn>;
-    destroy: ReturnType<typeof vi.fn>;
+    setDepth: Mock<(...args: unknown[]) => unknown>;
+    clear: Mock<() => void>;
+    destroy: Mock<() => void>;
   };
   let mockPreviewGraphics: {
-    setDepth: ReturnType<typeof vi.fn>;
-    clear: ReturnType<typeof vi.fn>;
-    destroy: ReturnType<typeof vi.fn>;
+    setDepth: Mock<(...args: unknown[]) => unknown>;
+    clear: Mock<() => void>;
+    destroy: Mock<() => void>;
   };
   let renderer: ArrowRenderer;
 
@@ -86,15 +95,15 @@ describe("ArrowRenderer", () => {
     vi.clearAllMocks();
 
     mockSharedGraphics = {
-      setDepth: vi.fn(),
-      clear: vi.fn(),
-      destroy: vi.fn(),
+      setDepth: vi.fn<(...args: unknown[]) => unknown>(),
+      clear: vi.fn<() => void>(),
+      destroy: vi.fn<() => void>(),
     };
 
     mockPreviewGraphics = {
-      setDepth: vi.fn(),
-      clear: vi.fn(),
-      destroy: vi.fn(),
+      setDepth: vi.fn<(...args: unknown[]) => unknown>(),
+      clear: vi.fn<() => void>(),
+      destroy: vi.fn<() => void>(),
     };
 
     mockScene = {
@@ -159,6 +168,7 @@ describe("ArrowRenderer", () => {
     expect(arrow.update).toHaveBeenCalledWith(ants, sapota);
     expect(mockSharedGraphics.clear).toHaveBeenCalledOnce();
     expect(arrow.draw).toHaveBeenCalledWith(mockSharedGraphics);
+    expect(arrow.getDirty()).toBe(false);
 
     renderer.redrawPermanentArrows(
       [
@@ -181,6 +191,45 @@ describe("ArrowRenderer", () => {
 
     mockPermanentArrowInstances[0].onClick();
     expect(onClick).toHaveBeenCalledWith("ants", "sapota");
+  });
+
+  it("redraws and resets dirty state when an arrow is marked dirty", () => {
+    vi.mocked(getRelation).mockReturnValue({ value: 1 } as never);
+    const ants = createOrganism("ants", 10, 20);
+    const sapota = createOrganism("sapota", 50, 60);
+    const map = new Map([
+      ["ants", ants],
+      ["sapota", sapota],
+    ]);
+
+    renderer.redrawPermanentArrows(
+      [{ from: "ants", to: "sapota" }],
+      map,
+      65,
+      false,
+      vi.fn(),
+    );
+
+    const arrow = mockPermanentArrowInstances[0];
+    expect(arrow.getDirty()).toBe(false);
+
+    mockSharedGraphics.clear.mockClear();
+    arrow.draw.mockClear();
+
+    arrow.setDirty(true);
+    expect(arrow.getDirty()).toBe(true);
+
+    renderer.redrawPermanentArrows(
+      [{ from: "ants", to: "sapota" }],
+      map,
+      65,
+      false,
+      vi.fn(),
+    );
+
+    expect(mockSharedGraphics.clear).toHaveBeenCalledOnce();
+    expect(arrow.draw).toHaveBeenCalledWith(mockSharedGraphics);
+    expect(arrow.getDirty()).toBe(false);
   });
 
   it("draws preview arrow with styles from arrowUIConfig", () => {

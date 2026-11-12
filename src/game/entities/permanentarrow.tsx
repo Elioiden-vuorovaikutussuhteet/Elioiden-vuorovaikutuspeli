@@ -449,12 +449,12 @@ export default class PermanentArrow {
         ? this.thickness + permanentArrowUIConfig.hoverThicknessBonus
         : this.thickness,
     });
+    this.dirty = false;
   }
 
   private redrawStandalone(): void {
     this.graphics.clear();
     this.draw(this.graphics);
-    this.dirty = false;
   }
 
   public setCursorMode(enabled: boolean): void {
@@ -512,5 +512,13 @@ export default class PermanentArrow {
       this.graphics.destroy();
     }
     this.arrowhitBox.destroy();
+  }
+
+  public setDirty(value: boolean) {
+    this.dirty = value;
+  }
+
+  public getDirty(): boolean {
+    return this.dirty;
   }
 }

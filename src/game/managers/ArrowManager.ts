@@ -95,23 +95,20 @@ export default class ArrowManager {
     this.renderer.playPulse(fromId, toId, hpChange);
   }
 
-  public playRandomEventPulses(
-  organismIds: string[],
-  hpChange: number,
-  ): void {
-  for (const interaction of this.interactions) {
-    const affectsFrom = organismIds.includes(interaction.from);
-    const affectsTo = organismIds.includes(interaction.to);
+  public playRandomEventPulses(organismIds: string[], hpChange: number): void {
+    for (const interaction of this.interactions) {
+      const affectsFrom = organismIds.includes(interaction.from);
+      const affectsTo = organismIds.includes(interaction.to);
 
-    if (affectsFrom || affectsTo) {
-      this.playArrowPulseAnimation(
-        interaction.from,
-        interaction.to,
-        hpChange,
-      );
+      if (affectsFrom || affectsTo) {
+        this.playArrowPulseAnimation(
+          interaction.from,
+          interaction.to,
+          hpChange,
+        );
+      }
     }
   }
-}
 
   public setForceConfig(newConfig: Partial<ForceLayoutConfig>): void {
     this.forceLayout.setConfig(
@@ -189,7 +186,6 @@ export default class ArrowManager {
         this.interactions.push({ from: firstId, to: secondId });
         this.recalculateLayout();
         this.redrawPermanentArrows();
-        this.arrowsDirty = false;
 
         const textId = getInteractionId(firstId, secondId);
         this.scene.scene.launch("PopupScene", { textId });
@@ -339,10 +335,17 @@ export default class ArrowManager {
     );
   }
 
-  private arrowsDirty = true;
+  private areArrowsDirty(): boolean {
+    for (const arrow of this.getArrows().values()) {
+      if (arrow.getDirty?.() ?? true) return true;
+    }
+    return false;
+  }
 
   private markArrowsDirty(): void {
-    this.arrowsDirty = true;
+    for (const arrow of this.getArrows().values()) {
+      arrow.setDirty?.(true);
+    }
   }
 
   public updatePreview(): void {
@@ -352,9 +355,8 @@ export default class ArrowManager {
   public update(): void {
     const layoutChanged = this.forceLayout.step();
 
-    if (layoutChanged || this.arrowsDirty) {
+    if (layoutChanged || this.areArrowsDirty()) {
       this.redrawPermanentArrows();
-      this.arrowsDirty = false;
     }
     this.updatePreview();
   }
