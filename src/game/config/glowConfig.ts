@@ -1,5 +1,17 @@
 import { z } from "zod";
 
+export const GlowFilterSettingsSchema = z.object({
+  color: z.number().int().min(0).max(0xffffff).meta({ input: "color" }),
+  outerStrength: z.number(),
+  innerStrength: z.number(),
+  scale: z.number(),
+  knockout: z.boolean(),
+  quality: z.number(),
+  distance: z.number(),
+});
+
+export type GlowFilterSettings = z.infer<typeof GlowFilterSettingsSchema>;
+
 export const GlowConfigSchema = z.object({
   positiveGlow: z.number().int().min(0).max(0xffffff).meta({ input: "color" }),
   negativeGlow: z.number().int().min(0).max(0xffffff).meta({ input: "color" }),
