@@ -12,9 +12,11 @@ RUN npm run build
 # Serve stage
 FROM node:alpine
 WORKDIR /app
+ENV NODE_ENV=production
+
 RUN npm install -g serve
 COPY --from=build /app/dist ./dist
-
+ENV NODE_ENV=production
 EXPOSE 4173
 
 USER 1001 
