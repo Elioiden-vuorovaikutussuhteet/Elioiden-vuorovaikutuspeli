@@ -19,14 +19,13 @@ services:
     build:
       context: .
       dockerfile: Dockerfile.dev
-    command: >
-      sh -c '
-        export SESSION_SECRET=$${SESSION_SECRET:-dev-session-secret}
-        if [ -z "$$ADMIN_PASSWORD_HASH" ]; then
-          export ADMIN_PASSWORD_HASH=$$(node -e "console.log(require(\"bcrypt\").hashSync(\"$${DEV_ADMIN_PASSWORD:-admin}\", 10))")
-        fi
-        npm run server
-      '
+    command:
+      - sh
+      - -c
+      - |
+        export SESSION_SECRET=$${SESSION_SECRET:-$$(node -e 'console.log(require("crypto").randomBytes(32).toString("hex"))')}
+        export ADMIN_PASSWORD_HASH=$${ADMIN_PASSWORD_HASH:-$$(node -e 'console.log(require("bcrypt").hashSync(process.env.DEV_ADMIN_PASSWORD || "admin", 10))')}
+        exec npm run server
     ports:
       - "3000:3000"
     volumes:
