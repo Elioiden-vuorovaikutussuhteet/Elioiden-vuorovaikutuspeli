@@ -25,7 +25,7 @@ services:
       - |
         export SESSION_SECRET=$${SESSION_SECRET:-$$(node -e 'console.log(require("crypto").randomBytes(32).toString("hex"))')}
         export ADMIN_PASSWORD_HASH=$${ADMIN_PASSWORD_HASH:-$$(node -e 'console.log(require("bcrypt").hashSync(process.env.DEV_ADMIN_PASSWORD || "admin", 10))')}
-        exec npm run server
+        exec npm run server:dev
     ports:
       - "3000:3000"
     volumes:
