@@ -1,12 +1,13 @@
-import express from 'express';
-import session from 'express-session';
-import authRouter from "./auth"
-import helmet from 'helmet';
-
 import dotenv from 'dotenv';
 import path from 'path';
 
 dotenv.config({ path: path.resolve(process.cwd(), 'server/.env') });
+dotenv.config();
+
+import express from 'express';
+import session from 'express-session';
+import authRouter from "./auth"
+import helmet from 'helmet';
 
 const app = express();
 const PORT = 3000;

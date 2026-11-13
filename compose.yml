@@ -4,25 +4,34 @@ services:
       context: .
       dockerfile: Dockerfile.dev
     ports:
-      - 5173:5173
+      - "5173:5173"
     volumes:
       - .:/app
       - /app/node_modules
     environment:
       - NODE_ENV=development
       - CHOKIDAR_USEPOLLING=true
+      - VITE_API_TARGET=http://server:3000
     depends_on:
       - server
 
   server:
-      build:
-        context: .
-        dockerfile: Dockerfile.dev
-      command: npm run server
-      ports:
-        - "3000:3000"
-      volumes:
-        - .:/app
-        - /app/node_modules
-      environment:
-        - NODE_ENV=development
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    command: >
+      sh -c '
+        export SESSION_SECRET=$${SESSION_SECRET:-dev-session-secret}
+        if [ -z "$$ADMIN_PASSWORD_HASH" ]; then
+          export ADMIN_PASSWORD_HASH=$$(node -e "console.log(require(\"bcrypt\").hashSync(\"$${DEV_ADMIN_PASSWORD:-admin}\", 10))")
+        fi
+        npm run server
+      '
+    ports:
+      - "3000:3000"
+    volumes:
+      - .:/app
+      - /app/node_modules
+    environment:
+      - NODE_ENV=development
+      - DEV_ADMIN_PASSWORD=admin
