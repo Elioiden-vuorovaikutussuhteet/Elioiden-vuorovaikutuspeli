@@ -1,13 +1,13 @@
-import react from '@vitejs/plugin-react'
-import { defineConfig, configDefaults} from 'vitest/config'
+import react from "@vitejs/plugin-react";
+import { defineConfig, configDefaults } from "vitest/config";
 
 //vite.dev/config/
 export default defineConfig({
   define: {
     __BUILD_DATE__: JSON.stringify(
-      new Date().toLocaleString('sv-SE', {
-        timeZone: 'Europe/Helsinki',
-      })
+      new Date().toLocaleString("sv-SE", {
+        timeZone: "Europe/Helsinki",
+      }),
     ),
   },
   plugins: [react()],
@@ -25,30 +25,26 @@ export default defineConfig({
   },
   server: {
     proxy: {
-      '/api': {
-        target: "http://localhost:3000",
+      "/api": {
+        target: process.env.VITE_API_TARGET || "http://localhost:3000",
         changeOrigin: true,
       },
     },
     watch: {
-      usePolling: true
-    }
-  },
-  test: {
-    environment: 'jsdom',
-    restoreMocks: true,
-    silent: false, 
-    reporters: ['verbose'],
-    exclude: ['tests/playwright/**', ...configDefaults.exclude],
-    coverage: {
-      provider: 'v8',
-      reporter: ['text', 'html', 'lcov'],
-      include: ['src/**/*.{ts,tsx}'],
-      exclude: [
-        'src/main.tsx',
-        'src/game/data/**',
-        'tests/playwright/**'
-      ]
+      usePolling: true,
     },
   },
-})
+  test: {
+    environment: "jsdom",
+    restoreMocks: true,
+    silent: false,
+    reporters: ["verbose"],
+    exclude: ["tests/playwright/**", ...configDefaults.exclude],
+    coverage: {
+      provider: "v8",
+      reporter: ["text", "html", "lcov"],
+      include: ["src/**/*.{ts,tsx}"],
+      exclude: ["src/main.tsx", "src/game/data/**", "tests/playwright/**"],
+    },
+  },
+});
