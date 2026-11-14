@@ -387,6 +387,7 @@ export default class PermanentArrow {
     this.visible = true;
 
     const eps = permanentArrowUIConfig.movementEpsilon;
+    const scaleEps = permanentArrowUIConfig.scaleEpsilon;
     const moved =
       !Number.isFinite(this.lastFromOrgX) ||
       !Number.isFinite(this.lastFromOrgY) ||
@@ -396,8 +397,8 @@ export default class PermanentArrow {
       Math.abs(from.y - this.lastFromOrgY) > eps ||
       Math.abs(to.x - this.lastToOrgX) > eps ||
       Math.abs(to.y - this.lastToOrgY) > eps ||
-      Math.abs(from.scaleX - this.lastFromScale) > 0.005 ||
-      Math.abs(to.scaleX - this.lastToScale) > 0.005;
+      Math.abs(from.scaleX - this.lastFromScale) > scaleEps ||
+      Math.abs(to.scaleX - this.lastToScale) > scaleEps;
 
     if (moved) {
       this.lastFromOrgX = from.x;

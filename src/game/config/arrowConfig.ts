@@ -52,6 +52,7 @@ export const PermanentArrowUIConfigSchema = z.object({
   fallbackNameTextOffset: z.number(),
   nameTextTopPadding: z.number(),
   movementEpsilon: z.number(),
+  scaleEpsilon: z.number(),
 });
 
 export type PermanentArrowUIConfig = z.infer<
@@ -87,4 +88,5 @@ export const permanentArrowUIConfig: PermanentArrowUIConfig = {
   fallbackNameTextOffset: 35,
   nameTextTopPadding: 4,
   movementEpsilon: 0.1,
+  scaleEpsilon: 0.005,
 };
