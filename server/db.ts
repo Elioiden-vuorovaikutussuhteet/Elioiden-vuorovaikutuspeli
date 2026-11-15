@@ -4,7 +4,7 @@ import { Pool } from "pg";
 function getConnectionString(): string {
   const url =
     process.env.DATABASE_URL ||
-    (process.env.NODE_ENV === "development"
+    (process.env.NODE_ENV === "development" || process.env.NODE_ENV === "test"
       ? "postgresql://eliopeli:devpassword@localhost:5432/eliopeli"
       : undefined);
 
