@@ -34,3 +34,25 @@ services:
     environment:
       - NODE_ENV=development
       - DEV_ADMIN_PASSWORD=admin
+    depends_on:
+      db:
+        condition: service_healthy
+
+  db:
+    image: postgres:17-alpine
+    ports:
+      - "5432:5432"
+    environment:
+      - POSTGRES_USER=eliopeli
+      - POSTGRES_PASSWORD=devpassword
+      - POSTGRES_DB=eliopeli
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U eliopeli -d eliopeli"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  pgdata:
