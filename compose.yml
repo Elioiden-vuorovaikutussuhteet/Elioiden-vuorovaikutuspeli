@@ -34,6 +34,7 @@ services:
     environment:
       - NODE_ENV=development
       - DEV_ADMIN_PASSWORD=admin
+      - DATABASE_URL=postgresql://${POSTGRES_USER:-eliopeli}:${POSTGRES_PASSWORD:-devpassword}@db:5432/${POSTGRES_DB:-eliopeli}
     depends_on:
       db:
         condition: service_healthy
@@ -43,9 +44,9 @@ services:
     ports:
       - "5432:5432"
     environment:
-      - POSTGRES_USER=eliopeli
-      - POSTGRES_PASSWORD=devpassword
-      - POSTGRES_DB=eliopeli
+      - POSTGRES_USER=${POSTGRES_USER:-eliopeli}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-devpassword}
+      - POSTGRES_DB=${POSTGRES_DB:-eliopeli}
     volumes:
       - pgdata:/var/lib/postgresql/data
     healthcheck:

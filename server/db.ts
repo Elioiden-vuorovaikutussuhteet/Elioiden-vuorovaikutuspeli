@@ -1,17 +1,25 @@
 import { Pool } from "pg";
 
-const connectionString =
-  process.env.DATABASE_URL ||
-  (process.env.NODE_ENV === "development"
-    ? "postgresql://eliopeli:devpassword@localhost:5432/eliopeli"
-    : undefined);
+/* Resolves the PostgreSQL connection string, falling back to local dev credentials only in development. */
+function getConnectionString(): string {
+  const url =
+    process.env.DATABASE_URL ||
+    (process.env.NODE_ENV === "development"
+      ? "postgresql://eliopeli:devpassword@localhost:5432/eliopeli"
+      : undefined);
 
-if (!connectionString) {
-  throw new Error("Missing required environment variable: DATABASE_URL");
+  if (!url) {
+    throw new Error("Missing required environment variable: DATABASE_URL");
+  }
+  return url;
 }
 
-export const pool = new Pool({ connectionString });
+/* Shared PostgreSQL connection pool for database queries. */
+export const pool = new Pool({
+  connectionString: getConnectionString(),
+});
 
+/* Ensures the game_configs table exists before the server starts handling requests. */
 export async function initDb(): Promise<void> {
   await pool.query(`
     CREATE TABLE IF NOT EXISTS game_configs (
