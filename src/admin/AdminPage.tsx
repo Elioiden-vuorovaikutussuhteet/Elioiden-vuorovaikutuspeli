@@ -5,6 +5,19 @@ import { logout } from "../api";
 import { Box, Tabs, Tab, Typography } from "@mui/material";
 import { configRegistry } from "../game/config/configRegistry";
 import DynamicForm from '../components/DynamicForm';
+import {
+  organisms as initialOrganisms,
+  type OrganismData,
+} from "../game/data/organisms";
+import {
+  relations as initialRelations,
+  type OrganismsRelations,
+} from "../game/data/relations";
+import {
+  popupTexts as initialPopupTexts,
+  type PopupText,
+} from "../game/data/popupTexts";
+import OrganismEditor from "../components/OrganismEditor";
 
 function AdminPage() {
   const [message, setMessage] = useState('Loading...');
@@ -33,6 +46,17 @@ const [profiles, setProfiles] = useState([
   { id: "default", name: "Default" },
 ]);
 
+function createDefaultConfigValues() {
+  return Object.fromEntries(
+    configRegistry.flatMap((config) =>
+      config.sections.map((section) => [
+        `${config.id}.${section.id}`,
+        structuredClone(section.defaults),
+      ])
+    )
+  );
+}
+
 const [activeProfile, setActiveProfile] = useState("default");
 
 const [newProfileName, setNewProfileName] = useState("");
@@ -54,14 +78,7 @@ function handleAddProfile() {
 
   setConfigValues((previous) => ({
     ...previous,
-    [id]: Object.fromEntries(
-      configRegistry.flatMap((config) =>
-        config.sections.map((section) => [
-          `${config.id}.${section.id}`,
-          structuredClone(section.defaults),
-        ])
-      )
-    ),
+    [id]: createDefaultConfigValues(),
   }));
 
   setActiveProfile(id);
@@ -70,7 +87,7 @@ function handleAddProfile() {
 }
 
 const [activeParentTab, setActiveParentTab] = useState("config");
-const [activeTab, setActiveTab] = useState("camera");
+const [activeConfigTab, setActiveConfigTab] = useState("camera");
 
 // For future config saving:
 // - Possibly load saved configurations from the backend instead of using section.defaults.
@@ -79,14 +96,7 @@ const [activeTab, setActiveTab] = useState("camera");
 const [configValues, setConfigValues] = useState<
   Record<string, Record<string, unknown>>
 >(() => ({
-  default: Object.fromEntries(
-    configRegistry.flatMap((config) =>
-      config.sections.map((section) => [
-        `${config.id}.${section.id}`,
-        structuredClone(section.defaults),
-      ])
-    )
-  ),
+  default: createDefaultConfigValues(),
 }));
 
   // For future config saving:
@@ -108,8 +118,28 @@ const [configValues, setConfigValues] = useState<
   }
 
   const activeConfig = configRegistry.find(
-    (config) => config.id === activeTab
+    (config) => config.id === activeConfigTab
   );
+
+// Current organisms tba implementation:
+// - Organisms, relations and popup texts are stored in React state.
+// - Changes are local and are lost when the page reloads.
+
+const [organisms, setOrganisms] = useState<OrganismData[]>(
+  () => structuredClone(initialOrganisms)
+);
+
+const [relations, setRelations] = useState<OrganismsRelations[]>(
+  () => structuredClone(initialRelations)
+);
+
+const [popupTexts, setPopupTexts] = useState<Record<string, PopupText>>(
+  () => structuredClone(initialPopupTexts)
+);
+
+const [selectedOrganismId, setSelectedOrganismId] = useState<string>(
+  initialOrganisms[0]?.id ?? ""
+);
 
   return (
     <Box
@@ -180,8 +210,8 @@ const [configValues, setConfigValues] = useState<
         {activeParentTab === "config" && (
           <Box sx={{ mt: 3 }}>
             <Tabs
-              value={activeTab}
-              onChange={(_, value) => setActiveTab(value)}
+              value={activeConfigTab}
+              onChange={(_, value) => setActiveConfigTab(value)}
             >
               {configRegistry.map((config) => (
                 <Tab
@@ -226,18 +256,87 @@ const [configValues, setConfigValues] = useState<
           </Box>
         )}
 
-        {/* Organisms tabs */}
+        {/* Organisms tab */}
         {activeParentTab === "organisms" && (
           <Box sx={{ mt: 3 }}>
             <Typography variant="h5" sx={{ mb: 2 }}>
-              To be added...
+              Organism Editor
             </Typography>
+
+            <Box sx={{ mt: 2 }}>
+              <Typography sx={{ mb: 1 }}>
+                Select organism:
+              </Typography>
+
+              <select
+                value={selectedOrganismId}
+                onChange={(e) =>
+                  setSelectedOrganismId(e.target.value)
+                }
+              >
+                {organisms.map((organism) => (
+                  <option
+                    key={organism.id}
+                    value={organism.id}
+                  >
+                    {organism.name}
+                  </option>
+                ))}
+              </select>
+            </Box>
+
+            <OrganismEditor
+              organisms={organisms}
+              relations={relations}
+              popupTexts={popupTexts}
+              selectedOrganismId={selectedOrganismId}
+
+              onOrganismChange={(updatedOrganism) => {
+                setOrganisms((previous) =>
+                  previous.map((organism) =>
+                    organism.id === updatedOrganism.id
+                      ? updatedOrganism
+                      : organism
+                  )
+                );
+                // For future saving:
+                // - Send updatedOrganism to the backend.
+                // - Update the existing organism using its ID.
+              }}
+
+              onRelationChange={(index, updatedRelation) => {
+              setRelations((previous) =>
+                previous.map((relation, i) =>
+                  i === index
+                    ? {
+                        ...updatedRelation,
+                        source: selectedOrganismId,
+                      }
+                    : relation
+                )
+              );
+              // For future saving:
+              // - Send updatedRelation to the backend.
+              // - Update the relation identified by its source and target.
+              // - Consider introducing a unique relation ID in the future.
+              }}
+
+              onPopupTextChange={(interactionId, updatedPopupText) => {
+                setPopupTexts((previous) => ({
+                  ...previous,
+                  [interactionId]: updatedPopupText,
+                }));
+              // For future saving:
+              // - Send updatedPopupText to the backend.
+              // - Update popup text using interactionId.
+              }}
+            />
           </Box>
         )}
-      </Box>
+    </Box>
           
     {/* 
-    For future config saving:
+    For future saving:
     - Add a save button that submits configValues to the backend. (If not autosave)
     */}
     </Box>

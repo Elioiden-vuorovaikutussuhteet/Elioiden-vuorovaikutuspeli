@@ -1,33 +1,40 @@
 import { useState } from "react";
-import { Box, TextField, Switch, FormControlLabel, Typography } from "@mui/material";
+import {
+  Box,
+  TextField,
+  Switch,
+  FormControlLabel,
+  Typography,
+  MenuItem,
+} from "@mui/material";
 import { z } from "zod";
+import { type OrganismData } from "../game/data/organisms";
 
 interface DynamicFormProps {
   schema: z.ZodObject<z.ZodRawShape>;
   defaults: Record<string, unknown>;
   onChange?: (values: Record<string, unknown>) => void;
+  organisms?: OrganismData[];
 }
 
 export default function DynamicForm({
   schema,
   defaults,
   onChange,
+  organisms,
 }: DynamicFormProps) {
 
   const [values, setValues] = useState(defaults);
 
   function handleChange(key: string, value: unknown) {
-    const updated = {
-      ...values,
-      [key]: value,
-    };
-
+    const updated = { ...values, [key]: value };
     setValues(updated);
     onChange?.(updated);
   }
 
   return (
     <Box sx={{ display: "flex", flexDirection: "column", gap: 2, mt: 2 }}>
+
       {Object.entries(schema.shape).map(([key, field]) => {
 
         const currentValue = values[key];
@@ -50,7 +57,10 @@ export default function DynamicForm({
                   type="color"
                   value={hexValue}
                   onChange={(e) => {
-                    handleChange(key, parseInt(e.target.value.slice(1), 16));
+                    handleChange(
+                      key,
+                      parseInt(e.target.value.slice(1), 16)
+                    );
                   }}
                   fullWidth
                 />
@@ -71,6 +81,75 @@ export default function DynamicForm({
             />
           );
         }
+
+        // Organism references
+        if (
+          (key === "source" || key === "target") &&
+          organisms
+        ) {
+          if (key === "source") {
+            const sourceOrganism = organisms.find(
+              (organism) => organism.id === currentValue
+            );
+
+            return (
+              <TextField
+                key={key}
+                label="Source"
+                value={sourceOrganism?.name ?? currentValue ?? ""}
+                slotProps={{
+                  input: {
+                    readOnly: true,
+                  },
+                }}
+                fullWidth
+              />
+            );
+          }
+
+          return (
+            <TextField
+              key={key}
+              select
+              label="Target"
+              value={currentValue ?? ""}
+              onChange={(e) =>
+                handleChange(key, e.target.value)
+              }
+              fullWidth
+            >
+              {organisms.map((organism) => (
+                <MenuItem
+                  key={organism.id}
+                  value={organism.id}
+                >
+                  {organism.name}
+                </MenuItem>
+              ))}
+            </TextField>
+          );
+        }
+
+        // Relation value
+        if (key === "value") {
+          return (
+            <TextField
+              key={key}
+              select
+              label="value"
+              value={currentValue ?? 0}
+              onChange={(e) =>
+                handleChange(key, Number(e.target.value))
+              }
+              fullWidth
+            >
+              <MenuItem value={-1}>-1 (Negative)</MenuItem>
+              <MenuItem value={0}>0 (Neutral)</MenuItem>
+              <MenuItem value={1}>1 (Positive)</MenuItem>
+            </TextField>
+          );
+        }
+
 
         // String fields
         if (field instanceof z.ZodString) {
@@ -95,7 +174,11 @@ export default function DynamicForm({
               label={key}
               control={
                 <Switch
-                  checked={typeof currentValue === "boolean" ? currentValue : false}
+                  checked={
+                    typeof currentValue === "boolean"
+                      ? currentValue
+                      : false
+                  }
                   onChange={(e) =>
                     handleChange(key, e.target.checked)
                   }
@@ -105,10 +188,64 @@ export default function DynamicForm({
           );
         }
 
+        // Arrays of strings
+        if (field instanceof z.ZodArray) {
+          const items = Array.isArray(currentValue)
+            ? currentValue as string[]
+            : [];
+
+          return (
+            <Box key={key}>
+              <Typography variant="body2" sx={{ mb: 1 }}>
+                {key}
+              </Typography>
+
+              <TextField
+                select
+                label={key}
+                slotProps={{
+                  select: {
+                    multiple: true,
+                    renderValue: (selected) =>
+                      (selected as string[]).join(", "),
+                  },
+                }}
+                value={items}
+                onChange={(e) => {
+                  const value = e.target.value;
+
+                  handleChange(
+                    key,
+                    typeof value === "string"
+                      ? value.split(",")
+                      : value
+                  );
+                }}
+                fullWidth
+              >
+                {field.element instanceof z.ZodString &&
+                  ["grow", "multiply"].map((option) => (
+                    <MenuItem key={option} value={option}>
+                      {option}
+                    </MenuItem>
+                  ))}
+              </TextField>
+            </Box>
+          );
+        }
+
         // Nested objects
         if (field instanceof z.ZodObject) {
           return (
-            <Box key={key} sx={{ border: 1, borderColor: "divider", borderRadius: 2, p: 2 }}>
+            <Box
+              key={key}
+              sx={{
+                border: 1,
+                borderColor: "divider",
+                borderRadius: 2,
+                p: 2,
+              }}
+            >
               <Typography variant="subtitle1" sx={{ mb: 2 }}>
                 {key}
               </Typography>
