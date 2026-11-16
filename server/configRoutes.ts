@@ -2,6 +2,7 @@ import { Router, Request, Response, NextFunction } from "express";
 import { z } from "zod";
 import { pool } from "./db";
 import { configRegistry } from "../src/game/config/configRegistry";
+import { deepMerge } from "./utils/deepMerge";
 
 const router = Router();
 
@@ -51,10 +52,8 @@ router.get("/", async (_req, res) => {
     for (const [id, entry] of sectionMap.entries()) {
       const dbConfig = dbMap.get(id);
       if (dbConfig) {
-        const parsed = entry.schema.safeParse({
-          ...entry.defaults,
-          ...dbConfig,
-        });
+        const merged = deepMerge(entry.defaults, dbConfig);
+        const parsed = entry.schema.safeParse(merged);
         result[id] = parsed.success ? parsed.data : entry.defaults;
       } else {
         result[id] = entry.defaults;
@@ -87,10 +86,8 @@ router.get("/:domain", async (req, res) => {
       return res.json(entry.defaults);
     }
 
-    const parsed = entry.schema.safeParse({
-      ...entry.defaults,
-      ...rows[0].config,
-    });
+    const merged = deepMerge(entry.defaults, rows[0].config);
+    const parsed = entry.schema.safeParse(merged);
     return res.json(parsed.success ? parsed.data : entry.defaults);
   } catch (err) {
     console.error(`Failed to fetch config [${domain}]:`, err);
@@ -107,7 +104,7 @@ router.put<{ domain: string }>("/:domain", requireAdmin, async (req, res) => {
     return res.status(404).json({ error: `Unknown config section: ${domain}` });
   }
 
-  const candidate = { ...entry.defaults, ...req.body };
+  const candidate = deepMerge(entry.defaults, req.body);
   const parsed = entry.schema.safeParse(candidate);
 
   if (!parsed.success) {
@@ -139,21 +136,27 @@ router.put<{ domain: string }>("/:domain", requireAdmin, async (req, res) => {
 });
 
 /* DELETE /api/configs/:domain - Removes stored overrides for a section to restore defaults. */
-router.delete<{ domain: string }>("/:domain", requireAdmin, async (req, res) => {
-  const { domain } = req.params;
-  const entry = sectionMap.get(domain);
+router.delete<{ domain: string }>(
+  "/:domain",
+  requireAdmin,
+  async (req, res) => {
+    const { domain } = req.params;
+    const entry = sectionMap.get(domain);
 
-  if (!entry) {
-    return res.status(404).json({ error: `Unknown config section: ${domain}` });
-  }
+    if (!entry) {
+      return res
+        .status(404)
+        .json({ error: `Unknown config section: ${domain}` });
+    }
 
-  try {
-    await pool.query("DELETE FROM game_configs WHERE domain = $1", [domain]);
-    res.json({ domain, config: entry.defaults, reset: true });
-  } catch (err) {
-    console.error(`Failed to reset config [${domain}]:`, err);
-    res.status(500).json({ error: "Failed to reset configuration" });
-  }
-});
+    try {
+      await pool.query("DELETE FROM game_configs WHERE domain = $1", [domain]);
+      res.json({ domain, config: entry.defaults, reset: true });
+    } catch (err) {
+      console.error(`Failed to reset config [${domain}]:`, err);
+      res.status(500).json({ error: "Failed to reset configuration" });
+    }
+  },
+);
 
 export default router;

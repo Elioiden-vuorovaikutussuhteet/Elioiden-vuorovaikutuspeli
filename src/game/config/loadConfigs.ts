@@ -1,4 +1,5 @@
 import { configRegistry } from "./configRegistry";
+import { deepMerge } from "../utils/deepMerge";
 
 /* Snapshot of initial code defaults taken before any database overrides are applied. */
 const initialDefaults = new Map<string, Record<string, unknown>>();
@@ -21,7 +22,8 @@ export function applySectionConfig(
     for (const section of category.sections) {
       if (section.id === sectionId) {
         const base = initialDefaults.get(sectionId) ?? section.defaults;
-        const parsed = section.schema.safeParse({ ...base, ...data });
+        const merged = deepMerge(base, data);
+        const parsed = section.schema.safeParse(merged);
         if (parsed.success) {
           Object.assign(section.defaults, parsed.data);
           return true;
