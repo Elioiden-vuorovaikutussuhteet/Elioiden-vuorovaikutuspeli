@@ -48,6 +48,8 @@ export default class PermanentArrow {
   private lastFromOrgX = NaN;
   private lastFromOrgY = NaN;
   private lastToOrgX = NaN;
+  private lastFromScale = NaN;
+  private lastToScale = NaN;
   private lastToOrgY = NaN;
   private visible = false;
 
@@ -175,7 +177,15 @@ export default class PermanentArrow {
       progress: 1,
       duration: permanentArrowUIConfig.pulseDuration,
       ease: "Linear",
+      onUpdate: () => {
+        const t = pulse.progress;
+        circle.setPosition(
+          this.fromX + (this.toX - this.fromX) * t,
+          this.fromY + (this.toY - this.fromY) * t,
+        );
+      },
       onComplete: () => {
+        circle.setPosition(this.toX, this.toY);
         circle.destroy();
         this.pulses = this.pulses.filter((p) => p !== pulse);
       },
@@ -377,6 +387,7 @@ export default class PermanentArrow {
     this.visible = true;
 
     const eps = permanentArrowUIConfig.movementEpsilon;
+    const scaleEps = permanentArrowUIConfig.scaleEpsilon;
     const moved =
       !Number.isFinite(this.lastFromOrgX) ||
       !Number.isFinite(this.lastFromOrgY) ||
@@ -385,13 +396,17 @@ export default class PermanentArrow {
       Math.abs(from.x - this.lastFromOrgX) > eps ||
       Math.abs(from.y - this.lastFromOrgY) > eps ||
       Math.abs(to.x - this.lastToOrgX) > eps ||
-      Math.abs(to.y - this.lastToOrgY) > eps;
+      Math.abs(to.y - this.lastToOrgY) > eps ||
+      Math.abs(from.scaleX - this.lastFromScale) > scaleEps ||
+      Math.abs(to.scaleX - this.lastToScale) > scaleEps;
 
     if (moved) {
       this.lastFromOrgX = from.x;
       this.lastFromOrgY = from.y;
       this.lastToOrgX = to.x;
       this.lastToOrgY = to.y;
+      this.lastFromScale = from.scaleX;
+      this.lastToScale = to.scaleX;
 
       const ux = dx / distance;
       const uy = dy / distance;
