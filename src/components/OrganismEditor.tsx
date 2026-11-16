@@ -24,6 +24,7 @@ interface OrganismEditorProps {
   selectedOrganismId: string;
 
   onOrganismChange: (
+    originalId: string,
     organism: OrganismData
   ) => void;
 
@@ -97,6 +98,7 @@ function OrganismEditor({
         organisms={organisms}
         onChange={(values) => {
           onOrganismChange(
+            selectedOrganism.id,
             values as OrganismData
           );
         }}
@@ -126,15 +128,17 @@ function OrganismEditor({
 
         return (
           <Box
-            key={`${interactionId}-${index}`}
-            sx={{
-              border: "1px solid",
-              borderColor: "divider",
-              borderRadius: 2,
-              p: 2,
-              mb: 3,
-            }}
-          >
+          key={`${interactionId}-${index}`}
+          sx={{
+            border: "1px solid",
+            borderColor: "#cbd5e1",
+            borderRadius: 2,
+            p: 3,
+            mb: 4,
+            backgroundColor: "#f8fafc",
+            boxShadow: "0 2px 5px rgba(0,0,0,0.04)",
+          }}
+        >
 
             {/* Relation */}
             <Typography variant="subtitle1" sx={{ mb: 2 }}>

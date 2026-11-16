@@ -1,4 +1,3 @@
-import { useState } from "react";
 import {
   Box,
   TextField,
@@ -17,23 +16,26 @@ interface DynamicFormProps {
   organisms?: OrganismData[];
 }
 
-export default function DynamicForm({
-  schema,
-  defaults,
-  onChange,
-  organisms,
-}: DynamicFormProps) {
-
-  const [values, setValues] = useState(defaults);
+export default function DynamicForm({ schema, defaults, onChange, organisms }: DynamicFormProps) {
+  const values = defaults;
 
   function handleChange(key: string, value: unknown) {
-    const updated = { ...values, [key]: value };
-    setValues(updated);
-    onChange?.(updated);
+    onChange?.({ ...defaults, [key]: value });
   }
 
   return (
-    <Box sx={{ display: "flex", flexDirection: "column", gap: 2, mt: 2 }}>
+    <Box
+      sx={{
+        display: "flex",
+        flexDirection: "column",
+        gap: 2,
+        mt: 2,
+        p: 3,
+        backgroundColor: "#f3f6fa",
+        border: "1px solid #dce3ec",
+        borderRadius: 2,
+      }}
+    >
 
       {Object.entries(schema.shape).map(([key, field]) => {
 
@@ -150,6 +152,20 @@ export default function DynamicForm({
           );
         }
 
+        // Organism ID
+        if (key === "id") {
+          return (
+            <TextField
+              key={key}
+              label="ID"
+              value={String(currentValue ?? "")}
+              onChange={(e) =>
+                handleChange(key, e.target.value)
+              }
+              fullWidth
+            />
+          );
+        }
 
         // String fields
         if (field instanceof z.ZodString) {

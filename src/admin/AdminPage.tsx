@@ -81,6 +81,11 @@ function handleAddProfile() {
     [id]: createDefaultConfigValues(),
   }));
 
+  setOrganismConfigs((previous) => ({
+    ...previous,
+    [id]: createDefaultOrganismConfig(),
+  }));
+
   setActiveProfile(id);
   setNewProfileName("");
   setShowAddProfile(false);
@@ -99,24 +104,41 @@ const [configValues, setConfigValues] = useState<
   default: createDefaultConfigValues(),
 }));
 
-  // For future config saving:
-  // - Trigger autosave or mark the configuration as edited here.
-  function handleConfigChange(
-    configId: string,
-    sectionId: string,
-    values: Record<string, unknown>
-  ) {
-    const key = `${configId}.${sectionId}`;
+/*
+For config saving:
+- Add a save button:
+- It should call a function that checks hasUnsavedConfigChanges for True, then sends
+  - profileId: activeProfile
+  - configValues: configValues[activeProfile]
+  to backend
+- After a successful save, set hasUnsavedConfigChanges to false.
 
-    setConfigValues((previous) => ({
-      ...previous,
-      [activeProfile]: {
-        ...previous[activeProfile],
-        [key]: values,
-      },
-    }));
-  }
+*/
+const [hasUnsavedConfigChanges, setHasUnsavedConfigChanges] = useState(false);
 
+void hasUnsavedConfigChanges;
+
+useEffect(() => {
+  setHasUnsavedConfigChanges(false);
+}, [activeProfile]);
+
+function handleConfigChange(
+  configId: string,
+  sectionId: string,
+  values: Record<string, unknown>
+) {
+  const key = `${configId}.${sectionId}`;
+
+  setConfigValues((previous) => ({
+    ...previous,
+    [activeProfile]: {
+      ...previous[activeProfile],
+      [key]: values,
+    },
+  }));
+
+  setHasUnsavedConfigChanges(true);
+}
   const activeConfig = configRegistry.find(
     (config) => config.id === activeConfigTab
   );
@@ -125,21 +147,70 @@ const [configValues, setConfigValues] = useState<
 // - Organisms, relations and popup texts are stored in React state.
 // - Changes are local and are lost when the page reloads.
 
-const [organisms, setOrganisms] = useState<OrganismData[]>(
-  () => structuredClone(initialOrganisms)
-);
+const [hasUnsavedOrgChanges, setHasUnsavedOrgChanges] = useState(false);
 
-const [relations, setRelations] = useState<OrganismsRelations[]>(
-  () => structuredClone(initialRelations)
-);
+void hasUnsavedOrgChanges;
 
-const [popupTexts, setPopupTexts] = useState<Record<string, PopupText>>(
-  () => structuredClone(initialPopupTexts)
-);
+useEffect(() => {
+  setHasUnsavedOrgChanges(false);
+}, [activeProfile]);
+
+type OrganismConfig = {
+  organisms: OrganismData[];
+  relations: OrganismsRelations[];
+  popupTexts: Record<string, PopupText>;
+};
+
+function createDefaultOrganismConfig(): OrganismConfig {
+  return {
+    organisms: structuredClone(initialOrganisms),
+    relations: structuredClone(initialRelations),
+    popupTexts: structuredClone(initialPopupTexts),
+  };
+}
+
+const [organismConfigs, setOrganismConfigs] = useState<
+  Record<string, OrganismConfig>
+>(() => ({
+  default: createDefaultOrganismConfig(),
+}));
+
+const activeOrganismConfig =
+  organismConfigs[activeProfile] ?? createDefaultOrganismConfig();
+
+const organisms = activeOrganismConfig.organisms;
+const relations = activeOrganismConfig.relations;
+const popupTexts = activeOrganismConfig.popupTexts;
 
 const [selectedOrganismId, setSelectedOrganismId] = useState<string>(
   initialOrganisms[0]?.id ?? ""
 );
+
+function updateOrganismConfig(
+  updater: (previous: OrganismConfig) => OrganismConfig
+) {
+  setOrganismConfigs((previous) => ({
+    ...previous,
+    [activeProfile]: updater(
+      previous[activeProfile] ?? createDefaultOrganismConfig()
+    ),
+  }));
+
+  setHasUnsavedOrgChanges(true);
+}
+
+useEffect(() => {
+  if (!organisms.some((organism) => organism.id === selectedOrganismId)) {
+    setSelectedOrganismId(organisms[0]?.id ?? "");
+  }
+}, [activeProfile, organisms, selectedOrganismId]);
+
+/*
+For organism saving:
+- Add a save button:
+- It should call a function that checks hasUnsavedOrgChanges for True, then sends
+organisms, relations, popupTexts to the backend
+*/
 
   return (
     <Box
@@ -286,49 +357,49 @@ const [selectedOrganismId, setSelectedOrganismId] = useState<string>(
             </Box>
 
             <OrganismEditor
+              key={activeProfile}
               organisms={organisms}
               relations={relations}
               popupTexts={popupTexts}
               selectedOrganismId={selectedOrganismId}
 
-              onOrganismChange={(updatedOrganism) => {
-                setOrganisms((previous) =>
-                  previous.map((organism) =>
-                    organism.id === updatedOrganism.id
+              onOrganismChange={(originalId, updatedOrganism) => {
+                updateOrganismConfig((previous) => ({
+                  ...previous,
+                  organisms: previous.organisms.map((organism) =>
+                    organism.id === originalId
                       ? updatedOrganism
                       : organism
-                  )
-                );
-                // For future saving:
-                // - Send updatedOrganism to the backend.
-                // - Update the existing organism using its ID.
+                  ),
+                }));
+
+                if (originalId !== updatedOrganism.id) {
+                  setSelectedOrganismId(updatedOrganism.id);
+                }
               }}
 
               onRelationChange={(index, updatedRelation) => {
-              setRelations((previous) =>
-                previous.map((relation, i) =>
-                  i === index
-                    ? {
-                        ...updatedRelation,
-                        source: selectedOrganismId,
-                      }
-                    : relation
-                )
-              );
-              // For future saving:
-              // - Send updatedRelation to the backend.
-              // - Update the relation identified by its source and target.
-              // - Consider introducing a unique relation ID in the future.
+                updateOrganismConfig((previous) => ({
+                  ...previous,
+                  relations: previous.relations.map((relation, i) =>
+                    i === index
+                      ? {
+                          ...updatedRelation,
+                          source: selectedOrganismId,
+                        }
+                      : relation
+                  ),
+                }));
               }}
 
               onPopupTextChange={(interactionId, updatedPopupText) => {
-                setPopupTexts((previous) => ({
+                updateOrganismConfig((previous) => ({
                   ...previous,
-                  [interactionId]: updatedPopupText,
+                  popupTexts: {
+                    ...previous.popupTexts,
+                    [interactionId]: updatedPopupText,
+                  },
                 }));
-              // For future saving:
-              // - Send updatedPopupText to the backend.
-              // - Update popup text using interactionId.
               }}
             />
           </Box>
