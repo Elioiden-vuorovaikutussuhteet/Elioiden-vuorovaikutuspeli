@@ -4,11 +4,8 @@ import PermanentArrow from "../entities/permanentarrow";
 import { drawArrow } from "../services/DrawArrowService";
 import { getRelation } from "../services/RelationsService";
 import type { Connection } from "../types/Connection";
-import {
-  arrowUIConfig,
-  permanentArrowUIConfig,
-  type ArrowUIConfig,
-} from "../config/uiConfig";
+import { arrowUIConfig, permanentArrowUIConfig } from "../config";
+import type { ArrowUIConfig } from "../config/arrowConfig";
 
 export default class ArrowRenderer {
   private scene: Phaser.Scene;

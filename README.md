@@ -29,11 +29,20 @@ React + TypeScript perusteinen opetuspeli.
 docker compose up
 ```
 
-5. Kontti rakentuu ja Eliopeli aukeaa osoitteeseen <http://localhost:5173>. Sen saa suljettua komentorivillä yhdistelmällä ctrl + c.
-6. Kontti päivittyy automaattisesti, kun koodia muutetaan, joten sitä ei tarvitse uudelleenkäynnistää useimpien muutosten välissä. Kaikki muutokset eivät kuitenkaan päivity. Tällöin kontin uudelleenrakennuksen käynnistyksen yhteydessä voi pakottaa komennolla
+5. Kontit rakentuvat ja käynnistyvät. Kontteja on kolme: eliöpeli, server ja db.
+6. Eliopeli aukeaa osoitteeseen <http://localhost:5173>. Sen saa suljettua komentorivillä yhdistelmällä ctrl + c. Admin-paneeliin pääsee osoitteesta <http://localhost:5173/login>.
+7. Kontti päivittyy automaattisesti, kun koodia muutetaan, joten sitä ei tarvitse uudelleenkäynnistää useimpien muutosten välissä. Kaikki muutokset eivät kuitenkaan päivity. Tällöin konttien uudelleenrakennuksen käynnistyksen yhteydessä voi pakottaa komennolla
 
 ```bash
 docker compose up --build -V
+```
+8. Mikäli haluaa tyhjentää tietokannan, tulee sen levy poistaa komennolla
+```bash
+docker compose down -v
+```
+Tietokannan tilan voi tarkistaa curl- ja jq-työkalujen avulla komennolla
+```bash
+curl -s http://localhost:3000/api/configs/ | jq
 ```
 
 ## Local

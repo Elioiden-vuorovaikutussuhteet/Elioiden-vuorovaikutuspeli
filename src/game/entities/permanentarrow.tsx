@@ -1,7 +1,7 @@
 import Phaser from "phaser";
 import type Organism from "./organism";
 import { drawArrow } from "../services/DrawArrowService";
-import { arrowUIConfig, permanentArrowUIConfig } from "../config/uiConfig";
+import { arrowUIConfig, permanentArrowUIConfig } from "../config";
 
 export interface PermanentArrowConfig {
   targetOffset?: number;

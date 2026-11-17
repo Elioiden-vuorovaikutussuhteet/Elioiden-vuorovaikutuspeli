@@ -66,7 +66,7 @@ import { getRelation } from "../../../src/game/services/RelationsService";
 import {
   arrowUIConfig,
   permanentArrowUIConfig,
-} from "../../../src/game/config/uiConfig";
+} from "../../../src/game/config";
 
 describe("ArrowRenderer", () => {
   let mockScene: Phaser.Scene;
