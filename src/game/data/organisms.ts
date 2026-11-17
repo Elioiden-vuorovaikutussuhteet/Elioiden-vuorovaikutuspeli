@@ -35,7 +35,7 @@ export const organisms = z.array(OrganismSchema).parse([
     id: "sapota",
     name: "Sapota",
     texture: "sapota_sprite",
-    default_scale: 0.9,
+    default_scale: 1,
     growth_types: ["grow"],
     offsetX: 400,
     offsetY: 0,
@@ -85,4 +85,3 @@ export const organismDataMap = new Map<string, OrganismData>(
 export function getOrganismData(id: string): OrganismData | undefined {
   return organismDataMap.get(id);
 }
-
