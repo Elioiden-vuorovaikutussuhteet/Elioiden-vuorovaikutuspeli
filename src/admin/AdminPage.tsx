@@ -4,7 +4,10 @@ import { useNavigate } from "react-router-dom";
 import { Box, Tabs, Tab, Typography, Button, Alert } from "@mui/material";
 import { configRegistry } from "../game/config/configRegistry";
 import { loadConfigsFromServer } from "../game/config/loadConfigs";
-import { saveConfigSection, deleteConfigSection } from "../game/config/configApi";
+import {
+  saveConfigSection,
+  deleteConfigSection,
+} from "../game/config/configApi";
 import DynamicForm from "../components/DynamicForm";
 
 function buildSectionMap(): Record<string, unknown> {
@@ -22,7 +25,9 @@ function AdminPage() {
   const [message, setMessage] = useState("Loading...");
   const navigate = useNavigate();
 
-  const [profiles, setProfiles] = useState([{ id: "default", name: "Default" }]);
+  const [profiles, setProfiles] = useState([
+    { id: "default", name: "Default" },
+  ]);
   const [activeProfile, setActiveProfile] = useState("default");
   const [newProfileName, setNewProfileName] = useState("");
   const [showAddProfile, setShowAddProfile] = useState(false);
@@ -36,9 +41,13 @@ function AdminPage() {
     default: buildSectionMap(),
   }));
 
-  const [dirtySections, setDirtySections] = useState<Record<string, boolean>>({});
+  const [dirtySections, setDirtySections] = useState<Record<string, boolean>>(
+    {},
+  );
   const [savingSection, setSavingSection] = useState<string | null>(null);
-  const [resetVersions, setResetVersions] = useState<Record<string, number>>({});
+  const [resetVersions, setResetVersions] = useState<Record<string, number>>(
+    {},
+  );
   const [feedback, setFeedback] = useState<{
     sectionKey: string;
     severity: "success" | "error";
@@ -177,9 +186,7 @@ function AdminPage() {
     }
   }
 
-  const activeConfig = configRegistry.find(
-    (config) => config.id === activeTab,
-  );
+  const activeConfig = configRegistry.find((config) => config.id === activeTab);
 
   return (
     <Box

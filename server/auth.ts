@@ -1,6 +1,6 @@
 import { Router } from "express";
 import bcrypt from "bcrypt";
-import { rateLimit } from 'express-rate-limit';
+import { rateLimit } from "express-rate-limit";
 
 const router = Router();
 
@@ -17,10 +17,10 @@ const loginLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
   limit: 8,
   message: {
-    error: 'Too many login attempts. Try again later.'
+    error: "Too many login attempts. Try again later.",
   },
   standardHeaders: true,
-  legacyHeaders: false
+  legacyHeaders: false,
 });
 
 /*
@@ -39,7 +39,7 @@ router.post("/login", loginLimiter, async (req, res) => {
   try {
     const valid = await bcrypt.compare(
       password,
-      process.env.ADMIN_PASSWORD_HASH!
+      process.env.ADMIN_PASSWORD_HASH!,
     );
 
     if (!valid) {
@@ -53,7 +53,7 @@ router.post("/login", loginLimiter, async (req, res) => {
 
       req.session.user = {
         id: "admin",
-        isAdmin: true
+        isAdmin: true,
       };
 
       res.json({ authenticated: true });
@@ -67,7 +67,7 @@ router.post("/logout", (req, res) => {
   req.session.destroy((err) => {
     if (err) {
       return res.status(500).json({
-        error: "Logout failed"
+        error: "Logout failed",
       });
     }
 
@@ -75,7 +75,7 @@ router.post("/logout", (req, res) => {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
       sameSite: "strict",
-      path: "/"
+      path: "/",
     });
 
     res.json({ authenticated: false });
@@ -84,7 +84,7 @@ router.post("/logout", (req, res) => {
 
 router.get("/me", (req, res) => {
   res.json({
-    authenticated: !!req.session.user?.isAdmin
+    authenticated: !!req.session.user?.isAdmin,
   });
 });
 
