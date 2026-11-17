@@ -39,7 +39,6 @@ import {
   popupSceneConfig,
 } from "./sceneConfig";
 import { ScoreConfigSchema, scoreConfig } from "./scoreConfig";
-import { UIConfigSchema, uiConfig } from "./uiConfig";
 
 export const configRegistry = [
   {
@@ -154,12 +153,6 @@ export const configRegistry = [
     id: "ui",
     label: "UI",
     sections: [
-      {
-        id: "ui",
-        label: "UI Settings",
-        schema: UIConfigSchema,
-        defaults: uiConfig,
-      },
       {
         id: "arrows",
         label: "Arrows",
