@@ -1,100 +1,94 @@
-import { useEffect, useState } from 'react';
-import { getServerMessage } from '../api';
+import { useEffect, useState } from "react";
+import { getServerMessage, logout } from "../api";
 import { useNavigate } from "react-router-dom";
-import { logout } from "../api";
-import { Box, Tabs, Tab, Typography } from "@mui/material";
+import { Box, Tabs, Tab, Typography, Button, Alert } from "@mui/material";
 import { configRegistry } from "../game/config/configRegistry";
-import DynamicForm from '../components/DynamicForm';
+import { loadConfigsFromServer } from "../game/config/loadConfigs";
+import { saveConfigSection, deleteConfigSection } from "../game/config/configApi";
+import DynamicForm from "../components/DynamicForm";
+
+function buildSectionMap(): Record<string, unknown> {
+  return Object.fromEntries(
+    configRegistry.flatMap((config) =>
+      config.sections.map((section) => [
+        `${config.id}.${section.id}`,
+        structuredClone(section.defaults),
+      ]),
+    ),
+  );
+}
 
 function AdminPage() {
-  const [message, setMessage] = useState('Loading...');
+  const [message, setMessage] = useState("Loading...");
+  const navigate = useNavigate();
+
+  const [profiles, setProfiles] = useState([{ id: "default", name: "Default" }]);
+  const [activeProfile, setActiveProfile] = useState("default");
+  const [newProfileName, setNewProfileName] = useState("");
+  const [showAddProfile, setShowAddProfile] = useState(false);
+
+  const [activeParentTab, setActiveParentTab] = useState("config");
+  const [activeTab, setActiveTab] = useState("camera");
+
+  const [configValues, setConfigValues] = useState<
+    Record<string, Record<string, unknown>>
+  >(() => ({
+    default: buildSectionMap(),
+  }));
+
+  const [dirtySections, setDirtySections] = useState<Record<string, boolean>>({});
+  const [savingSection, setSavingSection] = useState<string | null>(null);
+  const [resetVersions, setResetVersions] = useState<Record<string, number>>({});
+  const [feedback, setFeedback] = useState<{
+    sectionKey: string;
+    severity: "success" | "error";
+    text: string;
+  } | null>(null);
 
   useEffect(() => {
     getServerMessage()
-      .then(data => {
-        setMessage(data.message);
+      .then((data) => setMessage(data.message))
+      .catch(console.error);
+
+    loadConfigsFromServer()
+      .then(() => {
+        setConfigValues((prev) => ({
+          ...prev,
+          default: buildSectionMap(),
+        }));
       })
       .catch(console.error);
   }, []);
 
-const navigate = useNavigate();
-
-async function handleLogout() {
-  try {
-    await logout();
-    navigate("/login", { replace: true });
-  } catch (error) {
-    console.error("Logout failed:", error);
+  async function handleLogout() {
+    try {
+      await logout();
+      navigate("/login", { replace: true });
+    } catch (error) {
+      console.error("Logout failed:", error);
+    }
   }
-}
-// For future database use:
-// - Load profiles from backend
-const [profiles, setProfiles] = useState([
-  { id: "default", name: "Default" },
-]);
 
-const [activeProfile, setActiveProfile] = useState("default");
+  function handleAddProfile() {
+    const name = newProfileName.trim();
+    if (!name) return;
 
-const [newProfileName, setNewProfileName] = useState("");
-const [showAddProfile, setShowAddProfile] = useState(false);
+    const id = crypto.randomUUID();
+    setProfiles((previous) => [...previous, { id, name }]);
+    setConfigValues((previous) => ({
+      ...previous,
+      [id]: buildSectionMap(),
+    }));
 
-// For future database use:
-// - Change local profile adding to an API request
-function handleAddProfile() {
-  const name = newProfileName.trim();
+    setActiveProfile(id);
+    setNewProfileName("");
+    setShowAddProfile(false);
+  }
 
-  if (!name) return;
-
-  const id = crypto.randomUUID();
-
-  setProfiles((previous) => [
-    ...previous,
-    { id, name },
-  ]);
-
-  setConfigValues((previous) => ({
-    ...previous,
-    [id]: Object.fromEntries(
-      configRegistry.flatMap((config) =>
-        config.sections.map((section) => [
-          `${config.id}.${section.id}`,
-          structuredClone(section.defaults),
-        ])
-      )
-    ),
-  }));
-
-  setActiveProfile(id);
-  setNewProfileName("");
-  setShowAddProfile(false);
-}
-
-const [activeParentTab, setActiveParentTab] = useState("config");
-const [activeTab, setActiveTab] = useState("camera");
-
-// For future config saving:
-// - Possibly load saved configurations from the backend instead of using section.defaults.
-// - Possibly separate saved values from the current edited values.
-// - Associate each configuration with its corresponding profile.
-const [configValues, setConfigValues] = useState<
-  Record<string, Record<string, unknown>>
->(() => ({
-  default: Object.fromEntries(
-    configRegistry.flatMap((config) =>
-      config.sections.map((section) => [
-        `${config.id}.${section.id}`,
-        section.defaults,
-      ])
-    )
-  ),
-}));
-
-  // For future config saving:
-  // - Trigger autosave or mark the configuration as edited here.
   function handleConfigChange(
     configId: string,
     sectionId: string,
-    values: Record<string, unknown>
+    values: Record<string, unknown>,
   ) {
     const key = `${configId}.${sectionId}`;
 
@@ -105,10 +99,86 @@ const [configValues, setConfigValues] = useState<
         [key]: values,
       },
     }));
+    setDirtySections((prev) => ({ ...prev, [key]: true }));
+  }
+
+  async function handleSaveSection(configId: string, sectionId: string) {
+    const key = `${configId}.${sectionId}`;
+    const currentValues = configValues[activeProfile]?.[key] as Record<
+      string,
+      unknown
+    >;
+    if (!currentValues) return;
+
+    setSavingSection(key);
+    setFeedback(null);
+
+    try {
+      const savedConfig = await saveConfigSection(sectionId, currentValues);
+      setConfigValues((prev) => ({
+        ...prev,
+        [activeProfile]: {
+          ...prev[activeProfile],
+          [key]: structuredClone(savedConfig),
+        },
+      }));
+      setDirtySections((prev) => ({ ...prev, [key]: false }));
+      setFeedback({
+        sectionKey: key,
+        severity: "success",
+        text: "Configuration saved to database.",
+      });
+    } catch (error) {
+      setFeedback({
+        sectionKey: key,
+        severity: "error",
+        text:
+          error instanceof Error
+            ? error.message
+            : "Failed to save configuration.",
+      });
+    } finally {
+      setSavingSection(null);
+    }
+  }
+
+  async function handleResetSection(configId: string, sectionId: string) {
+    const key = `${configId}.${sectionId}`;
+    setSavingSection(key);
+    setFeedback(null);
+
+    try {
+      const defaultConfig = await deleteConfigSection(sectionId);
+      setConfigValues((prev) => ({
+        ...prev,
+        [activeProfile]: {
+          ...prev[activeProfile],
+          [key]: structuredClone(defaultConfig),
+        },
+      }));
+      setDirtySections((prev) => ({ ...prev, [key]: false }));
+      setResetVersions((prev) => ({ ...prev, [key]: (prev[key] ?? 0) + 1 }));
+      setFeedback({
+        sectionKey: key,
+        severity: "success",
+        text: "Reset to default values.",
+      });
+    } catch (error) {
+      setFeedback({
+        sectionKey: key,
+        severity: "error",
+        text:
+          error instanceof Error
+            ? error.message
+            : "Failed to reset configuration.",
+      });
+    } finally {
+      setSavingSection(null);
+    }
   }
 
   const activeConfig = configRegistry.find(
-    (config) => config.id === activeTab
+    (config) => config.id === activeTab,
   );
 
   return (
@@ -125,13 +195,9 @@ const [configValues, setConfigValues] = useState<
         Admin Dashboard
       </Typography>
 
-      <Typography sx={{ mb: 2 }}>
-        {message}
-      </Typography>
+      <Typography sx={{ mb: 2 }}>{message}</Typography>
 
-      <button onClick={handleLogout}>
-        Logout
-      </button>
+      <button onClick={handleLogout}>Logout</button>
 
       <Box sx={{ mt: 3, display: "flex", gap: 2, alignItems: "center" }}>
         <Typography>Profile:</Typography>
@@ -160,14 +226,11 @@ const [configValues, setConfigValues] = useState<
             placeholder="Profile name"
           />
 
-          <button onClick={handleAddProfile}>
-            Create
-          </button>
+          <button onClick={handleAddProfile}>Create</button>
         </Box>
       )}
 
       <Box sx={{ mt: 3 }}>
-        {/* Parent tabs */}
         <Tabs
           value={activeParentTab}
           onChange={(_, value) => setActiveParentTab(value)}
@@ -176,7 +239,6 @@ const [configValues, setConfigValues] = useState<
           <Tab label="Organisms" value="organisms" />
         </Tabs>
 
-        {/* Config tabs */}
         {activeParentTab === "config" && (
           <Box sx={{ mt: 3 }}>
             <Tabs
@@ -184,11 +246,7 @@ const [configValues, setConfigValues] = useState<
               onChange={(_, value) => setActiveTab(value)}
             >
               {configRegistry.map((config) => (
-                <Tab
-                  key={config.id}
-                  label={config.label}
-                  value={config.id}
-                />
+                <Tab key={config.id} label={config.label} value={config.id} />
               ))}
             </Tabs>
 
@@ -196,6 +254,9 @@ const [configValues, setConfigValues] = useState<
               <Box sx={{ mt: 3 }}>
                 {activeConfig.sections.map((section) => {
                   const key = `${activeConfig.id}.${section.id}`;
+                  const isSaving = savingSection === key;
+                  const isDirty = Boolean(dirtySections[key]);
+                  const version = resetVersions[key] ?? 0;
 
                   return (
                     <Box key={section.id} sx={{ mb: 4 }}>
@@ -204,20 +265,55 @@ const [configValues, setConfigValues] = useState<
                       </Typography>
 
                       <DynamicForm
-                        key={`${activeProfile}-${activeConfig.id}-${section.id}`}
+                        key={`${activeProfile}-${activeConfig.id}-${section.id}-${version}`}
                         schema={section.schema}
                         defaults={
-                          (configValues[activeProfile]?.[key] as Record<string, unknown>) ??
-                          section.defaults
+                          (configValues[activeProfile]?.[key] as Record<
+                            string,
+                            unknown
+                          >) ?? section.defaults
                         }
                         onChange={(values) =>
                           handleConfigChange(
                             activeConfig.id,
                             section.id,
-                            values
+                            values,
                           )
                         }
                       />
+
+                      <Box sx={{ mt: 2, display: "flex", gap: 2 }}>
+                        <Button
+                          variant="contained"
+                          disabled={isSaving || !isDirty}
+                          onClick={() =>
+                            handleSaveSection(activeConfig.id, section.id)
+                          }
+                        >
+                          {isSaving ? "Saving..." : "Save"}
+                        </Button>
+
+                        <Button
+                          variant="outlined"
+                          color="secondary"
+                          disabled={isSaving}
+                          onClick={() =>
+                            handleResetSection(activeConfig.id, section.id)
+                          }
+                        >
+                          Reset to Defaults
+                        </Button>
+                      </Box>
+
+                      {feedback?.sectionKey === key && (
+                        <Alert
+                          severity={feedback.severity}
+                          sx={{ mt: 2, maxWidth: 480 }}
+                          onClose={() => setFeedback(null)}
+                        >
+                          {feedback.text}
+                        </Alert>
+                      )}
                     </Box>
                   );
                 })}
@@ -226,7 +322,6 @@ const [configValues, setConfigValues] = useState<
           </Box>
         )}
 
-        {/* Organisms tabs */}
         {activeParentTab === "organisms" && (
           <Box sx={{ mt: 3 }}>
             <Typography variant="h5" sx={{ mb: 2 }}>
@@ -235,11 +330,6 @@ const [configValues, setConfigValues] = useState<
           </Box>
         )}
       </Box>
-          
-    {/* 
-    For future config saving:
-    - Add a save button that submits configValues to the backend. (If not autosave)
-    */}
     </Box>
   );
 }
