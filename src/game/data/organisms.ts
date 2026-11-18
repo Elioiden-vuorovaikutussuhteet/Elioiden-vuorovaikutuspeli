@@ -1,4 +1,4 @@
-import { z } from "zod";
+import { xid, z } from "zod";
 
 export const OrganismSchema = z.object({
   id: z.string().min(1),
@@ -75,6 +75,24 @@ export const organisms = z.array(OrganismSchema).parse([
     growth_types: ["multiply"],
     offsetX: 400,
     offsetY: 300,
+  },
+  {
+    id: "acaciapathogen",
+    name: "Bullhorn Acacia Pathogens",
+    texture: "acaciapathogen_sprite",
+    default_scale: 1,
+    growth_types: ["multiply"],
+    offsetX: 0,
+    offsetY: 0,
+  },
+  {
+    id: "antpathogen",
+    name: "Ant Infecting Pathogens",
+    texture: "antpathogen_sprite",
+    default_scale: 1,
+    growth_types: ["multiply"],
+    offsetX: 0,
+    offsetY: 0,
   },
 ]);
 
