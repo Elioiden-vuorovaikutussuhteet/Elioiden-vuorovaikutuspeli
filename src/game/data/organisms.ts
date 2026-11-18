@@ -82,8 +82,8 @@ export const organisms = z.array(OrganismSchema).parse([
     texture: "acaciapathogen_sprite",
     default_scale: 1,
     growth_types: ["multiply"],
-    offsetX: 0,
-    offsetY: 0,
+    offsetX: -250,
+    offsetY: -250,
   },
   {
     id: "antpathogen",
@@ -91,8 +91,8 @@ export const organisms = z.array(OrganismSchema).parse([
     texture: "antpathogen_sprite",
     default_scale: 1,
     growth_types: ["multiply"],
-    offsetX: 0,
-    offsetY: 0,
+    offsetX: -700,
+    offsetY: 150,
   },
 ]);
 
