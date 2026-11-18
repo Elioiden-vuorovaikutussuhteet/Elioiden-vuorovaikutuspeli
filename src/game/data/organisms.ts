@@ -1,4 +1,4 @@
-import { xid, z } from "zod";
+import { z } from "zod";
 
 export const OrganismSchema = z.object({
   id: z.string().min(1),
