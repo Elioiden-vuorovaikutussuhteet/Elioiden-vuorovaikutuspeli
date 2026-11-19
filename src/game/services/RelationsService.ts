@@ -1,8 +1,8 @@
 import { relations } from "../data/relations";
-import type { organismsRelations } from "../data/relations";
+import type { OrganismsRelations } from "../data/relations";
 
-type RelationValue = organismsRelations["value"];
-type RelationMult = organismsRelations["mult"];
+type RelationValue = OrganismsRelations["value"];
+type RelationMult = OrganismsRelations["mult"];
 
 export const getRelation = (
     organism1: string,

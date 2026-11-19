@@ -7,9 +7,9 @@ export const organismsRelationsSchema = z.object({
   mult: z.number(),
 });
 
-export type organismsRelations = z.infer<typeof organismsRelationsSchema>;
+export type OrganismsRelations = z.infer<typeof organismsRelationsSchema>;
 
-export const relations: organismsRelations[] = [
+export const relations: OrganismsRelations[] = [
   { source: "acacia", target: "amf", value: 1, mult: 1 },
   { source: "acacia", target: "ants", value: 1, mult: 1 },
   { source: "acacia", target: "sapota", value: -1, mult: 1 },
@@ -27,4 +27,7 @@ export const relations: organismsRelations[] = [
   { source: "mycorrhizahelper", target: "amf", value: 1, mult: 1 },
   { source: "mycorrhizahelper", target: "acacia", value: 1, mult: 1 },
   { source: "mycorrhizahelper", target: "sapota", value: 1, mult: 1 },
+  { source: "acaciapathogen", target: "acacia", value: -1, mult: 1 },
+  { source: "antfootbacteria", target: "antpathogen", value: -1, mult: 1 },
+  { source: "antfootbacteria", target: "acaciapathogen", value: -1, mult: 1 },
 ];

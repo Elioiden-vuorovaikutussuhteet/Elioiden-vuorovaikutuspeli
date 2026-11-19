@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
-import { getServerMessage, logout } from "../api";
 import { useNavigate } from "react-router-dom";
 import { Box, Tabs, Tab, Typography, Button, Alert } from "@mui/material";
+import { getServerMessage, logout } from "../api";
 import { configRegistry } from "../game/config/configRegistry";
 import { loadConfigsFromServer } from "../game/config/loadConfigs";
 import {
@@ -9,6 +9,25 @@ import {
   deleteConfigSection,
 } from "../game/config/configApi";
 import DynamicForm from "../components/DynamicForm";
+import OrganismEditor from "../components/OrganismEditor";
+import {
+  organisms as initialOrganisms,
+  type OrganismData,
+} from "../game/data/organisms";
+import {
+  relations as initialRelations,
+  type OrganismsRelations,
+} from "../game/data/relations";
+import {
+  popupTexts as initialPopupTexts,
+  type PopupText,
+} from "../game/data/popupTexts";
+
+type OrganismConfig = {
+  organisms: OrganismData[];
+  relations: OrganismsRelations[];
+  popupTexts: Record<string, PopupText>;
+};
 
 function buildSectionMap(): Record<string, unknown> {
   return Object.fromEntries(
@@ -19,6 +38,14 @@ function buildSectionMap(): Record<string, unknown> {
       ]),
     ),
   );
+}
+
+function createDefaultOrganismConfig(): OrganismConfig {
+  return {
+    organisms: structuredClone(initialOrganisms),
+    relations: structuredClone(initialRelations),
+    popupTexts: structuredClone(initialPopupTexts),
+  };
 }
 
 function AdminPage() {
@@ -33,8 +60,9 @@ function AdminPage() {
   const [showAddProfile, setShowAddProfile] = useState(false);
 
   const [activeParentTab, setActiveParentTab] = useState("config");
-  const [activeTab, setActiveTab] = useState("camera");
+  const [activeConfigTab, setActiveConfigTab] = useState("camera");
 
+  // Config values (per profile), saved per section through the config API
   const [configValues, setConfigValues] = useState<
     Record<string, Record<string, unknown>>
   >(() => ({
@@ -78,15 +106,89 @@ function AdminPage() {
     }
   }
 
+  // Organisms, relations and popup texts (per profile)
+  // Current implementation:
+  // - Stored in React state.
+  // - Changes are local and are lost when the page reloads.
+  const [organismConfigs, setOrganismConfigs] = useState<
+    Record<string, OrganismConfig>
+  >(() => ({
+    default: createDefaultOrganismConfig(),
+  }));
+
+  const [orgChanges, setOrgChanges] = useState<Record<string, boolean>>({});
+  const hasUnsavedOrgChanges = orgChanges[activeProfile] ?? false;
+  void hasUnsavedOrgChanges;
+
+  /*
+  TODO (API for organisms):
+  - Load organisms, relations and popupTexts from the backend instead of using
+    the initial data from ../game/data (e.g. alongside loadConfigsFromServer).
+  - Add a save button that calls a function which checks hasUnsavedOrgChanges
+    and sends organisms, relations and popupTexts to the backend.
+  - After a successful save, set orgChanges[activeProfile] to false.
+  */
+
+  const activeOrganismConfig =
+    organismConfigs[activeProfile] ?? createDefaultOrganismConfig();
+
+  const organisms = activeOrganismConfig.organisms;
+  const relations = activeOrganismConfig.relations;
+  const popupTexts = activeOrganismConfig.popupTexts;
+
+  function updateOrganismConfig(
+    updater: (previous: OrganismConfig) => OrganismConfig,
+  ) {
+    setOrganismConfigs((previous) => ({
+      ...previous,
+      [activeProfile]: updater(
+        previous[activeProfile] ?? createDefaultOrganismConfig(),
+      ),
+    }));
+
+    setOrgChanges((previous) => ({
+      ...previous,
+      [activeProfile]: true,
+    }));
+  }
+
+  const [selectedOrganismIds, setSelectedOrganismIds] = useState<
+    Record<string, string>
+  >({});
+
+  const storedOrganismId = selectedOrganismIds[activeProfile];
+
+  const selectedOrganismId = organisms.some(
+    (organism) => organism.id === storedOrganismId,
+  )
+    ? storedOrganismId
+    : (organisms[0]?.id ?? "");
+
+  function setSelectedOrganismId(id: string) {
+    setSelectedOrganismIds((previous) => ({
+      ...previous,
+      [activeProfile]: id,
+    }));
+  }
+
+  // Add profile
+  // For future database use:
+  // - Change local profile adding to an API request
   function handleAddProfile() {
     const name = newProfileName.trim();
     if (!name) return;
 
     const id = crypto.randomUUID();
     setProfiles((previous) => [...previous, { id, name }]);
+
     setConfigValues((previous) => ({
       ...previous,
       [id]: buildSectionMap(),
+    }));
+
+    setOrganismConfigs((previous) => ({
+      ...previous,
+      [id]: createDefaultOrganismConfig(),
     }));
 
     setActiveProfile(id);
@@ -186,7 +288,9 @@ function AdminPage() {
     }
   }
 
-  const activeConfig = configRegistry.find((config) => config.id === activeTab);
+  const activeConfig = configRegistry.find(
+    (config) => config.id === activeConfigTab,
+  );
 
   return (
     <Box
@@ -249,8 +353,8 @@ function AdminPage() {
         {activeParentTab === "config" && (
           <Box sx={{ mt: 3 }}>
             <Tabs
-              value={activeTab}
-              onChange={(_, value) => setActiveTab(value)}
+              value={activeConfigTab}
+              onChange={(_, value) => setActiveConfigTab(value)}
             >
               {configRegistry.map((config) => (
                 <Tab key={config.id} label={config.label} value={config.id} />
@@ -329,11 +433,71 @@ function AdminPage() {
           </Box>
         )}
 
+        {/* Organisms tab */}
         {activeParentTab === "organisms" && (
           <Box sx={{ mt: 3 }}>
             <Typography variant="h5" sx={{ mb: 2 }}>
-              To be added...
+              Organism Editor
             </Typography>
+
+            <Box sx={{ mt: 2 }}>
+              <Typography sx={{ mb: 1 }}>Select organism:</Typography>
+
+              <select
+                value={selectedOrganismId}
+                onChange={(e) => setSelectedOrganismId(e.target.value)}
+              >
+                {organisms.map((organism) => (
+                  <option key={organism.id} value={organism.id}>
+                    {organism.name}
+                  </option>
+                ))}
+              </select>
+            </Box>
+
+            <OrganismEditor
+              key={activeProfile}
+              organisms={organisms}
+              relations={relations}
+              popupTexts={popupTexts}
+              selectedOrganismId={selectedOrganismId}
+              onOrganismChange={(originalId, updatedOrganism) => {
+                updateOrganismConfig((previous) => ({
+                  ...previous,
+                  organisms: previous.organisms.map((organism) =>
+                    organism.id === originalId ? updatedOrganism : organism,
+                  ),
+                }));
+
+                if (originalId !== updatedOrganism.id) {
+                  setSelectedOrganismId(updatedOrganism.id);
+                }
+              }}
+              onRelationChange={(index, updatedRelation) => {
+                updateOrganismConfig((previous) => ({
+                  ...previous,
+                  relations: previous.relations.map((relation, i) =>
+                    i === index
+                      ? { ...updatedRelation, source: selectedOrganismId }
+                      : relation,
+                  ),
+                }));
+              }}
+              onPopupTextChange={(interactionId, updatedPopupText) => {
+                updateOrganismConfig((previous) => ({
+                  ...previous,
+                  popupTexts: {
+                    ...previous.popupTexts,
+                    [interactionId]: updatedPopupText,
+                  },
+                }));
+              }}
+            />
+
+            {/* For organism saving:
+                add a Save button here that sends
+                organisms, relations and popupTexts to the backend when
+                hasUnsavedOrgChanges is true. */}
           </Box>
         )}
       </Box>

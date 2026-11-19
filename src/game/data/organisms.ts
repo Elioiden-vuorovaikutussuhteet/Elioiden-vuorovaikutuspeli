@@ -17,7 +17,7 @@ export const organisms = z.array(OrganismSchema).parse([
     id: "acacia",
     name: "Bullhorn Acacia",
     texture: "acacia_sprite",
-    default_scale: 1,
+    default_scale: 0.8,
     growth_types: ["grow"],
     offsetX: 0,
     offsetY: 0,
@@ -26,7 +26,7 @@ export const organisms = z.array(OrganismSchema).parse([
     id: "amf",
     name: "Arbuscular Mycorrhizal Fungus",
     texture: "amf_sprite",
-    default_scale: 1,
+    default_scale: 0.8,
     growth_types: ["multiply"],
     offsetX: 0,
     offsetY: 300,
@@ -35,7 +35,7 @@ export const organisms = z.array(OrganismSchema).parse([
     id: "sapota",
     name: "Sapota",
     texture: "sapota_sprite",
-    default_scale: 0.9,
+    default_scale: 0.8,
     growth_types: ["grow"],
     offsetX: 400,
     offsetY: 0,
@@ -44,7 +44,7 @@ export const organisms = z.array(OrganismSchema).parse([
     id: "ants",
     name: "Acacia Ants",
     texture: "ants_sprite",
-    default_scale: 0.8,
+    default_scale: 0.7,
     growth_types: ["multiply"],
     offsetX: -400,
     offsetY: 0,
@@ -76,6 +76,24 @@ export const organisms = z.array(OrganismSchema).parse([
     offsetX: 400,
     offsetY: 300,
   },
+  {
+    id: "acaciapathogen",
+    name: "Bullhorn Acacia Pathogens",
+    texture: "acaciapathogen_sprite",
+    default_scale: 1.2,
+    growth_types: ["multiply"],
+    offsetX: -250,
+    offsetY: -250,
+  },
+  {
+    id: "antpathogen",
+    name: "Ant Infecting Pathogens",
+    texture: "antpathogen_sprite",
+    default_scale: 1.2,
+    growth_types: ["multiply"],
+    offsetX: -700,
+    offsetY: 150,
+  },
 ]);
 
 export const organismDataMap = new Map<string, OrganismData>(
@@ -85,4 +103,3 @@ export const organismDataMap = new Map<string, OrganismData>(
 export function getOrganismData(id: string): OrganismData | undefined {
   return organismDataMap.get(id);
 }
-
