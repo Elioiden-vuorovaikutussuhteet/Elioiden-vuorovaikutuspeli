@@ -207,7 +207,7 @@ export default class GameScene extends Phaser.Scene {
     });
   }
 
-  public deleteOrganism(organism: Organism) {
+  public deleteOrganism(organism: Organism): void {
     this.arrowManager.clearPreview();
     this.arrowManager.deleteArrows(organism);
     this.organismManager.deleteOrganism(organism);
