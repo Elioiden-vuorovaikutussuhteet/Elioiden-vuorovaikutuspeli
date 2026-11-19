@@ -74,6 +74,8 @@ export const gameSceneConfig: GameSceneConfig = {
     { key: "sapota_sprite", file: "sapota.png" },
     { key: "diazotroph_sprite", file: "diazotroph.png" },
     { key: "mycorrhizahelper_sprite", file: "mycorrhizabacteria.png" },
+    { key: "acaciapathogen_sprite", file: "acaciapathogen.png" },
+    { key: "antpathogen_sprite", file: "antpathogen.png" },
     { key: "pos_particle", file: "pos_particle.png" },
     { key: "neg_particle", file: "neg_particle.png" },
     { key: "cursor", file: "cursor.png" },

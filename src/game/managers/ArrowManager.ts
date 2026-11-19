@@ -42,6 +42,8 @@ export default class ArrowManager {
     "antfootbacteria",
     "diazotroph",
     "mycorrhizahelper",
+    "acaciapathogen",
+    "antpathogen",
   ];
   public organismSpawnOrder: string[] = [...this.defaultOrganismSpawnOrder];
   private nextOrganismToSpawn = 0;
