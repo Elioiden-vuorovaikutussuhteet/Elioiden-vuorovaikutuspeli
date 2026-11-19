@@ -741,4 +741,37 @@ describe("ArrowManager interactions", () => {
       arrowManager.getArrow("shroom", "tree")?.setStyle,
     ).toHaveBeenLastCalledWith(expect.objectContaining({ lateralOffset: 25 }));
   });
+
+  it("deletes arrows when an organism is deleted", () => {
+    vi.mocked(getRelation).mockReturnValue({
+      value: 1,
+      mult: 1,
+    });
+
+    const first = organism("tree", 300, 500);
+    const second = organism("shroom", 700, 500);
+
+    arrowManager.arrowChecker(first);
+    arrowManager.arrowChecker(second);
+
+    expect(arrowManager.getArrow("tree", "shroom")).toBeDefined();
+
+    arrowManager.deleteArrows(first);
+
+    expect(arrowManager.getArrow("tree", "shroom")).toBeUndefined();
+  });
+
+  it("removes preview arrow and deleted organism does not stay selected", () => {
+  vi.mocked(getRelation).mockReturnValue({
+    value: 1,
+    mult: 1,
+  });
+
+    const tree = organism("tree", 300, 500);
+
+    arrowManager.arrowChecker(tree);
+    arrowManager.deleteArrows(tree);
+    expect(previewArrow.clear).toHaveBeenCalled();
+
+});
 });

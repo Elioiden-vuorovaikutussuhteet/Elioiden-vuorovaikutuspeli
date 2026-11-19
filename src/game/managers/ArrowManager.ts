@@ -350,6 +350,26 @@ export default class ArrowManager {
     }
   }
 
+  public deleteArrows(organism: Organism): void {
+    const organismId = organism.organismData.id;
+
+    if (this.selectedOrganism === organism) {
+      this.clearPreview();
+    }
+
+    for (let i = this.interactions.length - 1; i >= 0; i--) {
+      const interaction = this.interactions[i];
+
+      if (interaction.from === organismId || interaction.to === organismId) {
+        this.interactions.splice(i, 1);
+      }
+    }
+
+    this.knownOrganisms.delete(organismId);
+    this.recalculateLayout();
+    this.redrawPermanentArrows();
+  }
+
   public updatePreview(): void {
     this.renderer.drawPreview(this.selectedOrganism, this.arrowColorValue);
   }
