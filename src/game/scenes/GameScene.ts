@@ -99,6 +99,18 @@ export default class GameScene extends Phaser.Scene {
       };
     }
 
+    if (typeof window !== "undefined") {
+      window.deleteOne = (id: string) => {
+        const organism = this.organismManager.getOrganismMap().get(id);
+        if (!organism) {
+          console.error("Organism not found", id);
+          return;
+        }
+
+        this.deleteOrganism(organism);
+      }
+    }
+
     this.scoreManager.outOfMoney = () => {
       this.randomEventManager.stopRandomEvents();
       this.scene.pause();
@@ -184,6 +196,12 @@ export default class GameScene extends Phaser.Scene {
         );
       });
     });
+  }
+
+  public deleteOrganism(organism: Organism): void {
+    this.arrowManager.clearPreview();
+    this.arrowManager.deleteArrows(organism);
+    this.organismManager.deleteOrganism(organism);
   }
 
   update() {

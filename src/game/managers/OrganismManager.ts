@@ -13,6 +13,7 @@ export default class OrganismManager {
     private organismMap = new Map<string, Organism>();
     private rightConnections: Connection[];
 
+
     private onOrganismSelected: (organism: Organism) => void;
 
     private onHealthChanged?: (
@@ -70,6 +71,18 @@ export default class OrganismManager {
             }
             }
         }
+    }
+
+    public deleteOrganism(organism: Organism) {
+        const index = this.organisms.indexOf(organism);
+
+        if (index !== -1) {
+            this.organisms.splice(index, 1);
+        }
+
+        this.organismMap.delete(organism.organismData.id);
+        organism.destroy();
+        this.createRightConnections();
     }
 
     public getOrganismMap() {
