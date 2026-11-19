@@ -1,7 +1,7 @@
 import Phaser from "phaser";
 import Organism from "../entities/organism";
 import { relations } from "../data/relations"
-import type { organismsRelations } from "../data/relations";
+import type { OrganismsRelations } from "../data/relations";
 import type { Connection } from "../types/Connection";
 
 // creates organisms and creates correct connections 
@@ -56,7 +56,7 @@ export default class OrganismManager {
         this.rightConnections.length = 0;
         const ids = this.organisms.map((organism) => organism.organismData.id);
         for (const organism of this.organisms) {
-            const sourceRelations: organismsRelations[] = relations.filter(
+            const sourceRelations: OrganismsRelations[] = relations.filter(
             (relation) => relation.source === organism.organismData.id,
             );
             //(source = { source: "tree", target: "shroom" })
