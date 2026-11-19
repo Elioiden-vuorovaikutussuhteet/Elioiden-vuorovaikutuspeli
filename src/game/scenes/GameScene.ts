@@ -74,7 +74,6 @@ export default class GameScene extends Phaser.Scene {
         this.arrowManager.playArrowPulseAnimation(fromId, toId, hpChange);
       },
     );
-
     this.connectionManager = new ConnectionManager(
       rightConnections,
       interactions,
@@ -92,12 +91,12 @@ export default class GameScene extends Phaser.Scene {
       this.updateGameCompletion.bind(this),
     );
     this.cursorManager = new CursorManager(this, this.arrowManager);
-
-    // creates random event spawning command if game started in development mode
-    if (import.meta.env?.DEV && typeof window !== "undefined") {
+    // creates random event spawn command
+    if (typeof window !== "undefined") {
       window.spawnRandomEvent = () => {
         this.randomEventManager.triggerRandomEvent(
           this.organismManager.getOrganisms(),
+          this.arrowManager,
         );
       };
     }
@@ -188,7 +187,11 @@ export default class GameScene extends Phaser.Scene {
 
     this.randomEventsStarted = true;
     this.time.delayedCall(this.config.randomEventSpawnDelayMs, () => {
-      this.randomEventManager.startRandomEvents(this, this.organismManager.getOrganisms());
+      this.randomEventManager.startRandomEvents(
+        this,
+        this.organismManager.getOrganisms(),
+        this.arrowManager,
+      );
     });
   }
 

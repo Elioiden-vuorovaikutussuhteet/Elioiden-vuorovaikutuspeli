@@ -1,32 +1,41 @@
 import Phaser from "phaser";
+import BaseButtonSprite from "./basebuttonsprite";
+import { arrowButtonUIConfig, type ArrowButtonUIConfig } from "../config";
 
-export default class ArrowButton extends Phaser.GameObjects.Sprite {
+export default class ArrowButton extends BaseButtonSprite {
   private selected = false;
+  private config: ArrowButtonUIConfig;
 
-  constructor(scene: Phaser.Scene, x: number, y: number, button: string) {
-    super(scene, x, y, button);
+  constructor(
+    scene: Phaser.Scene,
+    x: number,
+    y: number,
+    texture: string,
+    config: ArrowButtonUIConfig = arrowButtonUIConfig,
+  ) {
+    super(
+      scene,
+      x,
+      y,
+      texture,
+      config.clickEvent,
+      config.scale,
+      config.hoverAlpha,
+      config.defaultAlpha,
+    );
+    this.config = config;
+  }
 
-    this.setScale(0.1);
-
-    this.setInteractive();
-    this.setScrollFactor(0);
-
-    this.on("pointerover", () => {
-      this.setAlpha(0.8);
-    });
-
-    this.on("pointerout", () => {
-      this.setAlpha(this.selected ? 0.8 : 1);
-    });
-    this.on("pointerdown", () => {
-      this.emit("arrowButtonClicked", this);
-    });
-
-    scene.add.existing(this);
+  protected override handlePointerOut(): void {
+    this.setAlpha(
+      this.selected ? this.config.selectedAlpha : this.config.defaultAlpha,
+    );
   }
 
   public setSelected(selected: boolean): void {
     this.selected = selected;
-    this.setAlpha(selected ? 0.8 : 1);
+    this.setAlpha(
+      selected ? this.config.selectedAlpha : this.config.defaultAlpha,
+    );
   }
 }

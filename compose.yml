@@ -4,25 +4,56 @@ services:
       context: .
       dockerfile: Dockerfile.dev
     ports:
-      - 5173:5173
+      - "5173:5173"
     volumes:
       - .:/app
       - /app/node_modules
     environment:
       - NODE_ENV=development
       - CHOKIDAR_USEPOLLING=true
+      - VITE_API_TARGET=http://server:3000
     depends_on:
       - server
 
   server:
-      build:
-        context: .
-        dockerfile: Dockerfile.dev
-      command: npm run server
-      ports:
-        - "3000:3000"
-      volumes:
-        - .:/app
-        - /app/node_modules
-      environment:
-        - NODE_ENV=development
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    command:
+      - sh
+      - -c
+      - |
+        export SESSION_SECRET=$${SESSION_SECRET:-$$(node -e 'console.log(require("crypto").randomBytes(32).toString("hex"))')}
+        export ADMIN_PASSWORD_HASH=$${ADMIN_PASSWORD_HASH:-$$(node -e 'console.log(require("bcrypt").hashSync(process.env.DEV_ADMIN_PASSWORD || "admin", 10))')}
+        exec npm run server:dev
+    ports:
+      - "3000:3000"
+    volumes:
+      - .:/app
+      - /app/node_modules
+    environment:
+      - NODE_ENV=development
+      - DEV_ADMIN_PASSWORD=admin
+      - DATABASE_URL=postgresql://${POSTGRES_USER:-eliopeli}:${POSTGRES_PASSWORD:-devpassword}@db:5432/${POSTGRES_DB:-eliopeli}
+    depends_on:
+      db:
+        condition: service_healthy
+
+  db:
+    image: postgres:17-alpine
+    ports:
+      - "5432:5432"
+    environment:
+      - POSTGRES_USER=${POSTGRES_USER:-eliopeli}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-devpassword}
+      - POSTGRES_DB=${POSTGRES_DB:-eliopeli}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U eliopeli -d eliopeli"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  pgdata:

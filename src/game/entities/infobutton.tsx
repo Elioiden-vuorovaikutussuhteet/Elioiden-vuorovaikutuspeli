@@ -1,23 +1,34 @@
 import Phaser from "phaser";
+import BaseButtonSprite from "./basebuttonsprite";
+import { infoButtonUIConfig, type InfoButtonUIConfig } from "../config";
 
-export default class InfoButton extends Phaser.GameObjects.Sprite {
-    constructor (scene: Phaser.Scene, x: number, y: number) {
-        super(scene, x, y, "infobutton_sprite");
-        this.setScale(0.05);
-        this.setInteractive();
-        this.setScrollFactor(0);
-        this.on("pointerdown", () => {
-            this.emit("infoButtonClicked", this);
-        });
+export default class InfoButton extends BaseButtonSprite {
+  private config: InfoButtonUIConfig;
 
-        this.on("pointerover", () => {
-            this.setTint(0x777777);
-        });
+  constructor(
+    scene: Phaser.Scene,
+    x: number,
+    y: number,
+    config: InfoButtonUIConfig = infoButtonUIConfig,
+  ) {
+    super(
+      scene,
+      x,
+      y,
+      config.texture,
+      config.clickEvent,
+      config.scale,
+      config.hoverAlpha,
+      config.defaultAlpha,
+    );
+    this.config = config;
+  }
 
-        this.on("pointerout", () => {
-            this.clearTint();
-        });
+  protected override handlePointerOver(): void {
+    this.setTint(this.config.hoverTint);
+  }
 
-        scene.add.existing(this);
-    }
+  protected override handlePointerOut(): void {
+    this.clearTint();
+  }
 }

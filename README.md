@@ -21,19 +21,28 @@ React + TypeScript perusteinen opetuspeli.
 ## Docker-käyttö kehitykseen
 
 1. Asenna [docker ja docker compose](https://docs.docker.com/engine/install/). Halutessasi lisää itsesi docker-käyttäjäryhmään [ohjeiden mukaisesti](https://docs.docker.com/engine/install/linux-postinstall/). Tällöin et tarvitse sudoa.
-2. Lataa repositorio
-3. Avaa komentorivi latauskansiossa
+2. Kloonaa repositorio.
+3. Muuta halutessasi compose.yml-tiedostossa admin-salasanaa. Oletus on admin.
+4. Avaa komentorivi repositorion kansiossa. Aja komento
 
 ```bash
-cd Elioiden-vuorovaikutuspeli
 docker compose up
 ```
 
-1. Kontti rakentuu ja Eliopeli aukeaa osoitteeseen <http://localhost:5173>. Sen saa suljettua komentorivillä yhdistelmällä ctrl + c.
-2. Kontti päivittyy automaattisesti, kun koodia muutetaan, joten sitä ei tarvitse uudelleenkäynnistää muutosten välissä. Joskus docker tallentaa kuitenkin vanhentuneen version välimuistiin. Tällöin kontin uudelleenrakennuksen voi pakottaa komennolla
+5. Kontit rakentuvat ja käynnistyvät. Kontteja on kolme: eliöpeli, server ja db.
+6. Eliopeli aukeaa osoitteeseen <http://localhost:5173>. Sen saa suljettua komentorivillä yhdistelmällä ctrl + c. Admin-paneeliin pääsee osoitteesta <http://localhost:5173/login>.
+7. Kontti päivittyy automaattisesti, kun koodia muutetaan, joten sitä ei tarvitse uudelleenkäynnistää useimpien muutosten välissä. Kaikki muutokset eivät kuitenkaan päivity. Tällöin konttien uudelleenrakennuksen käynnistyksen yhteydessä voi pakottaa komennolla
 
 ```bash
 docker compose up --build -V
+```
+8. Mikäli haluaa tyhjentää tietokannan, tulee sen levy poistaa komennolla
+```bash
+docker compose down -v
+```
+Tietokannan tilan voi tarkistaa curl- ja jq-työkalujen avulla komennolla
+```bash
+curl -s http://localhost:3000/api/configs/ | jq
 ```
 
 ## Local

@@ -1,8 +1,13 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Box, Tabs, Tab, Typography } from "@mui/material";
+import { Box, Tabs, Tab, Typography, Button, Alert } from "@mui/material";
 import { getServerMessage, logout } from "../api";
 import { configRegistry } from "../game/config/configRegistry";
+import { loadConfigsFromServer } from "../game/config/loadConfigs";
+import {
+  saveConfigSection,
+  deleteConfigSection,
+} from "../game/config/configApi";
 import DynamicForm from "../components/DynamicForm";
 import OrganismEditor from "../components/OrganismEditor";
 import {
@@ -24,14 +29,14 @@ type OrganismConfig = {
   popupTexts: Record<string, PopupText>;
 };
 
-function createDefaultConfigValues(): Record<string, unknown> {
+function buildSectionMap(): Record<string, unknown> {
   return Object.fromEntries(
     configRegistry.flatMap((config) =>
       config.sections.map((section) => [
         `${config.id}.${section.id}`,
         structuredClone(section.defaults),
-      ])
-    )
+      ]),
+    ),
   );
 }
 
@@ -44,13 +49,50 @@ function createDefaultOrganismConfig(): OrganismConfig {
 }
 
 function AdminPage() {
-  const navigate = useNavigate();
   const [message, setMessage] = useState("Loading...");
+  const navigate = useNavigate();
+
+  const [profiles, setProfiles] = useState([
+    { id: "default", name: "Default" },
+  ]);
+  const [activeProfile, setActiveProfile] = useState("default");
+  const [newProfileName, setNewProfileName] = useState("");
+  const [showAddProfile, setShowAddProfile] = useState(false);
+
+  const [activeParentTab, setActiveParentTab] = useState("config");
+  const [activeConfigTab, setActiveConfigTab] = useState("camera");
+
+  // Config values (per profile), saved per section through the config API
+  const [configValues, setConfigValues] = useState<
+    Record<string, Record<string, unknown>>
+  >(() => ({
+    default: buildSectionMap(),
+  }));
+
+  const [dirtySections, setDirtySections] = useState<Record<string, boolean>>(
+    {},
+  );
+  const [savingSection, setSavingSection] = useState<string | null>(null);
+  const [resetVersions, setResetVersions] = useState<Record<string, number>>(
+    {},
+  );
+  const [feedback, setFeedback] = useState<{
+    sectionKey: string;
+    severity: "success" | "error";
+    text: string;
+  } | null>(null);
 
   useEffect(() => {
     getServerMessage()
-      .then((data) => {
-        setMessage(data.message);
+      .then((data) => setMessage(data.message))
+      .catch(console.error);
+
+    loadConfigsFromServer()
+      .then(() => {
+        setConfigValues((prev) => ({
+          ...prev,
+          default: buildSectionMap(),
+        }));
       })
       .catch(console.error);
   }, []);
@@ -63,70 +105,6 @@ function AdminPage() {
       console.error("Logout failed:", error);
     }
   }
-
-  // Profiles
-  // For future database use:
-  // - Load profiles from backend
-  const [profiles, setProfiles] = useState([{ id: "default", name: "Default" }]);
-  const [activeProfile, setActiveProfile] = useState("default");
-  const [newProfileName, setNewProfileName] = useState("");
-  const [showAddProfile, setShowAddProfile] = useState(false);
-
-  const [activeParentTab, setActiveParentTab] = useState("config");
-  const [activeConfigTab, setActiveConfigTab] = useState("camera");
-
-
-  // Config values (per profile)
-  // For future config saving:
-  // - Possibly load saved configurations from the backend instead of using section.defaults.
-  // - Possibly separate saved values from the current edited values.
-  // - Associate each configuration with its corresponding profile.
-
-  const [configValues, setConfigValues] = useState<
-    Record<string, Record<string, unknown>>
-  >(() => ({
-    default: createDefaultConfigValues(),
-  }));
-
-  /*
-  For config saving:
-  - Add a save button:
-  - It should call a function that checks hasUnsavedConfigChanges for True, then sends
-    - profileId: activeProfile
-    - configValues: configValues[activeProfile]
-    to backend
-  - After a successful save, set hasUnsavedConfigChanges to false.
-  */
-  const [configChanges, setConfigChanges] = useState<Record<string, boolean>>(
-    {}
-  );
-  const hasUnsavedConfigChanges = configChanges[activeProfile] ?? false;
-  void hasUnsavedConfigChanges;
-
-  function handleConfigChange(
-    configId: string,
-    sectionId: string,
-    values: Record<string, unknown>
-  ) {
-    const key = `${configId}.${sectionId}`;
-
-    setConfigValues((previous) => ({
-      ...previous,
-      [activeProfile]: {
-        ...previous[activeProfile],
-        [key]: values,
-      },
-    }));
-
-    setConfigChanges((previous) => ({
-      ...previous,
-      [activeProfile]: true,
-    }));
-  }
-
-  const activeConfig = configRegistry.find(
-    (config) => config.id === activeConfigTab
-  );
 
   // Organisms, relations and popup texts (per profile)
   // Current implementation:
@@ -143,10 +121,12 @@ function AdminPage() {
   void hasUnsavedOrgChanges;
 
   /*
-  For organism saving:
-  - Add a save button:
-  - It should call a function that checks hasUnsavedOrgChanges for True, then sends
-    organisms, relations, popupTexts to the backend
+  TODO (API for organisms):
+  - Load organisms, relations and popupTexts from the backend instead of using
+    the initial data from ../game/data (e.g. alongside loadConfigsFromServer).
+  - Add a save button that calls a function which checks hasUnsavedOrgChanges
+    and sends organisms, relations and popupTexts to the backend.
+  - After a successful save, set orgChanges[activeProfile] to false.
   */
 
   const activeOrganismConfig =
@@ -157,12 +137,12 @@ function AdminPage() {
   const popupTexts = activeOrganismConfig.popupTexts;
 
   function updateOrganismConfig(
-    updater: (previous: OrganismConfig) => OrganismConfig
+    updater: (previous: OrganismConfig) => OrganismConfig,
   ) {
     setOrganismConfigs((previous) => ({
       ...previous,
       [activeProfile]: updater(
-        previous[activeProfile] ?? createDefaultOrganismConfig()
+        previous[activeProfile] ?? createDefaultOrganismConfig(),
       ),
     }));
 
@@ -179,10 +159,10 @@ function AdminPage() {
   const storedOrganismId = selectedOrganismIds[activeProfile];
 
   const selectedOrganismId = organisms.some(
-    (organism) => organism.id === storedOrganismId
+    (organism) => organism.id === storedOrganismId,
   )
     ? storedOrganismId
-    : organisms[0]?.id ?? "";
+    : (organisms[0]?.id ?? "");
 
   function setSelectedOrganismId(id: string) {
     setSelectedOrganismIds((previous) => ({
@@ -196,16 +176,14 @@ function AdminPage() {
   // - Change local profile adding to an API request
   function handleAddProfile() {
     const name = newProfileName.trim();
-
     if (!name) return;
 
     const id = crypto.randomUUID();
-
     setProfiles((previous) => [...previous, { id, name }]);
 
     setConfigValues((previous) => ({
       ...previous,
-      [id]: createDefaultConfigValues(),
+      [id]: buildSectionMap(),
     }));
 
     setOrganismConfigs((previous) => ({
@@ -217,6 +195,102 @@ function AdminPage() {
     setNewProfileName("");
     setShowAddProfile(false);
   }
+
+  function handleConfigChange(
+    configId: string,
+    sectionId: string,
+    values: Record<string, unknown>,
+  ) {
+    const key = `${configId}.${sectionId}`;
+
+    setConfigValues((previous) => ({
+      ...previous,
+      [activeProfile]: {
+        ...previous[activeProfile],
+        [key]: values,
+      },
+    }));
+    setDirtySections((prev) => ({ ...prev, [key]: true }));
+  }
+
+  async function handleSaveSection(configId: string, sectionId: string) {
+    const key = `${configId}.${sectionId}`;
+    const currentValues = configValues[activeProfile]?.[key] as Record<
+      string,
+      unknown
+    >;
+    if (!currentValues) return;
+
+    setSavingSection(key);
+    setFeedback(null);
+
+    try {
+      const savedConfig = await saveConfigSection(sectionId, currentValues);
+      setConfigValues((prev) => ({
+        ...prev,
+        [activeProfile]: {
+          ...prev[activeProfile],
+          [key]: structuredClone(savedConfig),
+        },
+      }));
+      setDirtySections((prev) => ({ ...prev, [key]: false }));
+      setFeedback({
+        sectionKey: key,
+        severity: "success",
+        text: "Configuration saved to database.",
+      });
+    } catch (error) {
+      setFeedback({
+        sectionKey: key,
+        severity: "error",
+        text:
+          error instanceof Error
+            ? error.message
+            : "Failed to save configuration.",
+      });
+    } finally {
+      setSavingSection(null);
+    }
+  }
+
+  async function handleResetSection(configId: string, sectionId: string) {
+    const key = `${configId}.${sectionId}`;
+    setSavingSection(key);
+    setFeedback(null);
+
+    try {
+      const defaultConfig = await deleteConfigSection(sectionId);
+      setConfigValues((prev) => ({
+        ...prev,
+        [activeProfile]: {
+          ...prev[activeProfile],
+          [key]: structuredClone(defaultConfig),
+        },
+      }));
+      setDirtySections((prev) => ({ ...prev, [key]: false }));
+      setResetVersions((prev) => ({ ...prev, [key]: (prev[key] ?? 0) + 1 }));
+      setFeedback({
+        sectionKey: key,
+        severity: "success",
+        text: "Reset to default values.",
+      });
+    } catch (error) {
+      setFeedback({
+        sectionKey: key,
+        severity: "error",
+        text:
+          error instanceof Error
+            ? error.message
+            : "Failed to reset configuration.",
+      });
+    } finally {
+      setSavingSection(null);
+    }
+  }
+
+  const activeConfig = configRegistry.find(
+    (config) => config.id === activeConfigTab,
+  );
 
   return (
     <Box
@@ -268,7 +342,6 @@ function AdminPage() {
       )}
 
       <Box sx={{ mt: 3 }}>
-        {/* Parent tabs */}
         <Tabs
           value={activeParentTab}
           onChange={(_, value) => setActiveParentTab(value)}
@@ -277,7 +350,6 @@ function AdminPage() {
           <Tab label="Organisms" value="organisms" />
         </Tabs>
 
-        {/* Config tabs */}
         {activeParentTab === "config" && (
           <Box sx={{ mt: 3 }}>
             <Tabs
@@ -293,6 +365,9 @@ function AdminPage() {
               <Box sx={{ mt: 3 }}>
                 {activeConfig.sections.map((section) => {
                   const key = `${activeConfig.id}.${section.id}`;
+                  const isSaving = savingSection === key;
+                  const isDirty = Boolean(dirtySections[key]);
+                  const version = resetVersions[key] ?? 0;
 
                   return (
                     <Box key={section.id} sx={{ mb: 4 }}>
@@ -301,7 +376,7 @@ function AdminPage() {
                       </Typography>
 
                       <DynamicForm
-                        key={`${activeProfile}-${activeConfig.id}-${section.id}`}
+                        key={`${activeProfile}-${activeConfig.id}-${section.id}-${version}`}
                         schema={section.schema}
                         defaults={
                           (configValues[activeProfile]?.[key] as Record<
@@ -313,10 +388,43 @@ function AdminPage() {
                           handleConfigChange(
                             activeConfig.id,
                             section.id,
-                            values
+                            values,
                           )
                         }
                       />
+
+                      <Box sx={{ mt: 2, display: "flex", gap: 2 }}>
+                        <Button
+                          variant="contained"
+                          disabled={isSaving || !isDirty}
+                          onClick={() =>
+                            handleSaveSection(activeConfig.id, section.id)
+                          }
+                        >
+                          {isSaving ? "Saving..." : "Save"}
+                        </Button>
+
+                        <Button
+                          variant="outlined"
+                          color="secondary"
+                          disabled={isSaving}
+                          onClick={() =>
+                            handleResetSection(activeConfig.id, section.id)
+                          }
+                        >
+                          Reset to Defaults
+                        </Button>
+                      </Box>
+
+                      {feedback?.sectionKey === key && (
+                        <Alert
+                          severity={feedback.severity}
+                          sx={{ mt: 2, maxWidth: 480 }}
+                          onClose={() => setFeedback(null)}
+                        >
+                          {feedback.text}
+                        </Alert>
+                      )}
                     </Box>
                   );
                 })}
@@ -357,7 +465,7 @@ function AdminPage() {
                 updateOrganismConfig((previous) => ({
                   ...previous,
                   organisms: previous.organisms.map((organism) =>
-                    organism.id === originalId ? updatedOrganism : organism
+                    organism.id === originalId ? updatedOrganism : organism,
                   ),
                 }));
 
@@ -371,7 +479,7 @@ function AdminPage() {
                   relations: previous.relations.map((relation, i) =>
                     i === index
                       ? { ...updatedRelation, source: selectedOrganismId }
-                      : relation
+                      : relation,
                   ),
                 }));
               }}
@@ -385,14 +493,14 @@ function AdminPage() {
                 }));
               }}
             />
+
+            {/* For organism saving:
+                add a Save button here that sends
+                organisms, relations and popupTexts to the backend when
+                hasUnsavedOrgChanges is true. */}
           </Box>
         )}
       </Box>
-
-      {/*
-      For future saving:
-      - Add a save button that submits configValues to the backend. (If not autosave)
-      */}
     </Box>
   );
 }

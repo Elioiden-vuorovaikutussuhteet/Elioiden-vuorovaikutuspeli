@@ -7,6 +7,7 @@ yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
 
+# Manifests
 manifests/testing
 
 node_modules
@@ -16,6 +17,9 @@ coverage
 *.local
 .env
 .env.*
+**/.env
+**/.env.*
+cookies.txt
 
 # Editor directories and files
 .vscode/*

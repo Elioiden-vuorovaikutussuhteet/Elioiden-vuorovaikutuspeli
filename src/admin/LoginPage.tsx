@@ -35,7 +35,7 @@ function LoginPage() {
           type="password"
           placeholder="Admin password"
           value={password}
-          onChange={e => setPassword(e.target.value)}
+          onChange={(e) => setPassword(e.target.value)}
           required
         />
 

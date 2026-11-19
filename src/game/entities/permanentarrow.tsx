@@ -1,7 +1,7 @@
 import Phaser from "phaser";
 import type Organism from "./organism";
 import { drawArrow } from "../services/DrawArrowService";
-import { arrowUIConfig, permanentArrowUIConfig } from "../config/uiConfig";
+import { arrowUIConfig, permanentArrowUIConfig } from "../config";
 
 export interface PermanentArrowConfig {
   targetOffset?: number;
@@ -48,6 +48,8 @@ export default class PermanentArrow {
   private lastFromOrgX = NaN;
   private lastFromOrgY = NaN;
   private lastToOrgX = NaN;
+  private lastFromScale = NaN;
+  private lastToScale = NaN;
   private lastToOrgY = NaN;
   private visible = false;
 
@@ -93,10 +95,8 @@ export default class PermanentArrow {
     this.arrowhitBox = this.scene.add.zone(0, 0, 1, 1);
     this.arrowhitBox.setOrigin(0);
     this.arrowhitBox.setDepth(permanentArrowUIConfig.hitZoneDepth);
-    this.arrowhitBox.setInteractive(
-      this.hitAreaRect,
-      (_hitArea, x, y) =>
-        this.isPointOnArrow(x + this.hitBounds.x, y + this.hitBounds.y),
+    this.arrowhitBox.setInteractive(this.hitAreaRect, (_hitArea, x, y) =>
+      this.isPointOnArrow(x + this.hitBounds.x, y + this.hitBounds.y),
     );
     this.arrowhitBox.on("pointerover", () => {
       this.hovered = true;
@@ -115,7 +115,10 @@ export default class PermanentArrow {
 
   public setStyle(config: Partial<PermanentArrowConfig>): void {
     let changed = false;
-    if (config.targetOffset !== undefined && config.targetOffset !== this.targetOffset) {
+    if (
+      config.targetOffset !== undefined &&
+      config.targetOffset !== this.targetOffset
+    ) {
       this.targetOffset = config.targetOffset;
       changed = true;
     }
@@ -127,7 +130,10 @@ export default class PermanentArrow {
       this.thickness = config.thickness;
       changed = true;
     }
-    if (config.lateralOffset !== undefined && config.lateralOffset !== this.lateralOffset) {
+    if (
+      config.lateralOffset !== undefined &&
+      config.lateralOffset !== this.lateralOffset
+    ) {
       this.lateralOffset = config.lateralOffset;
       changed = true;
     }
@@ -151,9 +157,9 @@ export default class PermanentArrow {
     );
 
     circle.setStrokeStyle(
-      permanentArrowUIConfig.pulseColorGlowRadius || 8,
+      permanentArrowUIConfig.pulseColorGlowRadius,
       color,
-      0.35,
+      permanentArrowUIConfig.pulseStrokeAlpha,
     );
     circle.setBlendMode(Phaser.BlendModes.ADD);
     circle.setDepth(permanentArrowUIConfig.pulseDepth);
@@ -171,7 +177,15 @@ export default class PermanentArrow {
       progress: 1,
       duration: permanentArrowUIConfig.pulseDuration,
       ease: "Linear",
+      onUpdate: () => {
+        const t = pulse.progress;
+        circle.setPosition(
+          this.fromX + (this.toX - this.fromX) * t,
+          this.fromY + (this.toY - this.fromY) * t,
+        );
+      },
       onComplete: () => {
+        circle.setPosition(this.toX, this.toY);
         circle.destroy();
         this.pulses = this.pulses.filter((p) => p !== pulse);
       },
@@ -223,7 +237,9 @@ export default class PermanentArrow {
     let cached = textureAlphaCache.get(textureKey);
     if (!cached && this.scene.textures?.exists(textureKey)) {
       const tex = this.scene.textures.get(textureKey);
-      const sourceImage = tex.getSourceImage() as HTMLImageElement | HTMLCanvasElement;
+      const sourceImage = tex.getSourceImage() as
+        | HTMLImageElement
+        | HTMLCanvasElement;
       if (sourceImage && typeof document !== "undefined") {
         const canvas = document.createElement("canvas");
         canvas.width = textureWidth;
@@ -247,7 +263,12 @@ export default class PermanentArrow {
 
     const getPixelAlpha = this.scene.textures?.getPixelAlpha;
     return typeof getPixelAlpha === "function"
-      ? (getPixelAlpha.call(this.scene.textures, textureX, textureY, textureKey) ?? 0)
+      ? (getPixelAlpha.call(
+          this.scene.textures,
+          textureX,
+          textureY,
+          textureKey,
+        ) ?? 0)
       : 255;
   }
 
@@ -268,18 +289,28 @@ export default class PermanentArrow {
       };
     }
 
-    const borderPadding = 10;
+    const {
+      borderPadding,
+      raycastStep,
+      alphaThreshold,
+      fallbackNameTextHeight,
+      fallbackNameTextOffset,
+      nameTextTopPadding,
+    } = permanentArrowUIConfig;
+
     const maxSpriteDistance = Math.hypot(halfDisplayWidth, halfDisplayHeight);
     let spriteBorderDistance = 0;
 
     for (
       let distanceFromCenter = maxSpriteDistance;
       distanceFromCenter >= 0;
-      distanceFromCenter -= 2
+      distanceFromCenter -= raycastStep
     ) {
       const worldX = organism.x + lateralShiftX + ux * distanceFromCenter;
-      const worldY = organism.y + lateralShiftY + uy * distanceFromCenter;
-      if (this.getOrganismPixelAlpha(organism, worldX, worldY) > 10) {
+      const worldY = organism.y + lateralShiftX + uy * distanceFromCenter;
+      if (
+        this.getOrganismPixelAlpha(organism, worldX, worldY) > alphaThreshold
+      ) {
         spriteBorderDistance = distanceFromCenter + borderPadding;
         break;
       }
@@ -290,10 +321,10 @@ export default class PermanentArrow {
     const nameTextBottomOffset =
       organism.nameText?.y !== undefined
         ? organism.nameText.y -
-        organism.y +
-        (organism.nameText.height ?? 20) / 2
-        : halfDisplayHeight + 35;
-    const nameTextTopY = halfDisplayHeight - 4;
+          organism.y +
+          (organism.nameText.height ?? fallbackNameTextHeight) / 2
+        : halfDisplayHeight + fallbackNameTextOffset;
+    const nameTextTopY = halfDisplayHeight - nameTextTopPadding;
     const nameTextBottomY =
       Math.max(halfDisplayHeight, nameTextBottomOffset) + borderPadding;
 
@@ -355,21 +386,27 @@ export default class PermanentArrow {
 
     this.visible = true;
 
+    const eps = permanentArrowUIConfig.movementEpsilon;
+    const scaleEps = permanentArrowUIConfig.scaleEpsilon;
     const moved =
       !Number.isFinite(this.lastFromOrgX) ||
       !Number.isFinite(this.lastFromOrgY) ||
       !Number.isFinite(this.lastToOrgX) ||
       !Number.isFinite(this.lastToOrgY) ||
-      Math.abs(from.x - this.lastFromOrgX) > 0.1 ||
-      Math.abs(from.y - this.lastFromOrgY) > 0.1 ||
-      Math.abs(to.x - this.lastToOrgX) > 0.1 ||
-      Math.abs(to.y - this.lastToOrgY) > 0.1;
+      Math.abs(from.x - this.lastFromOrgX) > eps ||
+      Math.abs(from.y - this.lastFromOrgY) > eps ||
+      Math.abs(to.x - this.lastToOrgX) > eps ||
+      Math.abs(to.y - this.lastToOrgY) > eps ||
+      Math.abs(from.scaleX - this.lastFromScale) > scaleEps ||
+      Math.abs(to.scaleX - this.lastToScale) > scaleEps;
 
     if (moved) {
       this.lastFromOrgX = from.x;
       this.lastFromOrgY = from.y;
       this.lastToOrgX = to.x;
       this.lastToOrgY = to.y;
+      this.lastFromScale = from.scaleX;
+      this.lastToScale = to.scaleX;
 
       const ux = dx / distance;
       const uy = dy / distance;
@@ -412,7 +449,9 @@ export default class PermanentArrow {
   /**
    * Appends this arrow's geometry onto a Graphics instance without clearing it.
    */
-  public draw(targetGraphics: Phaser.GameObjects.Graphics = this.graphics): void {
+  public draw(
+    targetGraphics: Phaser.GameObjects.Graphics = this.graphics,
+  ): void {
     if (!this.visible) return;
 
     drawArrow(targetGraphics, {
@@ -425,12 +464,12 @@ export default class PermanentArrow {
         ? this.thickness + permanentArrowUIConfig.hoverThicknessBonus
         : this.thickness,
     });
+    this.dirty = false;
   }
 
   private redrawStandalone(): void {
     this.graphics.clear();
     this.draw(this.graphics);
-    this.dirty = false;
   }
 
   public setCursorMode(enabled: boolean): void {
@@ -443,8 +482,7 @@ export default class PermanentArrow {
   }
 
   private updateHitZone(): void {
-    const padding =
-      this.thickness + permanentArrowUIConfig.hitBoxPaddingOffset;
+    const padding = this.thickness + permanentArrowUIConfig.hitBoxPaddingOffset;
     const minX = Math.min(this.fromX, this.toX) - padding;
     const minY = Math.min(this.fromY, this.toY) - padding;
     const width = Math.max(1, Math.abs(this.toX - this.fromX) + padding * 2);
@@ -489,5 +527,13 @@ export default class PermanentArrow {
       this.graphics.destroy();
     }
     this.arrowhitBox.destroy();
+  }
+
+  public setDirty(value: boolean) {
+    this.dirty = value;
+  }
+
+  public getDirty(): boolean {
+    return this.dirty;
   }
 }
