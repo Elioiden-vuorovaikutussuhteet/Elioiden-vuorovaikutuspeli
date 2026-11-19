@@ -17,24 +17,30 @@ export default class InteractionManager {
   private pulseAnimationCallback: ArrowPulseAnimationCallback;
   private config: InteractionConfig;
   private pulseWaitTime: number;
+  private nextPulseId = 0;
+  private activePulseId = -1;
+  private onPulseStart?: () => void;
 
   constructor(
     organismMap: Map<string, Organism>,
     interactions: Connection[],
     pulseAnimationCallback: ArrowPulseAnimationCallback,
     config: Partial<InteractionConfig> = {},
+    onPulseStart?: () => void,
   ) {
     this.organismMap = organismMap;
     this.interactions = interactions;
     this.pulseAnimationCallback = pulseAnimationCallback;
     this.config = { ...interactionConfig, ...config };
     this.pulseWaitTime = this.config.pulseWaitTime;
+    this.onPulseStart = onPulseStart;
   }
 
   public async interactionPulse(
     startingOrganism: Organism,
     arrowOriginOrganism: Organism,
   ) {
+    const pulseId = this.nextPulseId++;
     const visited = new Set<string>();
     const queue: { id: string; depth: number }[] = [];
     const depthGroups = new Map<number, string[]>();
@@ -57,11 +63,14 @@ export default class InteractionManager {
     if (Math.abs(initialHealthChange) <= MIN_HP_CHANGE_THRESHOLD) {
       return;
     }
+    this.activePulseId = pulseId;
+    this.onPulseStart?.();
 
     this.pulseAnimationCallback(originId, startingId, initialHealthChange);
 
     await new Promise((resolve) => setTimeout(resolve, this.pulseWaitTime));
-    startingOrganism.changeHealth(initialHealthChange);
+    if (pulseId !== this.activePulseId) return;
+    startingOrganism.changeHealth(initialHealthChange, pulseId);
 
     for (const arrow of this.interactions) {
       if (arrow.from === originId && arrow.to === startingId) {
@@ -135,9 +144,10 @@ export default class InteractionManager {
       if (healthChanges.size === 0) break;
 
       await new Promise((resolve) => setTimeout(resolve, this.pulseWaitTime));
+      if (pulseId !== this.activePulseId) return;
 
       for (const [targetId, healthChange] of healthChanges) {
-        this.organismMap.get(targetId)?.changeHealth(healthChange);
+        this.organismMap.get(targetId)?.changeHealth(healthChange, pulseId);
       }
     }
   }
