@@ -17,6 +17,7 @@ export interface RandomEventData {
   name: string;
   affectedOrganisms: string[];
   chance: number;
+  maxOccurrencesPerGame?: number;
   effect: RandomEventEffect;
 }
 
@@ -26,18 +27,19 @@ export const randomEvents: RandomEventData[] = [
     name: "Lightning Strike",
     affectedOrganisms: ["sapota", "acacia"],
     chance: 50,
+    maxOccurrencesPerGame: 1,
     effect: {
       type: "damage",
       amount: 100,
     },
   },
   {
-  id: "rain",
-  name: "Rain",
-  affectedOrganisms: ["sapota", "acacia","amf","diazotroph","mycorrhizahelper"],
-  chance: 30,
+  id: "carcass",
+  name: "Carcass",
+  affectedOrganisms: ["amf"],
+  chance: 50,
   effect: {
-    type: "healAll",
+    type: "heal",
     amount: 40,
   },
 },
