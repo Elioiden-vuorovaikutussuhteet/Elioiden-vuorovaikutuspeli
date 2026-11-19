@@ -432,6 +432,7 @@ describe("ArrowManager interactions", () => {
 
     interactionManager = {
       interactionPulse: vi.fn(),
+      randomEventPulse: vi.fn(),
     } as unknown as InteractionManager;
 
     connectionManager = {

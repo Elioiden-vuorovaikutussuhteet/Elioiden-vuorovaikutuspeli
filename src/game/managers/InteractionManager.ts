@@ -141,4 +141,109 @@ export default class InteractionManager {
       }
     }
   }
+
+  public async randomEventPulse(
+    targetIds: string[],
+    healthChange: number,
+  ): Promise<void> {
+    if (targetIds.length === 0 || Math.abs(healthChange) <= MIN_HP_CHANGE_THRESHOLD) {
+      return;
+    }
+
+    const targets = targetIds
+      .map((id) => this.organismMap.get(id))
+      .filter((organism): organism is Organism => organism !== undefined);
+
+    if (targets.length === 0) return;
+
+    for (const target of targets) {
+      target.changeHealth(healthChange);
+    }
+
+    await new Promise((resolve) => setTimeout(resolve, this.pulseWaitTime));
+
+    const outgoingArrowsByOrganism = new Map<string, Connection[]>();
+    for (const arrow of this.interactions) {
+      let arrows = outgoingArrowsByOrganism.get(arrow.from);
+      if (!arrows) {
+        arrows = [];
+        outgoingArrowsByOrganism.set(arrow.from, arrows);
+      }
+      arrows.push(arrow);
+    }
+
+    const visited = new Set<string>(targets.map((target) =>
+      target.organismData.id,
+    ));
+    const queue: { id: string; depth: number }[] = targets.map((target) => ({
+      id: target.organismData.id,
+      depth: 0,
+    }));
+    const depthGroups = new Map<number, string[]>();
+
+    let head = 0;
+    while (head < queue.length) {
+      const current = queue[head++];
+
+      let group = depthGroups.get(current.depth);
+      if (!group) {
+        group = [];
+        depthGroups.set(current.depth, group);
+      }
+      group.push(current.id);
+
+      for (const arrow of outgoingArrowsByOrganism.get(current.id) ?? []) {
+        if (visited.has(arrow.to)) continue;
+
+        visited.add(arrow.to);
+        queue.push({
+          id: arrow.to,
+          depth: current.depth + 1,
+        });
+      }
+    }
+
+    for (const organismIds of depthGroups.values()) {
+      const healthChanges = new Map<string, number>();
+
+      for (const sourceId of organismIds) {
+        const sourceOrganism = this.organismMap.get(sourceId);
+        if (!sourceOrganism) continue;
+
+        const sourceHPChange =
+          sourceOrganism.hp - sourceOrganism.previousHP;
+        if (Math.abs(sourceHPChange) <= MIN_HP_CHANGE_THRESHOLD) continue;
+
+        const hpScale = Math.sqrt(
+          Math.max(0, sourceOrganism.hp) /
+            this.config.hpNormalizationDivisor,
+        );
+
+        for (const arrow of outgoingArrowsByOrganism.get(sourceId) ?? []) {
+          const relationData = getRelation(arrow.from, arrow.to);
+          const hpChange =
+            sourceHPChange *
+            relationData.mult *
+            relationData.value *
+            hpScale;
+
+          if (Math.abs(hpChange) <= MIN_HP_CHANGE_THRESHOLD) continue;
+
+          const currentChange = healthChanges.get(arrow.to) ?? 0;
+          healthChanges.set(arrow.to, currentChange + hpChange);
+          this.pulseAnimationCallback(arrow.from, arrow.to, hpChange);
+        }
+      }
+
+      if (healthChanges.size === 0) break;
+
+      await new Promise((resolve) =>
+        setTimeout(resolve, this.pulseWaitTime),
+      );
+
+      for (const [targetId, hpChange] of healthChanges) {
+        this.organismMap.get(targetId)?.changeHealth(hpChange);
+      }
+    }
+  }
 }
