@@ -1,13 +1,10 @@
 import type Organism from "../entities/organism";
 import { randomEvents } from "../data/RandomEvents";
 import type { RandomEventData } from "../data/RandomEvents";
-import RandomEventEffects from "./RandomEventEffectsManager";
 import type Phaser from "phaser";
 import type ArrowManager from "./ArrowManager";
 
 export default class RandomEventManager {
-
-  private effects = new RandomEventEffects();
   private randomEventTimer?: Phaser.Time.TimerEvent;
   // table of organisms given to isnt being updated for now
 
@@ -60,9 +57,6 @@ export default class RandomEventManager {
     event.effect.type === "damage"
     ? -event.effect.amount
     : event.effect.amount;
-
-
-    this.effects.applyEffect(targets, event.effect);
 
 
     arrowManager.playRandomEventPulses(
