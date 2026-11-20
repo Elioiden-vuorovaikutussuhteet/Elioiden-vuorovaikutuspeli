@@ -1,14 +1,59 @@
 import { configRegistry } from "./configRegistry";
 import { deepMerge } from "../utils/deepMerge";
+import { organisms, type OrganismData } from "../data/organisms";
+import { relations, type OrganismsRelations } from "../data/relations";
+import { popupTexts, type PopupText } from "../data/popupTexts";
 
 /* Snapshot of initial code defaults taken before any database overrides are applied. */
 const initialDefaults = new Map<string, Record<string, unknown>>();
+
+interface EcosystemPayload {
+  organisms?: unknown;
+  relations?: unknown;
+  popupTexts?: unknown;
+}
 
 for (const category of configRegistry) {
   for (const section of category.sections) {
     initialDefaults.set(
       section.id,
       structuredClone(section.defaults) as Record<string, unknown>,
+    );
+  }
+}
+
+export function applyEcosystemConfig(raw: unknown): void {
+  if (!raw || typeof raw !== "object") return;
+
+  const candidate = raw as EcosystemPayload;
+
+  if (Array.isArray(candidate.organisms)) {
+    organisms.splice(
+      0,
+      organisms.length,
+      ...(candidate.organisms as OrganismData[]),
+    );
+  }
+
+  if (Array.isArray(candidate.relations)) {
+    relations.splice(
+      0,
+      relations.length,
+      ...(candidate.relations as OrganismsRelations[]),
+    );
+  }
+
+  if (
+    candidate.popupTexts &&
+    typeof candidate.popupTexts === "object" &&
+    !Array.isArray(candidate.popupTexts)
+  ) {
+    for (const key of Object.keys(popupTexts)) {
+      delete popupTexts[key];
+    }
+    Object.assign(
+      popupTexts,
+      candidate.popupTexts as Record<string, PopupText>,
     );
   }
 }
@@ -60,6 +105,10 @@ export async function loadConfigsFromServer(): Promise<void> {
     }
 
     const data = (await res.json()) as Record<string, Record<string, unknown>>;
+
+    if (data && typeof data === "object" && "ecosystem" in data) {
+      applyEcosystemConfig((data as { ecosystem?: unknown }).ecosystem);
+    }
 
     for (const [sectionId, sectionData] of Object.entries(data)) {
       if (sectionData && typeof sectionData === "object") {

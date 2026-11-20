@@ -3,6 +3,15 @@ import { z } from "zod";
 import { pool } from "./db";
 import { configRegistry } from "../src/game/config/configRegistry";
 import { deepMerge } from "./utils/deepMerge";
+import "express-session";
+
+declare module "express-session" {
+  interface SessionData {
+    user?: {
+      isAdmin?: boolean;
+    };
+  }
+}
 
 const router = Router();
 
@@ -11,9 +20,16 @@ interface SectionEntry {
   categoryId: string;
   id: string;
   label: string;
-  schema: z.ZodTypeAny;
-  defaults: Record<string, unknown>;
+  schema: z.ZodType;
+  defaults: Record<string, unknown> | null;
+  replace?: boolean;
 }
+
+const ecosystemSchema = z.object({
+  organisms: z.array(z.record(z.string(), z.unknown())),
+  relations: z.array(z.object({ source: z.string(), target: z.string() }).passthrough()),
+  popupTexts: z.record(z.string(), z.record(z.string(), z.unknown())),
+});
 
 /* Flattened lookup map of config sections with cloned defaults to prevent runtime mutation. */
 const sectionMap = new Map<string, SectionEntry>();
@@ -28,6 +44,27 @@ for (const category of configRegistry) {
       defaults: structuredClone(section.defaults) as Record<string, unknown>,
     });
   }
+}
+
+sectionMap.set("ecosystem", {
+  categoryId: "ecosystem",
+  id: "ecosystem",
+  label: "Ecosystem",
+  schema: ecosystemSchema,
+  defaults: null,
+  replace: true,
+});
+
+function buildCandidate(entry: SectionEntry, payload: Record<string, unknown>): unknown {
+  return entry.replace || entry.defaults === null
+    ? payload
+    : deepMerge(entry.defaults, payload);
+}
+
+function resolveConfig(entry: SectionEntry, dbConfig?: Record<string, unknown>): unknown {
+  if (!dbConfig) return entry.defaults;
+  const parsed = entry.schema.safeParse(buildCandidate(entry, dbConfig));
+  return parsed.success ? parsed.data : entry.defaults;
 }
 
 /* Middleware that restricts route access to authenticated admin sessions. */
@@ -50,14 +87,7 @@ router.get("/", async (_req, res) => {
     const result: Record<string, unknown> = {};
 
     for (const [id, entry] of sectionMap.entries()) {
-      const dbConfig = dbMap.get(id);
-      if (dbConfig) {
-        const merged = deepMerge(entry.defaults, dbConfig);
-        const parsed = entry.schema.safeParse(merged);
-        result[id] = parsed.success ? parsed.data : entry.defaults;
-      } else {
-        result[id] = entry.defaults;
-      }
+      result[id] = resolveConfig(entry, dbMap.get(id));
     }
 
     res.json(result);
@@ -82,13 +112,7 @@ router.get("/:domain", async (req, res) => {
       [domain],
     );
 
-    if (rows.length === 0) {
-      return res.json(entry.defaults);
-    }
-
-    const merged = deepMerge(entry.defaults, rows[0].config);
-    const parsed = entry.schema.safeParse(merged);
-    return res.json(parsed.success ? parsed.data : entry.defaults);
+    return res.json(resolveConfig(entry, rows[0]?.config));
   } catch (err) {
     console.error(`Failed to fetch config [${domain}]:`, err);
     res.status(500).json({ error: "Failed to fetch configuration" });
@@ -104,8 +128,7 @@ router.put<{ domain: string }>("/:domain", requireAdmin, async (req, res) => {
     return res.status(404).json({ error: `Unknown config section: ${domain}` });
   }
 
-  const candidate = deepMerge(entry.defaults, req.body);
-  const parsed = entry.schema.safeParse(candidate);
+  const parsed = entry.schema.safeParse(buildCandidate(entry, req.body));
 
   if (!parsed.success) {
     return res.status(400).json({
