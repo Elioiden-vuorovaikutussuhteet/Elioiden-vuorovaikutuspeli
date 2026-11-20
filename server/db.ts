@@ -15,12 +15,17 @@ function getConnectionString(): string {
 }
 
 /* Ensures the connection works with ssl in possu while working without it in local development. */
-const connectionString = getConnectionString();
-const useSsl = /[?&]sslmode=(require|verify-ca|verify-full)\b/i.test(connectionString);
+const url = new URL(getConnectionString());
+const useSsl = /^(require|verify-ca|verify-full)$/i.test(
+  url.searchParams.get("sslmode") ?? "",
+);
+if (useSsl) {
+  url.searchParams.delete("sslmode");
+}
 
 /* Shared PostgreSQL connection pool for database queries. */
 export const pool = new Pool({
-  connectionString,
+  connectionString: url.toString(),
   ssl: useSsl ? { rejectUnauthorized: false } : false,
 });
 
