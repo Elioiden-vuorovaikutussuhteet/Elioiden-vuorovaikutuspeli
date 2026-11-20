@@ -14,9 +14,14 @@ function getConnectionString(): string {
   return url;
 }
 
+/* Ensures the connection works with ssl in possu while working without it in local development. */
+const connectionString = getConnectionString();
+const useSsl = /[?&]sslmode=(require|verify-ca|verify-full)\b/i.test(connectionString);
+
 /* Shared PostgreSQL connection pool for database queries. */
 export const pool = new Pool({
-  connectionString: getConnectionString(),
+  connectionString,
+  ssl: useSsl ? { rejectUnauthorized: false } : false,
 });
 
 /* Ensures the game_configs table exists before the server starts handling requests. */

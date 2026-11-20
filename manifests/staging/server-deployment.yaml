@@ -30,6 +30,8 @@ spec:
           envFrom:
             - secretRef:
                 name: admin-auth
+            - secretRef:
+                name: possu-db    
           resources:
             limits:
               memory: "512Mi"
