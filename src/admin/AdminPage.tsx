@@ -1,6 +1,14 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Box, Tabs, Tab, Typography, Button, Alert } from "@mui/material";
+import {
+  Box,
+  Tabs,
+  Tab,
+  Typography,
+  Button,
+  Alert,
+  Stack,
+} from "@mui/material";
 import { getServerMessage, logout } from "../api";
 import { configRegistry } from "../game/config/configRegistry";
 import { loadConfigsFromServer } from "../game/config/loadConfigs";
@@ -21,6 +29,7 @@ import {
 import {
   popupTexts as initialPopupTexts,
   type PopupText,
+  getInteractionId,
 } from "../game/data/popupTexts";
 
 type OrganismConfig = {
@@ -28,6 +37,9 @@ type OrganismConfig = {
   relations: OrganismsRelations[];
   popupTexts: Record<string, PopupText>;
 };
+
+const ECOSYSTEM_ENDPOINT = "/api/configs/ecosystem";
+const ECOSYSTEM_SECTION_KEY = "ecosystem";
 
 function buildSectionMap(): Record<string, unknown> {
   return Object.fromEntries(
@@ -48,6 +60,25 @@ function createDefaultOrganismConfig(): OrganismConfig {
   };
 }
 
+function normalizeOrganismConfig(raw: unknown): OrganismConfig {
+  if (!raw || typeof raw !== "object") {
+    return createDefaultOrganismConfig();
+  }
+  const candidate = raw as Partial<OrganismConfig>;
+  return {
+    organisms: Array.isArray(candidate.organisms)
+      ? candidate.organisms
+      : structuredClone(initialOrganisms),
+    relations: Array.isArray(candidate.relations)
+      ? candidate.relations
+      : structuredClone(initialRelations),
+    popupTexts:
+      candidate.popupTexts && typeof candidate.popupTexts === "object"
+        ? candidate.popupTexts
+        : structuredClone(initialPopupTexts),
+  };
+}
+
 function AdminPage() {
   const [message, setMessage] = useState("Loading...");
   const navigate = useNavigate();
@@ -62,7 +93,6 @@ function AdminPage() {
   const [activeParentTab, setActiveParentTab] = useState("config");
   const [activeConfigTab, setActiveConfigTab] = useState("camera");
 
-  // Config values (per profile), saved per section through the config API
   const [configValues, setConfigValues] = useState<
     Record<string, Record<string, unknown>>
   >(() => ({
@@ -82,6 +112,16 @@ function AdminPage() {
     text: string;
   } | null>(null);
 
+  const [organismConfigs, setOrganismConfigs] = useState<
+    Record<string, OrganismConfig>
+  >(() => ({
+    default: createDefaultOrganismConfig(),
+  }));
+
+  const [orgChanges, setOrgChanges] = useState<Record<string, boolean>>({});
+  const [isSavingOrganisms, setIsSavingOrganisms] = useState(false);
+  const hasUnsavedOrgChanges = orgChanges[activeProfile] ?? false;
+
   useEffect(() => {
     getServerMessage()
       .then((data) => setMessage(data.message))
@@ -95,6 +135,27 @@ function AdminPage() {
         }));
       })
       .catch(console.error);
+
+    fetch(ECOSYSTEM_ENDPOINT, { credentials: "include" })
+      .then((res) =>
+        res.ok ? res.json() : Promise.reject(new Error(`HTTP ${res.status}`)),
+      )
+      .then((data: unknown) => {
+        if (data !== null) {
+          const loaded = normalizeOrganismConfig(data);
+          setOrganismConfigs((prev) => ({
+            ...prev,
+            default: loaded,
+          }));
+          setOrgChanges((prev) => ({
+            ...prev,
+            default: false,
+          }));
+        }
+      })
+      .catch((err) => {
+        console.error("Failed to load ecosystem config:", err);
+      });
   }, []);
 
   async function handleLogout() {
@@ -105,29 +166,6 @@ function AdminPage() {
       console.error("Logout failed:", error);
     }
   }
-
-  // Organisms, relations and popup texts (per profile)
-  // Current implementation:
-  // - Stored in React state.
-  // - Changes are local and are lost when the page reloads.
-  const [organismConfigs, setOrganismConfigs] = useState<
-    Record<string, OrganismConfig>
-  >(() => ({
-    default: createDefaultOrganismConfig(),
-  }));
-
-  const [orgChanges, setOrgChanges] = useState<Record<string, boolean>>({});
-  const hasUnsavedOrgChanges = orgChanges[activeProfile] ?? false;
-  void hasUnsavedOrgChanges;
-
-  /*
-  TODO (API for organisms):
-  - Load organisms, relations and popupTexts from the backend instead of using
-    the initial data from ../game/data (e.g. alongside loadConfigsFromServer).
-  - Add a save button that calls a function which checks hasUnsavedOrgChanges
-    and sends organisms, relations and popupTexts to the backend.
-  - After a successful save, set orgChanges[activeProfile] to false.
-  */
 
   const activeOrganismConfig =
     organismConfigs[activeProfile] ?? createDefaultOrganismConfig();
@@ -152,6 +190,99 @@ function AdminPage() {
     }));
   }
 
+  async function handleSaveOrganisms() {
+    setIsSavingOrganisms(true);
+    setFeedback(null);
+
+    try {
+      const res = await fetch(ECOSYSTEM_ENDPOINT, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ organisms, relations, popupTexts }),
+      });
+
+      const body = await res.json();
+      if (!res.ok) {
+        throw new Error(body.error ?? "Failed to save organisms");
+      }
+
+      const saved =
+        body.config != null
+          ? normalizeOrganismConfig(body.config)
+          : { organisms, relations, popupTexts };
+
+      setOrganismConfigs((previous) => ({
+        ...previous,
+        [activeProfile]: saved,
+      }));
+      setOrgChanges((previous) => ({
+        ...previous,
+        [activeProfile]: false,
+      }));
+      setFeedback({
+        sectionKey: ECOSYSTEM_SECTION_KEY,
+        severity: "success",
+        text: "Organisms saved to database.",
+      });
+    } catch (error) {
+      setFeedback({
+        sectionKey: ECOSYSTEM_SECTION_KEY,
+        severity: "error",
+        text:
+          error instanceof Error ? error.message : "Failed to save organisms",
+      });
+    } finally {
+      setIsSavingOrganisms(false);
+    }
+  }
+
+  async function handleResetOrganisms() {
+    setIsSavingOrganisms(true);
+    setFeedback(null);
+
+    try {
+      const res = await fetch(ECOSYSTEM_ENDPOINT, {
+        method: "DELETE",
+        credentials: "include",
+      });
+
+      const body = await res.json();
+      if (!res.ok) {
+        throw new Error(body.error ?? "Failed to reset organisms");
+      }
+
+      const next =
+        body.config != null
+          ? normalizeOrganismConfig(body.config)
+          : createDefaultOrganismConfig();
+
+      setOrganismConfigs((previous) => ({
+        ...previous,
+        [activeProfile]: next,
+      }));
+      setSelectedOrganismId(next.organisms[0]?.id ?? "");
+      setOrgChanges((previous) => ({
+        ...previous,
+        [activeProfile]: false,
+      }));
+      setFeedback({
+        sectionKey: ECOSYSTEM_SECTION_KEY,
+        severity: "success",
+        text: "Organisms reset to default values.",
+      });
+    } catch (error) {
+      setFeedback({
+        sectionKey: ECOSYSTEM_SECTION_KEY,
+        severity: "error",
+        text:
+          error instanceof Error ? error.message : "Failed to reset organisms",
+      });
+    } finally {
+      setIsSavingOrganisms(false);
+    }
+  }
+
   const [selectedOrganismIds, setSelectedOrganismIds] = useState<
     Record<string, string>
   >({});
@@ -171,9 +302,6 @@ function AdminPage() {
     }));
   }
 
-  // Add profile
-  // For future database use:
-  // - Change local profile adding to an API request
   function handleAddProfile() {
     const name = newProfileName.trim();
     if (!name) return;
@@ -462,26 +590,96 @@ function AdminPage() {
               popupTexts={popupTexts}
               selectedOrganismId={selectedOrganismId}
               onOrganismChange={(originalId, updatedOrganism) => {
-                updateOrganismConfig((previous) => ({
-                  ...previous,
-                  organisms: previous.organisms.map((organism) =>
+                updateOrganismConfig((previous) => {
+                  const nextOrganisms = previous.organisms.map((organism) =>
                     organism.id === originalId ? updatedOrganism : organism,
-                  ),
-                }));
+                  );
+                  if (originalId === updatedOrganism.id) {
+                    return { ...previous, organisms: nextOrganisms };
+                  }
+
+                  const nextRelations = previous.relations.map((relation) => ({
+                    ...relation,
+                    source:
+                      relation.source === originalId
+                        ? updatedOrganism.id
+                        : relation.source,
+                    target:
+                      relation.target === originalId
+                        ? updatedOrganism.id
+                        : relation.target,
+                  }));
+
+                  const nextPopupTexts = { ...previous.popupTexts };
+                  for (const relation of previous.relations) {
+                    if (
+                      relation.source === originalId ||
+                      relation.target === originalId
+                    ) {
+                      const oldKey = getInteractionId(
+                        relation.source,
+                        relation.target,
+                      );
+                      const newKey = getInteractionId(
+                        relation.source === originalId
+                          ? updatedOrganism.id
+                          : relation.source,
+                        relation.target === originalId
+                          ? updatedOrganism.id
+                          : relation.target,
+                      );
+                      if (oldKey !== newKey && nextPopupTexts[oldKey]) {
+                        nextPopupTexts[newKey] = nextPopupTexts[oldKey];
+                        delete nextPopupTexts[oldKey];
+                      }
+                    }
+                  }
+
+                  return {
+                    ...previous,
+                    organisms: nextOrganisms,
+                    relations: nextRelations,
+                    popupTexts: nextPopupTexts,
+                  };
+                });
 
                 if (originalId !== updatedOrganism.id) {
                   setSelectedOrganismId(updatedOrganism.id);
                 }
               }}
               onRelationChange={(index, updatedRelation) => {
-                updateOrganismConfig((previous) => ({
-                  ...previous,
-                  relations: previous.relations.map((relation, i) =>
-                    i === index
-                      ? { ...updatedRelation, source: selectedOrganismId }
-                      : relation,
-                  ),
-                }));
+                updateOrganismConfig((previous) => {
+                  const prevRel = previous.relations[index];
+                  const nextRelations = previous.relations.map((relation, i) =>
+                    i === index ? updatedRelation : relation,
+                  );
+                  const nextPopupTexts = { ...previous.popupTexts };
+
+                  if (prevRel) {
+                    const oldKey = getInteractionId(
+                      prevRel.source,
+                      prevRel.target,
+                    );
+                    const newKey = getInteractionId(
+                      updatedRelation.source,
+                      updatedRelation.target,
+                    );
+                    if (
+                      oldKey !== newKey &&
+                      nextPopupTexts[oldKey] &&
+                      !nextPopupTexts[newKey]
+                    ) {
+                      nextPopupTexts[newKey] = nextPopupTexts[oldKey];
+                      delete nextPopupTexts[oldKey];
+                    }
+                  }
+
+                  return {
+                    ...previous,
+                    relations: nextRelations,
+                    popupTexts: nextPopupTexts,
+                  };
+                });
               }}
               onPopupTextChange={(interactionId, updatedPopupText) => {
                 updateOrganismConfig((previous) => ({
@@ -494,10 +692,38 @@ function AdminPage() {
               }}
             />
 
-            {/* For organism saving:
-                add a Save button here that sends
-                organisms, relations and popupTexts to the backend when
-                hasUnsavedOrgChanges is true. */}
+            <Stack
+              direction="row"
+              spacing={2}
+              sx={{ alignItems: "center", mt: 3 }}
+            >
+              <Button
+                variant="contained"
+                disabled={!hasUnsavedOrgChanges || isSavingOrganisms}
+                onClick={handleSaveOrganisms}
+              >
+                {isSavingOrganisms ? "Saving..." : "Save"}
+              </Button>
+
+              <Button
+                variant="outlined"
+                color="secondary"
+                disabled={isSavingOrganisms}
+                onClick={handleResetOrganisms}
+              >
+                Reset to Defaults
+              </Button>
+            </Stack>
+
+            {feedback?.sectionKey === ECOSYSTEM_SECTION_KEY && (
+              <Alert
+                severity={feedback.severity}
+                sx={{ mt: 2, maxWidth: 480 }}
+                onClose={() => setFeedback(null)}
+              >
+                {feedback.text}
+              </Alert>
+            )}
           </Box>
         )}
       </Box>

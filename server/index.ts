@@ -72,6 +72,8 @@ app.get("/api/hello", (_req, res) => {
   });
 });
 
+app.get("/api/health", (_req, res) => res.sendStatus(200));
+
 // Initialize database table before starting the HTTP server
 initDb()
   .then(() => {
