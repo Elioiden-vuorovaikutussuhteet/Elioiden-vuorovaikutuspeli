@@ -35,7 +35,10 @@ export const arrowButtonUIConfig: ArrowButtonUIConfig = {
   clickEvent: "arrowButtonClicked",
 };
 
-export const CursorButtonUIConfigSchema = SpriteButtonBaseSchema;
+export const CursorButtonUIConfigSchema = SpriteButtonBaseSchema.extend({
+  hoverTint: z.number().int().min(0).max(0xffffff).meta({ input: "color" }),
+  selectedTint: z.number().int().min(0).max(0xffffff).meta({ input: "color" }),
+});
 
 export type CursorButtonUIConfig = z.infer<typeof CursorButtonUIConfigSchema>;
 
@@ -43,6 +46,8 @@ export const cursorButtonUIConfig: CursorButtonUIConfig = {
   scale: 0.05,
   hoverAlpha: 0.8,
   defaultAlpha: 1,
+  hoverTint: 0x999999,
+  selectedTint: 0x777777,
   clickEvent: "cursorButtonClicked",
 };
 
