@@ -24,6 +24,7 @@ import session from "express-session";
 import helmet from "helmet";
 import authRouter from "./auth";
 import configRouter from "./configRoutes";
+import { profileRoutes } from "./profileRoutes";
 import { initDb } from "./db";
 
 const app = express();
@@ -51,6 +52,7 @@ app.use(
 
 app.use("/api/auth", authRouter);
 app.use("/api/configs", configRouter);
+app.use("/api/profiles", profileRoutes);
 
 function requireAdmin(
   req: express.Request,
@@ -71,8 +73,6 @@ app.get("/api/hello", (_req, res) => {
     status: "success",
   });
 });
-
-app.get("/api/health", (_req, res) => res.sendStatus(200));
 
 // Initialize database table before starting the HTTP server
 initDb()

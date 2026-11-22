@@ -1,4 +1,9 @@
-import { Router } from "express";
+import {
+  Router,
+  type Request,
+  type Response,
+  type NextFunction,
+} from "express";
 import bcrypt from "bcrypt";
 import { rateLimit } from "express-rate-limit";
 
@@ -87,5 +92,17 @@ router.get("/me", (req, res) => {
     authenticated: !!req.session.user?.isAdmin,
   });
 });
+
+export function requireAdmin(
+  req: Request,
+  res: Response,
+  next: NextFunction,
+): void {
+  if (!req.session.user?.isAdmin) {
+    res.status(401).json({ error: "Unauthorized" });
+    return;
+  }
+  next();
+}
 
 export default router;
