@@ -77,7 +77,14 @@ beforeEach(() => {
 });
 
 describe("profileRoutes", () => {
-  it("GET /api/profiles returns all profiles", async () => {
+  it("GET /api/profiles rejects unauthenticated requests with 401", async () => {
+    const res = await fetch(`${baseUrl}/api/profiles`);
+
+    expect(res.status).toBe(401);
+    expect(mockQuery).not.toHaveBeenCalled();
+  });
+
+  it("GET /api/profiles returns all profiles for admin", async () => {
     const rows = [
       {
         id: "default",
@@ -88,7 +95,7 @@ describe("profileRoutes", () => {
     ];
     mockQuery.mockResolvedValueOnce({ rows });
 
-    const res = await fetch(`${baseUrl}/api/profiles`);
+    const res = await fetch(`${baseUrl}/api/profiles`, { headers: ADMIN });
 
     expect(res.status).toBe(200);
     expect(await res.json()).toEqual(rows);

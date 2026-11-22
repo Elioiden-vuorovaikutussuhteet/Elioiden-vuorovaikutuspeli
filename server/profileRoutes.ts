@@ -1,7 +1,7 @@
 import { Router } from "express";
 import { z } from "zod";
 import { pool } from "./db";
-import { requireAdmin } from "./auth"; // adjust to your auth middleware path
+import { requireAdmin } from "./auth"; 
 
 const createProfileSchema = z.object({
   id: z.string().regex(/^[a-z0-9-]+$/).min(1).max(64),
@@ -19,6 +19,7 @@ const updateProfileSchema = z
   });
 
 export const profileRoutes = Router();
+profileRoutes.use(requireAdmin);
 
 profileRoutes.get("/", async (_req, res) => {
   const { rows } = await pool.query(
