@@ -67,14 +67,13 @@ export default function AdminPage() {
   useEffect(() => {
     if (!selectedProfileId) return;
     let cancelled = false;
-    setLoadedProfile(null);
-    setLoadError(null);
-    setConfigDirty(false);
-    setOrganismsDirty(false);
 
     fetchProfileConfigs(selectedProfileId)
       .then((data) => {
-        if (!cancelled) setLoadedProfile({ id: selectedProfileId, data });
+        if (!cancelled) {
+          setLoadedProfile({ id: selectedProfileId, data });
+          setLoadError(null);
+        }
       })
       .catch((err) => {
         if (!cancelled) {
@@ -118,6 +117,14 @@ export default function AdminPage() {
       return;
     }
     void performLogout();
+  }
+
+  function selectProfile(nextId: string) {
+    setSelectedProfileId(nextId);
+    setLoadedProfile(null);
+    setLoadError(null);
+    setConfigDirty(false);
+    setOrganismsDirty(false);
   }
 
   function handleSelectProfile(nextId: string) {
@@ -178,7 +185,7 @@ export default function AdminPage() {
             const remaining = profiles.filter((p) => p.id !== deletedId);
             setProfiles(remaining);
             const fallback = remaining.find((p) => p.is_active) ?? remaining[0];
-            if (fallback) setSelectedProfileId(fallback.id);
+            if (fallback) selectProfile(fallback.id);
           }}
         />
       )}
