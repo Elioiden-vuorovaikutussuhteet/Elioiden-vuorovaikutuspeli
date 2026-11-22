@@ -1,5 +1,6 @@
 import Phaser from "phaser";
 import ArrowButtons from "../entities/arrowbuttons";
+import type CursorButton from "../entities/cursorbutton";
 import type Organism from "../entities/organism";
 import type PermanentArrow from "../entities/permanentarrow";
 import { getRelation } from "../services/RelationsService";
@@ -35,6 +36,7 @@ export default class ArrowManager {
   private readonly onRightArrowDrawn?: () => void;
   private greenButton?: ArrowButtons;
   private redButton?: ArrowButtons;
+  private cursorButton?: CursorButton;
 
   private readonly defaultOrganismSpawnOrder: readonly string[] = [
     "ants",
@@ -266,9 +268,14 @@ export default class ArrowManager {
     });
   }
 
+  public setCursorButton(button: CursorButton): void {
+    this.cursorButton = button;
+  }
+
   public setCursorMode(enabled: boolean): void {
     this.cursorMode = enabled;
     this.renderer.setCursorMode(enabled);
+    this.cursorButton?.setSelected?.(enabled);
     if (enabled) {
       this.greenButton?.setSelected?.(false);
       this.redButton?.setSelected?.(false);

@@ -4,6 +4,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import GameScene from "../../../src/game/scenes/GameScene";
 import Organism from "../../../src/game/entities/organism";
 import ArrowButtons from "../../../src/game/entities/arrowbuttons";
+import type CursorButton from "../../../src/game/entities/cursorbutton";
 import { getRelation } from "../../../src/game/services/RelationsService";
 import ArrowManager from "../../../src/game/managers/ArrowManager";
 import InteractionManager from "../../../src/game/managers/InteractionManager";
@@ -763,16 +764,27 @@ describe("ArrowManager interactions", () => {
   });
 
   it("removes preview arrow and deleted organism does not stay selected", () => {
-  vi.mocked(getRelation).mockReturnValue({
-    value: 1,
-    mult: 1,
-  });
+    vi.mocked(getRelation).mockReturnValue({
+      value: 1,
+      mult: 1,
+    });
 
     const tree = organism("tree", 300, 500);
 
     arrowManager.arrowChecker(tree);
     arrowManager.deleteArrows(tree);
     expect(previewArrow.clear).toHaveBeenCalled();
+  });
 
-});
+  it("updates cursor button selected state when cursor mode changes", () => {
+    const cursorButton = { setSelected: vi.fn() } as unknown as CursorButton;
+
+    arrowManager.setCursorButton(cursorButton);
+
+    arrowManager.setCursorMode(true);
+    expect(cursorButton.setSelected).toHaveBeenCalledWith(true);
+
+    arrowManager.setCursorMode(false);
+    expect(cursorButton.setSelected).toHaveBeenCalledWith(false);
+  });
 });
