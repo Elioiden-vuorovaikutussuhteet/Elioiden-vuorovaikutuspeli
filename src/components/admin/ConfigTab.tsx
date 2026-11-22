@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Alert, Box, Button, Tab, Tabs, Typography } from "@mui/material";
 import { configRegistry } from "../../game/config/configRegistry";
 import {
@@ -11,6 +11,7 @@ interface ConfigTabProps {
   profileId: string;
   isActive: boolean;
   initialData: Record<string, unknown>;
+  onDirtyChange?: (dirty: boolean) => void;
 }
 
 function buildInitialValues(
@@ -21,7 +22,10 @@ function buildInitialValues(
       category.sections.map((section) => [
         section.id,
         structuredClone(
-          (serverData[section.id] ?? section.defaults) as Record<string, unknown>,
+          (serverData[section.id] ?? section.defaults) as Record<
+            string,
+            unknown
+          >,
         ),
       ]),
     ),
@@ -32,10 +36,15 @@ export default function ConfigTab({
   profileId,
   isActive,
   initialData,
+  onDirtyChange,
 }: ConfigTabProps) {
   const [activeTab, setActiveTab] = useState(configRegistry[0]?.id ?? "camera");
   const [values, setValues] = useState(() => buildInitialValues(initialData));
   const [dirty, setDirty] = useState<Record<string, boolean>>({});
+  const hasUnsaved = Object.values(dirty).some(Boolean);
+  useEffect(() => {
+    onDirtyChange?.(hasUnsaved);
+  }, [hasUnsaved, onDirtyChange]);
   const [savingId, setSavingId] = useState<string | null>(null);
   const [resetCounts, setResetCounts] = useState<Record<string, number>>({});
   const [feedback, setFeedback] = useState<{
@@ -51,9 +60,15 @@ export default function ConfigTab({
     setSavingId(sectionId);
     setFeedback(null);
     try {
-      const saved = await saveConfigSection(profileId, sectionId, current, isActive);
+      const saved = await saveConfigSection(
+        profileId,
+        sectionId,
+        current,
+        isActive,
+      );
       setValues((prev) => ({ ...prev, [sectionId]: structuredClone(saved) }));
       setDirty((prev) => ({ ...prev, [sectionId]: false }));
+
       setFeedback({
         sectionId,
         severity: "success",
@@ -63,7 +78,8 @@ export default function ConfigTab({
       setFeedback({
         sectionId,
         severity: "error",
-        text: err instanceof Error ? err.message : "Failed to save configuration.",
+        text:
+          err instanceof Error ? err.message : "Failed to save configuration.",
       });
     } finally {
       setSavingId(null);
@@ -82,7 +98,10 @@ export default function ConfigTab({
         ),
       }));
       setDirty((prev) => ({ ...prev, [sectionId]: false }));
-      setResetCounts((prev) => ({ ...prev, [sectionId]: (prev[sectionId] ?? 0) + 1 }));
+      setResetCounts((prev) => ({
+        ...prev,
+        [sectionId]: (prev[sectionId] ?? 0) + 1,
+      }));
       setFeedback({
         sectionId,
         severity: "success",
@@ -92,7 +111,8 @@ export default function ConfigTab({
       setFeedback({
         sectionId,
         severity: "error",
-        text: err instanceof Error ? err.message : "Failed to reset configuration.",
+        text:
+          err instanceof Error ? err.message : "Failed to reset configuration.",
       });
     } finally {
       setSavingId(null);
@@ -120,7 +140,7 @@ export default function ConfigTab({
                 </Typography>
 
                 <DynamicForm
-                  key={`${activeCategory.id}-${section.id}-${resetCounts[section.id] ?? 0}`}
+                  key={`${profileId}-${activeCategory.id}-${section.id}-${resetCounts[section.id] ?? 0}`}
                   schema={section.schema}
                   defaults={values[section.id] ?? section.defaults}
                   onChange={(next) => {

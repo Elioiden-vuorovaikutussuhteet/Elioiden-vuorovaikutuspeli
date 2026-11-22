@@ -1,6 +1,18 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Alert, Box, Tab, Tabs, Typography } from "@mui/material";
+import {
+  Alert,
+  Box,
+  Button,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogContentText,
+  DialogTitle,
+  Tab,
+  Tabs,
+  Typography,
+} from "@mui/material";
 import { getServerMessage, logout } from "../api";
 import {
   type Profile,
@@ -11,16 +23,28 @@ import ProfileBar from "../components/admin/ProfileBar";
 import ConfigTab from "../components/admin/ConfigTab";
 import OrganismsTab from "../components/admin/OrganismsTab";
 
+type PendingAction = { kind: "switch"; profileId: string } | { kind: "logout" };
+
 export default function AdminPage() {
   const navigate = useNavigate();
   const [message, setMessage] = useState("Loading...");
   const [profiles, setProfiles] = useState<Profile[]>([]);
   const [selectedProfileId, setSelectedProfileId] = useState("");
-  const [profileData, setProfileData] = useState<Record<string, unknown> | null>(
-    null,
-  );
+  const [loadedProfile, setLoadedProfile] = useState<{
+    id: string;
+    data: Record<string, unknown>;
+  } | null>(null);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<"config" | "organisms">("config");
+  const [configDirty, setConfigDirty] = useState(false);
+  const [organismsDirty, setOrganismsDirty] = useState(false);
+  const [pendingAction, setPendingAction] = useState<PendingAction | null>(
+    null,
+  );
+
+  const hasUnsavedChanges = configDirty || organismsDirty;
+  const selectedProfile = profiles.find((p) => p.id === selectedProfileId);
+  const isActive = Boolean(selectedProfile?.is_active);
 
   useEffect(() => {
     getServerMessage()
@@ -43,17 +67,21 @@ export default function AdminPage() {
   useEffect(() => {
     if (!selectedProfileId) return;
     let cancelled = false;
-    setProfileData(null);
+    setLoadedProfile(null);
     setLoadError(null);
+    setConfigDirty(false);
+    setOrganismsDirty(false);
 
     fetchProfileConfigs(selectedProfileId)
       .then((data) => {
-        if (!cancelled) setProfileData(data);
+        if (!cancelled) setLoadedProfile({ id: selectedProfileId, data });
       })
       .catch((err) => {
         if (!cancelled) {
           setLoadError(
-            err instanceof Error ? err.message : "Failed to load profile config.",
+            err instanceof Error
+              ? err.message
+              : "Failed to load profile config.",
           );
         }
       });
@@ -63,10 +91,19 @@ export default function AdminPage() {
     };
   }, [selectedProfileId]);
 
-  const selectedProfile = profiles.find((p) => p.id === selectedProfileId);
-  const isActive = Boolean(selectedProfile?.is_active);
+  useEffect(() => {
+    if (!hasUnsavedChanges) return;
 
-  async function handleLogout() {
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      e.preventDefault();
+      e.returnValue = "";
+    };
+
+    window.addEventListener("beforeunload", handleBeforeUnload);
+    return () => window.removeEventListener("beforeunload", handleBeforeUnload);
+  }, [hasUnsavedChanges]);
+
+  async function performLogout() {
     try {
       await logout();
       navigate("/login", { replace: true });
@@ -75,22 +112,60 @@ export default function AdminPage() {
     }
   }
 
+  function handleLogout() {
+    if (hasUnsavedChanges) {
+      setPendingAction({ kind: "logout" });
+      return;
+    }
+    void performLogout();
+  }
+
+  function handleSelectProfile(nextId: string) {
+    if (nextId === selectedProfileId) return;
+    if (hasUnsavedChanges) {
+      setPendingAction({ kind: "switch", profileId: nextId });
+      return;
+    }
+    setSelectedProfileId(nextId);
+  }
+
+  function handleConfirmDiscard() {
+    const action = pendingAction;
+    setPendingAction(null);
+    if (!action) return;
+
+    if (action.kind === "switch") {
+      setSelectedProfileId(action.profileId);
+    } else {
+      void performLogout();
+    }
+  }
+
   return (
-    <Box sx={{ p: 3, minHeight: "100vh", overflowY: "auto", boxSizing: "border-box" }}>
+    <Box
+      sx={{
+        p: 3,
+        minHeight: "100vh",
+        overflowY: "auto",
+        boxSizing: "border-box",
+      }}
+    >
       <Typography variant="h4" sx={{ mb: 2 }}>
         Admin Dashboard
       </Typography>
       <Typography sx={{ mb: 2 }}>{message}</Typography>
-      <button onClick={handleLogout}>Logout</button>
+      <Button variant="outlined" size="small" onClick={handleLogout}>
+        Logout
+      </Button>
 
       {profiles.length > 0 && (
         <ProfileBar
           profiles={profiles}
           selectedProfileId={selectedProfileId}
-          onSelect={setSelectedProfileId}
+          onSelect={handleSelectProfile}
           onCreated={(created) => {
             setProfiles((prev) => [...prev, created]);
-            setSelectedProfileId(created.id);
+            handleSelectProfile(created.id);
           }}
           onActivated={(updated) => {
             setProfiles((prev) =>
@@ -115,34 +190,65 @@ export default function AdminPage() {
       )}
 
       <Box sx={{ mt: 3 }}>
-        <Tabs value={activeTab} onChange={(_, v) => setActiveTab(v)}>
+        <Tabs
+          value={activeTab}
+          onChange={(_, v: "config" | "organisms") => setActiveTab(v)}
+        >
           <Tab label="Config" value="config" />
           <Tab label="Organisms" value="organisms" />
         </Tabs>
 
-        {profileData ? (
+        {loadedProfile?.id === selectedProfileId ? (
           <>
             <Box sx={{ display: activeTab === "config" ? "block" : "none" }}>
               <ConfigTab
-                key={selectedProfileId}
-                profileId={selectedProfileId}
+                key={loadedProfile.id}
+                profileId={loadedProfile.id}
                 isActive={isActive}
-                initialData={profileData}
+                initialData={loadedProfile.data}
+                onDirtyChange={setConfigDirty}
               />
             </Box>
             <Box sx={{ display: activeTab === "organisms" ? "block" : "none" }}>
               <OrganismsTab
-                key={selectedProfileId}
-                profileId={selectedProfileId}
+                key={loadedProfile.id}
+                profileId={loadedProfile.id}
                 isActive={isActive}
-                initialData={profileData.ecosystem}
+                initialData={loadedProfile.data.ecosystem}
+                onDirtyChange={setOrganismsDirty}
               />
             </Box>
           </>
         ) : (
-          !loadError && <Typography sx={{ mt: 3 }}>Loading profile...</Typography>
+          !loadError && (
+            <Typography sx={{ mt: 3 }}>Loading profile...</Typography>
+          )
         )}
       </Box>
+
+      <Dialog
+        open={pendingAction !== null}
+        onClose={() => setPendingAction(null)}
+      >
+        <DialogTitle>Unsaved changes</DialogTitle>
+        <DialogContent>
+          <DialogContentText>
+            {pendingAction?.kind === "logout"
+              ? "You have unsaved changes. Log out and discard them?"
+              : "You have unsaved changes. Switch profile and discard them?"}
+          </DialogContentText>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setPendingAction(null)}>Cancel</Button>
+          <Button
+            variant="contained"
+            color="error"
+            onClick={handleConfirmDiscard}
+          >
+            Discard
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Box>
   );
 }

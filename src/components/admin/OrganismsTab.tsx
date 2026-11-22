@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Alert, Box, Button, Stack, Typography } from "@mui/material";
 import {
   saveConfigSection,
@@ -30,6 +30,7 @@ interface OrganismsTabProps {
   profileId: string;
   isActive: boolean;
   initialData: unknown;
+  onDirtyChange?: (dirty: boolean) => void;
 }
 
 function defaultOrganismConfig(): OrganismConfig {
@@ -63,7 +64,11 @@ function movePopupKey(
   newKey: string,
   overwrite: boolean,
 ) {
-  if (oldKey !== newKey && popupTexts[oldKey] && (overwrite || !popupTexts[newKey])) {
+  if (
+    oldKey !== newKey &&
+    popupTexts[oldKey] &&
+    (overwrite || !popupTexts[newKey])
+  ) {
     popupTexts[newKey] = popupTexts[oldKey];
     delete popupTexts[oldKey];
   }
@@ -73,8 +78,11 @@ export default function OrganismsTab({
   profileId,
   isActive,
   initialData,
+  onDirtyChange,
 }: OrganismsTabProps) {
-  const [config, setConfig] = useState(() => normalizeOrganismConfig(initialData));
+  const [config, setConfig] = useState(() =>
+    normalizeOrganismConfig(initialData),
+  );
   const [selectedId, setSelectedId] = useState("");
   const [dirty, setDirty] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -82,7 +90,9 @@ export default function OrganismsTab({
     severity: "success" | "error";
     text: string;
   } | null>(null);
-
+  useEffect(() => {
+    onDirtyChange?.(dirty);
+  }, [dirty, onDirtyChange]);
   const { organisms, relations, popupTexts } = config;
   const activeOrganismId = organisms.some((o) => o.id === selectedId)
     ? selectedId
@@ -161,7 +171,10 @@ export default function OrganismsTab({
       if (isActive) await loadConfigsFromServer(profileId);
       setConfig(normalizeOrganismConfig(saved));
       setDirty(false);
-      setFeedback({ severity: "success", text: "Organisms saved to database." });
+      setFeedback({
+        severity: "success",
+        text: "Organisms saved to database.",
+      });
     } catch (err) {
       setFeedback({
         severity: "error",
@@ -226,7 +239,10 @@ export default function OrganismsTab({
         onPopupTextChange={(interactionId, updatedPopupText) =>
           update((prev) => ({
             ...prev,
-            popupTexts: { ...prev.popupTexts, [interactionId]: updatedPopupText },
+            popupTexts: {
+              ...prev.popupTexts,
+              [interactionId]: updatedPopupText,
+            },
           }))
         }
       />

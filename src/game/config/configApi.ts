@@ -10,6 +10,7 @@ export interface Profile {
 async function apiRequest<T>(url: string, init?: RequestInit): Promise<T> {
   const res = await fetch(url, {
     credentials: "include",
+    cache: "no-store",
     ...init,
     headers: {
       ...(init?.body ? { "Content-Type": "application/json" } : {}),
