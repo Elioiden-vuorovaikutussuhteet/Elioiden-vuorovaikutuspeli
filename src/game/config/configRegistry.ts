@@ -39,6 +39,7 @@ import {
   popupSceneConfig,
 } from "./sceneConfig";
 import { ScoreConfigSchema, scoreConfig } from "./scoreConfig";
+import { LightningConfigSchema, lightningConfig } from "./lightningConfig";
 
 export const configRegistry = [
   {
@@ -134,6 +135,12 @@ export const configRegistry = [
         label: "Popup Scene",
         schema: PopupSceneConfigSchema,
         defaults: popupSceneConfig,
+      },
+      {
+        id: "lightning",
+        label: "Lightning Scene",
+        schema: LightningConfigSchema,
+        defaults: lightningConfig,
       },
     ],
   },

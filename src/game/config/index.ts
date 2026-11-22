@@ -4,6 +4,7 @@ export * from "./cameraConfig";
 export * from "./forceConfig";
 export * from "./glowConfig";
 export * from "./interactionConfig";
+export * from "./lightningConfig";
 export * from "./loadConfigs";
 export * from "./organismConfig";
 export * from "./sceneConfig";
