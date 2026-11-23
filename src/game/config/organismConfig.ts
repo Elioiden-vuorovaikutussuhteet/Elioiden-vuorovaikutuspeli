@@ -66,6 +66,10 @@ export const organismUIConfig: OrganismUIConfig = {
     knockout: false,
     quality: 10,
     distance: 10,
+    easeInDuration: glowConfig.easeInDuration,
+    pulseDuration: glowConfig.pulseDuration,
+    pulseStrength: glowConfig.pulseStrength,
+    minColorMix: glowConfig.minColorMix,
   },
   hintGlow: {
     color: 0xffff00,
@@ -75,6 +79,10 @@ export const organismUIConfig: OrganismUIConfig = {
     knockout: false,
     quality: 10,
     distance: 10,
+    easeInDuration: glowConfig.easeInDuration,
+    pulseDuration: glowConfig.pulseDuration,
+    pulseStrength: glowConfig.pulseStrength,
+    minColorMix: glowConfig.minColorMix,
     defaultDuration: 2000,
   },
   nameText: {

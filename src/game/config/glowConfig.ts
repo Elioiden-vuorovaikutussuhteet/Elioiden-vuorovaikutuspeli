@@ -8,6 +8,10 @@ export const GlowFilterSettingsSchema = z.object({
   knockout: z.boolean(),
   quality: z.number(),
   distance: z.number(),
+  easeInDuration: z.number(),
+  pulseDuration: z.number(),
+  pulseStrength: z.number(),
+  minColorMix: z.number().min(0).max(1),
 });
 
 export type GlowFilterSettings = z.infer<typeof GlowFilterSettingsSchema>;
@@ -25,6 +29,10 @@ export const GlowConfigSchema = z.object({
   loop: z.number(),
 
   ease: z.string(),
+  easeInDuration: z.number(),
+  pulseDuration: z.number(),
+  pulseStrength: z.number(),
+  minColorMix: z.number().min(0).max(1),
 });
 
 export type GlowConfig = z.infer<typeof GlowConfigSchema>;
@@ -40,4 +48,8 @@ export const glowConfig: GlowConfig = {
   innerDuration: 300,
   loop: 0,
   ease: "Sine.inOut",
+  easeInDuration: 300,
+  pulseDuration: 500,
+  pulseStrength: 500,
+  minColorMix: 1,
 };
