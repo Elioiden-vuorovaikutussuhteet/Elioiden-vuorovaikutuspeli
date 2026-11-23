@@ -14,40 +14,40 @@ export function getInteractionId(first: string, second: string): string {
 
 export const popupTexts: Record<string, PopupText> = {
   "acacia-amf": {
-    title: "Bullhorn Acacia -> Glomeromycetes",
+    title: "Bullhorn Acacia -> Arbuscular Mycorrhizal Fungi",
     relation: "Symbiotic",
     description:
-      "Bullhorn acacia provides the arbuscular mycorrhizal symbiosis forming glomeromycetes fungi with high energy carbohydrates.",
+      "Bullhorn acacia provides the arbuscular mycorrhizal symbiosis forming glomeromycete fungi with high energy carbohydrates.",
   },
 
   "amf-acacia": {
-    title: "Glomeromycetes -> Bullhorn Acacia",
+    title: "Arbuscular Mycorrhizal Fungi -> Bullhorn Acacia",
     relation: "Symbiotic",
     description:
       "All arbuscular mycorrhizal fungi belong to the taxa Glomeromycota. They form symbiosis with acacia trees and provide Bullhorn acacias with water and nutrients, phosphorus in particular.",
   },
 
   "acacia-ants": {
-    title: "Bullhorn Acacia -> Ants",
+    title: "Bullhorn Acacia -> Acacia Ants",
     relation: "Symbiotic",
     description:
       "Bullhorn acacias protect the ant queen, eggs and larvae from elements and predators. Bullhorn acacias provide adult ants also with high energy nectar and larvae with Beltian bodies high with protein, fats and vitamins.",
   },
 
   "ants-acacia": {
-    title: "Ants -> Bullhorn Acacia",
+    title: "Acacia Ants -> Bullhorn Acacia",
     relation: "Symbiotic",
     description:
       "Ants remove shading plant branches, vines and vegetation growing at the base of the trees. They also protect bullhorn acacia aggressively against herbivores such as insects and rodents. ",
   },
   "sapota-amf": {
-    title: "Sapodilla -> Glomeromycetes",
+    title: "Sapodilla -> Arbuscular Mycorrhizal Fungi",
     relation: "Symbiotic",
     description:
       "Sapodilla tree provides the arbuscular mycorrhizal fungi with high energy carbohydrates. ",
   },
   "amf-sapota": {
-    title: "Glomeromycetes -> Sapodilla",
+    title: "Arbuscular Mycorrhizal Fungi -> Sapodilla",
     relation: "Symbiotic",
     description:
       "Fungi belonging to the taxa Glomeromycota form arbuscular mycorrhizal symbiosis provide Sapodilla trees with water and nutrients, particularly phosphorus and nitrogen. ",
@@ -65,13 +65,13 @@ export const popupTexts: Record<string, PopupText> = {
       "Bullhorn acacia competes for nutrients and light with Sapodilla tree. ",
   },
   "ants-antfootbacteria": {
-    title: "Ants -> Ant Foot Bacteria",
+    title: "Acacia Ants -> Ant Foot Bacteria",
     relation: "Symbiotic",
     description:
       "Acacia ants provide a good living space as well as food for surface bacteria belonging to genera such as Bacillus, Lactococcus, Pantoea and Burkholderia. ",
   },
   "antfootbacteria-ants": {
-    title: "Ant Foot Bacteria -> Ants",
+    title: "Ant Foot Bacteria -> Acacia Ants",
     relation: "Symbiotic",
     description:
       "Ant foot bacteria secrete antimicrobial metabolites to kill both bacterial and fungal pathogens.",
@@ -89,13 +89,13 @@ export const popupTexts: Record<string, PopupText> = {
       "Root nodule forming nitrogen fixing bacteria belonging to genera such as Rhizobium, Bradyrhizobium and Mesorhizobium receive high energy carbohydrates from the plant as well as protected living space in the specialized root nodules. Acacia also produces oxygen binding leghemoglobin to the root nodules to assist in nitrogen fixation. ",
   },
   "amf-mycorrhizahelper": {
-    title: "Glomeromycetes -> Mycorrhiza Helper Bacteria",
+    title: "Arbuscular Mycorrhizal Fungi -> Mycorrhiza Helper Bacteria",
     relation: "Symbiotic",
     description:
       "Arbuscular mycorrhizal symbiosis forming glomeromycetes provide mycorrhiza helper bacteria with a place to grow as well as organic acids and other molecules for food. ",
   },
   "mycorrhizahelper-amf": {
-    title: "Mycorrhiza Helper Bacteria -> Glomeromycetes",
+    title: "Mycorrhiza Helper Bacteria -> Arbuscular Mycorrhizal Fungi",
     relation: "Symbiotic",
     description:
       "Mycorrhiza helper bacteria help arbuscular mycorrhizal symbiosis forming glomeromycetes to gather phosphorus and iron from soil as well as promote mycorrhizal symbiosis with plant by stimulating fungal and root growth and establishment of symbiotic structures. They also defend both fungi and plant roots against pathogens. ",
@@ -113,10 +113,10 @@ export const popupTexts: Record<string, PopupText> = {
       "Mycorrhiza helper bacteria defend the tree mycorrhizosphere against pathogens. ",
   },
   "ants-sapota": {
-    title: "Ants -> Sapodilla",
+    title: "Acacia Ants -> Sapodilla",
     relation: "Harmful",
     description:
-      "Removes Sapodilla branches which might shade the bullhorn acacia tree as well as sapodilla seedlings close to the acacia.",
+      "Remove Sapodilla branches which might shade the bullhorn acacia tree as well as sapodilla seedlings close to the acacia.",
   },
   "antfootbacteria-antpathogen": {
     title: "Ant Foot Bacteria -> Ant Infecting Pathogens",
