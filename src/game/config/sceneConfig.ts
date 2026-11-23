@@ -194,10 +194,74 @@ export const tutorialSceneConfig: TutorialSceneConfig = {
   },
 };
 
+export const SettingsSceneConfigSchema = OverlayBoxStyleSchema.extend({
+  key: z.string(),
+  assetsPath: z.string(),
+  images: z.array(AssetEntrySchema),
+  widthRatio: z.number(),
+  maxWidth: z.number(),
+  heightRatio: z.number(),
+  maxHeight: z.number(),
+  leftMarginRatio: z.number(),
+  topOffsetDivisor: z.number(),
+  text: z.object({
+    content: z.string(),
+    topOffsetRatio: z.number(),
+    fontFamily: z.string(),
+    fontSizeRatio: z.number(),
+    maxFontSize: z.number(),
+    fontStyle: z.string(),
+    color: z.string().meta({ input: "color" }),
+    wordWrapWidthRatio: z.number(),
+    align: z.string(),
+    originX: z.number(),
+    originY: z.number(),
+  }),
+  closeButton: z.object({
+    bottomOffset: z.number(),
+    event: z.string(),
+  }),
+});
+
+export type SettingsSceneConfig = z.infer<typeof SettingsSceneConfigSchema>;
+
+export const settingsSceneConfig: SettingsSceneConfig = {
+  ...defaultOverlayBoxStyle,
+  key: "SettingsScene",
+  assetsPath: "assets",
+  images: [{ key: "close_button_sprite", file: "closebutton.png" }],
+  widthRatio: 0.3,
+  maxWidth: 450,
+  heightRatio: 0.7,
+  maxHeight: 600,
+  leftMarginRatio: 0.05,
+  topOffsetDivisor: 2.7,
+  text: {
+    content: [
+      "Select the desired pulse speed:",
+    ].join("\n"),
+    topOffsetRatio: 0.15,
+    fontFamily: "monospace",
+    fontSizeRatio: 0.015,
+    maxFontSize: 25,
+    fontStyle: "bold",
+    color: "#ffffff",
+    wordWrapWidthRatio: 0.8,
+    align: "center",
+    originX: 0.5,
+    originY: 0,
+  },
+  closeButton: {
+    bottomOffset: 50,
+    event: "closeButtonClicked",
+  },
+};
+
 export const OptionsSceneConfigSchema = OverlayBoxStyleSchema.extend({
   key: z.string(),
   scenes: z.object({
     tutorial: z.string(),
+    settings: z.string(),
   }),
   assetsPath: z.string(),
   images: z.array(AssetEntrySchema),
@@ -226,6 +290,7 @@ export const optionsSceneConfig: OptionsSceneConfig = {
   key: "OptionsScene",
   scenes: {
     tutorial: "TutorialScene",
+    settings: "SettingsScene",
   },
   assetsPath: "assets",
   images: [

@@ -76,7 +76,7 @@ export default class OptionsScene extends Phaser.Scene {
     );
 
     infoButton.on("infoButtonClicked", () => {
-      // this.scene.stop(this.config.scenes.settings);
+      this.scene.stop(this.config.scenes.settings);
       this.scene.launch(this.config.scenes.tutorial);
     });
 
@@ -91,7 +91,12 @@ export default class OptionsScene extends Phaser.Scene {
 
     settingsButton.on("pointerdown", () => {
       this.scene.stop(this.config.scenes.tutorial);
-      // this.scene.launch(this.config.scenes.settings);
+      this.scene.launch(this.config.scenes.settings);
+    });
+
+    this.events.once("shutdown", () => {
+      this.scene.stop(this.config.scenes.tutorial);
+      this.scene.stop(this.config.scenes.settings);
     });
   }
 }

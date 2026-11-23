@@ -3,6 +3,7 @@ import GameScene from "./scenes/GameScene";
 import MenuScene from "./scenes/MenuScene";
 import TutorialScene from "./scenes/TutorialScene";
 import OptionsScene from "./scenes/OptionsScene";
+import SettingsScene from "./scenes/SettingsScene";
 import PopupScene from "./scenes/PopupScene";
 import GameOverScene from "./scenes/GameOverScene";
 
@@ -13,7 +14,7 @@ export function createGame(parent: HTMLElement) {
     height: window.innerHeight,
     parent,
     backgroundColor: "#f9f980",
-    scene: [GameScene, MenuScene, TutorialScene, PopupScene, GameOverScene, OptionsScene],
+    scene: [GameScene, MenuScene, TutorialScene, PopupScene, GameOverScene, OptionsScene, SettingsScene],
     scale: {
       mode: Phaser.Scale.RESIZE,
       autoCenter: Phaser.Scale.CENTER_BOTH,
