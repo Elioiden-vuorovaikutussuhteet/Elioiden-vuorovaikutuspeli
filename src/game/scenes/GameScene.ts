@@ -29,7 +29,6 @@ export default class GameScene extends Phaser.Scene {
   private cursorManager!: CursorManager;
   private randomEventManager = new RandomEventManager();
   private config: GameSceneConfig;
-  
 
   constructor(config?: GameSceneConfig) {
     const resolvedConfig =
@@ -112,6 +111,13 @@ export default class GameScene extends Phaser.Scene {
         this.deleteOrganism(organism);
       }
     }
+    if (typeof window !== "undefined") {
+      window.lightning = ()  => {
+        this.scene.pause();
+        this.scene.launch("LightningScene");
+        this.scene.bringToTop("LightningScene");
+      }
+        }
 
     this.scoreManager.outOfMoney = () => {
       this.randomEventManager.stopRandomEvents();
