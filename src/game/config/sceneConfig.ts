@@ -91,7 +91,7 @@ export const gameSceneConfig: GameSceneConfig = {
   secondOrganismIndex: 1,
   secondOrganismSpawnDelayMs: 3000,
   randomEventSpawnDelayMs: 3000,
-  randomEventCheckIntervalMs: 10000,
+  randomEventCheckIntervalMs: 30000,
   randomEventChance: 0.25,
   randomEventMaxPerGame: 4,
 };
