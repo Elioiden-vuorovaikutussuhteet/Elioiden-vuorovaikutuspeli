@@ -11,6 +11,8 @@ type ArrowPulseAnimationCallback = (
 
 const MIN_HP_CHANGE_THRESHOLD = 1e-4;
 
+
+
 export default class InteractionManager {
   private organismMap: Map<string, Organism>;
   private interactions: Connection[];
@@ -20,6 +22,24 @@ export default class InteractionManager {
   private nextPulseId = 0;
   private activePulseId = -1;
   private onPulseStart?: () => void;
+  private fastForwardPulseId = -1;
+
+  private fastForwardResolvers = new Map<number, () => void>();
+
+  private async waitForPulse(pulseId: number) {
+    if (pulseId === this.fastForwardPulseId) return;
+
+    await Promise.race([
+      new Promise<void>((resolve) =>
+        setTimeout(resolve, this.pulseWaitTime),
+      ),
+      new Promise<void>((resolve) => {
+        this.fastForwardResolvers.set(pulseId, resolve);
+      }),
+    ]);
+
+    this.fastForwardResolvers.delete(pulseId);
+  }
 
   constructor(
     organismMap: Map<string, Organism>,
@@ -40,6 +60,10 @@ export default class InteractionManager {
     startingOrganism: Organism,
     arrowOriginOrganism: Organism,
   ) {
+    if (this.activePulseId !== -1) {
+      this.fastForwardPulseId = this.activePulseId;
+      this.fastForwardResolvers.get(this.activePulseId)?.();
+    }
     const pulseId = this.nextPulseId++;
     const visited = new Set<string>();
     const queue: { id: string; depth: number }[] = [];
@@ -68,8 +92,9 @@ export default class InteractionManager {
 
     this.pulseAnimationCallback(originId, startingId, initialHealthChange);
 
-    await new Promise((resolve) => setTimeout(resolve, this.pulseWaitTime));
-    if (pulseId !== this.activePulseId) return;
+    await this.waitForPulse(pulseId);
+    // if (pulseId !== this.activePulseId) return;
+
     startingOrganism.changeHealth(initialHealthChange, pulseId);
 
     for (const arrow of this.interactions) {
@@ -143,8 +168,9 @@ export default class InteractionManager {
       // If no meaningful health changes occurred at this depth, skip waiting and stop early
       if (healthChanges.size === 0) break;
 
-      await new Promise((resolve) => setTimeout(resolve, this.pulseWaitTime));
-      if (pulseId !== this.activePulseId) return;
+      await this.waitForPulse(pulseId);
+
+      // if (pulseId !== this.activePulseId) return;
 
       for (const [targetId, healthChange] of healthChanges) {
         this.organismMap.get(targetId)?.changeHealth(healthChange, pulseId);
