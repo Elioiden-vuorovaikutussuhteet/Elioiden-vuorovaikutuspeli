@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import RandomEventManager from "../../../src/game/managers/RandomEventManager";
 import type Organism from "../../../src/game/entities/organism";
 import type ArrowManager from "../../../src/game/managers/ArrowManager";
@@ -13,6 +13,7 @@ describe("RandomEventManager", () => {
   };
 
   beforeEach(() => {
+    vi.useFakeTimers();
     timerCallback = undefined;
     scene = {
       time: {
@@ -23,6 +24,10 @@ describe("RandomEventManager", () => {
         remove: vi.fn(),
       },
     };
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
   });
 
   it("does not trigger events when configured chance is zero", () => {
@@ -38,7 +43,7 @@ describe("RandomEventManager", () => {
       1000,
       0,
     );
-    timerCallback?.();
+    vi.advanceTimersByTime(1000);
 
     expect(arrowManager.playRandomEventPulses).not.toHaveBeenCalled();
   });
@@ -60,7 +65,7 @@ describe("RandomEventManager", () => {
       1000,
       1,
     );
-    timerCallback?.();
+    vi.advanceTimersByTime(1000);
 
     expect(arrowManager.playRandomEventPulses).toHaveBeenCalled();
     randomSpy.mockRestore();
@@ -85,6 +90,71 @@ describe("RandomEventManager", () => {
     randomSpy.mockRestore();
   });
 
+  it("defers Lightning Strike removal until the backend-effect callback", () => {
+    const manager = new RandomEventManager();
+    const target = {
+      organismData: { id: "sapota" },
+    } as Organism;
+    const arrowManager = {
+      playRandomEventPulses: vi.fn(),
+    } as unknown as ArrowManager;
+    const removeOrganism = vi.fn();
+    let applyLightningEffect: (() => void) | undefined;
+    const playLightningAnimation = vi.fn(
+      (lightningEffects: () => void) => {
+        applyLightningEffect = lightningEffects;
+      },
+    );
+    const randomSpy = vi.spyOn(Math, "random").mockReturnValue(0);
+
+    manager.triggerRandomEvent(
+      [target],
+      arrowManager,
+      removeOrganism,
+      playLightningAnimation,
+    );
+
+    expect(playLightningAnimation).toHaveBeenCalledOnce();
+    expect(removeOrganism).not.toHaveBeenCalled();
+
+    applyLightningEffect?.();
+
+    expect(removeOrganism).toHaveBeenCalledOnce();
+    expect(removeOrganism).toHaveBeenCalledWith(target);
+    randomSpy.mockRestore();
+  });
+
+  it("removes exactly one tree during Lightning Strike", () => {
+    const manager = new RandomEventManager();
+    const acacia = {
+      organismData: { id: "acacia" },
+    } as Organism;
+    const sapota = {
+      organismData: { id: "sapota" },
+    } as Organism;
+    const arrowManager = {
+      playRandomEventPulses: vi.fn(),
+    } as unknown as ArrowManager;
+    const removeOrganism = vi.fn();
+    let lightningEffect: (() => void) | undefined;
+    const randomSpy = vi.spyOn(Math, "random").mockReturnValue(0);
+
+    manager.triggerRandomEvent(
+      [acacia, sapota],
+      arrowManager,
+      removeOrganism,
+      (effect) => {
+        lightningEffect = effect;
+      },
+    );
+
+    lightningEffect?.();
+
+    expect(removeOrganism).toHaveBeenCalledOnce();
+    expect(removeOrganism).toHaveBeenCalledWith(acacia);
+    randomSpy.mockRestore();
+  });
+
   it("stops after four random events in a playthrough", () => {
     const manager = new RandomEventManager();
     const target = {
@@ -105,7 +175,7 @@ describe("RandomEventManager", () => {
     );
 
     for (let i = 0; i < 6; i++) {
-      timerCallback?.();
+      vi.advanceTimersByTime(1000);
     }
 
     expect(arrowManager.playRandomEventPulses).toHaveBeenCalledTimes(4);

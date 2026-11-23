@@ -5,6 +5,7 @@ import { lightningConfig, type LightningConfig } from "../config/lightningConfig
 export class LightningScene extends Phaser.Scene {
   private stormClouds: Phaser.GameObjects.Sprite[] = [];
   private config: LightningConfig;
+  private lightningEffects?: () => void;
 
   constructor(config?: Partial<LightningConfig>) {
     const resolvedConfig = { ...lightningConfig, ...config };
@@ -21,6 +22,10 @@ export class LightningScene extends Phaser.Scene {
 
   create() {
     this.showStormCover();
+  }
+
+  init(data?: { lightningEffects?: () => void }): void {
+    this.lightningEffects = data?.lightningEffects;
   }
 
   private showStormCover(): void {
@@ -91,6 +96,13 @@ export class LightningScene extends Phaser.Scene {
         255,
         255,
       );
+    });
+
+    const effectDelayMs =
+      this.config.effectDelayMs ?? this.config.EffectDelayMs ?? 0;
+    this.time.delayedCall(effectDelayMs, () => {
+      this.lightningEffects?.();
+      this.lightningEffects = undefined;
     });
 
     this.time.delayedCall(this.config.sceneDuration, () => {
