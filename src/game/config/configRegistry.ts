@@ -9,12 +9,14 @@ import {
   ArrowButtonUIConfigSchema,
   CursorButtonUIConfigSchema,
   InfoButtonUIConfigSchema,
+  MenuButtonUIConfigSchema,
   CloseButtonUIConfigSchema,
   HintButtonUIConfigSchema,
   buttonUIConfig,
   arrowButtonUIConfig,
   cursorButtonUIConfig,
   infoButtonUIConfig,
+  menuButtonUIConfig,
   closeButtonUIConfig,
   hintButtonUIConfig,
 } from "./buttonConfig";
@@ -188,6 +190,12 @@ export const configRegistry = [
         label: "Info Button",
         schema: InfoButtonUIConfigSchema,
         defaults: infoButtonUIConfig,
+      },
+      {
+        id: "menuButton",
+        label: "Menu Button",
+        schema: MenuButtonUIConfigSchema,
+        defaults: menuButtonUIConfig,
       },
       {
         id: "closeButton",

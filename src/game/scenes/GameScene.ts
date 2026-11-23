@@ -2,7 +2,7 @@ import Phaser from "phaser";
 import GlowManager from "../managers/GlowManager";
 import Organism from "../entities/organism";
 import { organisms } from "../data/organisms";
-import InfoButton from "../entities/infobutton";
+import MenuButton from "../entities/menubutton";
 import HintButton from "../entities/hintbutton";
 import CameraManager from "../managers/CameraManager";
 import ArrowManager from "../managers/ArrowManager";
@@ -120,8 +120,8 @@ export default class GameScene extends Phaser.Scene {
       this.scene.launch(this.config.scenes.gameOver);
     };
 
-    this.arrowManager.createArrowButtons(centerX, this.config.infoButton.y);
-    this.cursorManager.createCursorButton(centerX, this.config.infoButton.y);
+    this.arrowManager.createArrowButtons(centerX, this.config.menuButton.y);
+    this.cursorManager.createCursorButton(centerX, this.config.menuButton.y);
 
     const initialOrganism = organisms[this.config.initialOrganismIndex];
 
@@ -147,14 +147,14 @@ export default class GameScene extends Phaser.Scene {
     this.scene.launch(this.config.scenes.menu);
     this.scene.bringToTop(this.config.scenes.menu);
 
-    const infobutton = new InfoButton(
+    const menubutton = new MenuButton(
       this,
-      this.config.infoButton.x,
-      this.config.infoButton.y,
+      this.config.menuButton.x,
+      this.config.menuButton.y,
     );
-    this.cameras.main.ignore(infobutton);
+    this.cameras.main.ignore(menubutton);
 
-    infobutton.on("infoButtonClicked", () => {
+    menubutton.on("menuButtonClicked", () => {
       this.scene.launch(this.config.scenes.tutorial);
     });
 

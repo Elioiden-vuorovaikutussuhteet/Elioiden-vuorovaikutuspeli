@@ -38,7 +38,7 @@ export const GameSceneConfigSchema = z.object({
   images: z.array(AssetEntrySchema),
   startingMoney: z.number(),
   hintCost: z.number(),
-  infoButton: z.object({
+  menuButton: z.object({
     x: z.number(),
     y: z.number(),
   }),
@@ -67,7 +67,7 @@ export const gameSceneConfig: GameSceneConfig = {
     { key: "amf_sprite", file: "amf.png" },
     { key: "greenbutton", file: "greenbutton.png" },
     { key: "redbutton", file: "redbutton.png" },
-    { key: "infobutton_sprite", file: "altinfo.png" },
+    { key: "menubutton_sprite", file: "menubutton.png" },
     { key: "ants_sprite", file: "ants.png" },
     { key: "antfootbacteria_sprite", file: "antfootbacteria.png" },
     { key: "sapota_sprite", file: "sapota.png" },
@@ -82,7 +82,7 @@ export const gameSceneConfig: GameSceneConfig = {
   ],
   startingMoney: 1000,
   hintCost: 100,
-  infoButton: { x: 40, y: 40 },
+  menuButton: { x: 40, y: 40 },
   hintButton: { x: 300, y: 40 },
   initialOrganismIndex: 0,
   secondOrganismIndex: 1,
