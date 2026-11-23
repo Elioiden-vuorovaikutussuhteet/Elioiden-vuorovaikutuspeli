@@ -64,5 +64,18 @@ export default class OptionsScene extends Phaser.Scene {
       menuHeight,
       this.config.cornerRadius,
     );
+    
+    const infoLeftMargin = this.config.infoButton.leftOffset
+    const infoBottomOffset = this.config.infoButton.bottomOffset
+
+    const infoButton = new InfoButton(
+      this,
+      menuX + infoLeftMargin,
+      menuY + infoBottomOffset,
+    );
+
+    infoButton.on("infoButtonClicked", () => {
+      this.scene.launch(this.config.scenes.tutorial);
+    });
   }
 }

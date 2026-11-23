@@ -31,7 +31,6 @@ export const GameSceneConfigSchema = z.object({
   key: z.string(),
   scenes: z.object({
     menu: z.string(),
-    tutorial: z.string(),
     gameOver: z.string(),
     options: z.string(),
   }),
@@ -59,7 +58,6 @@ export const gameSceneConfig: GameSceneConfig = {
   key: "GameScene",
   scenes: {
     menu: "MenuScene",
-    tutorial: "TutorialScene",
     gameOver: "GameOverScene",
     options: "OptionsScene"
   },
@@ -168,7 +166,7 @@ export const tutorialSceneConfig: TutorialSceneConfig = {
   heightRatio: 0.7,
   maxHeight: 600,
   leftMarginRatio: 0.05,
-  topOffsetDivisor: 4,
+  topOffsetDivisor: 2.7,
   text: {
     content: [
       "Select whether you want",
@@ -198,6 +196,9 @@ export const tutorialSceneConfig: TutorialSceneConfig = {
 
 export const OptionsSceneConfigSchema = OverlayBoxStyleSchema.extend({
   key: z.string(),
+  scenes: z.object({
+    tutorial: z.string(),
+  }),
   assetsPath: z.string(),
   images: z.array(AssetEntrySchema),
   widthRatio: z.number(),
@@ -223,6 +224,9 @@ export type OptionsSceneConfig = z.infer<typeof OptionsSceneConfigSchema>;
 export const optionsSceneConfig: OptionsSceneConfig = {
   ...defaultOverlayBoxStyle,
   key: "OptionsScene",
+  scenes: {
+    tutorial: "TutorialScene",
+  },
   assetsPath: "assets",
   images: [
     { key: "infobutton_sprite", file: "altinfo.png" },
@@ -234,13 +238,13 @@ export const optionsSceneConfig: OptionsSceneConfig = {
   leftMarginRatio: 0.1,
   topOffsetDivisor: 50,
   infoButton: {
-    leftOffset: 15,
-    bottomOffset: 10,
+    leftOffset: 70,
+    bottomOffset: 50,
     event: "infoButtonClicked",
   },
   settingsButton: {
     leftOffset: 50,
-    bottomOffset: 10,
+    bottomOffset: 50,
     event: "settingsButtonClicked",
   },
 };
