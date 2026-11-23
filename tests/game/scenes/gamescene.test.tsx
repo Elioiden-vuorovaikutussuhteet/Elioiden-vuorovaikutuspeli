@@ -155,6 +155,7 @@ describe("GameScene", () => {
 
     scene.time = mockPartial<typeof scene.time>({
       delayedCall: vi.fn(),
+      addEvent: vi.fn(),
     });
 
     scene.add = mockDeep<typeof scene.add>({
