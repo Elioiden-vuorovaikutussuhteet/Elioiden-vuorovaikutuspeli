@@ -6,26 +6,34 @@ import type ArrowManager from "./ArrowManager";
 
 export default class RandomEventManager {
   private randomEventTimer?: Phaser.Time.TimerEvent;
-  // table of organisms given to isnt being updated for now
+  private occurrenceCounts = new Map<string, number>();
+  private totalOccurrences = 0;
+  private maxOccurrencesPerGame = 4;
 
   public startRandomEvents(
     _scene: Phaser.Scene,
     organisms: Organism[],
     arrowManager: ArrowManager,
+    checkIntervalMs: number,
+    chance: number,
+    maxOccurrencesPerGame = 4,
   ): void {
+    if (this.randomEventTimer) return;
+    this.maxOccurrencesPerGame = maxOccurrencesPerGame;
 
-      if (this.randomEventTimer) {
-    return;
-  }
-  
-  
-  this.randomEventTimer = _scene.time.addEvent({
-    delay: 10000,
-    callback: () => {
-      this.triggerRandomEvent(organisms,arrowManager);
-    },
-    loop: true,
-  });
+    this.randomEventTimer = _scene.time.addEvent({
+      delay: checkIntervalMs,
+      callback: () => {
+        if (this.totalOccurrences >= this.maxOccurrencesPerGame) {
+          this.stopRandomEvents();
+          return;
+        }
+        if (Math.random() < chance) {
+          this.triggerRandomEvent(organisms, arrowManager);
+        }
+      },
+      loop: true,
+    });
   }
 
   public stopRandomEvents(): void {
@@ -34,6 +42,10 @@ export default class RandomEventManager {
 }
 
   public triggerRandomEvent(organisms: Organism[], arrowManager: ArrowManager,): void {
+    if (this.totalOccurrences >= this.maxOccurrencesPerGame) {
+      this.stopRandomEvents();
+      return;
+    }
 
     const event = this.selectEvent();
 
@@ -48,6 +60,21 @@ export default class RandomEventManager {
     if (targetPool.length === 0) {
       return;
     }
+
+    const occurrenceCount = this.occurrenceCounts.get(event.id) ?? 0;
+    if (
+      event.maxOccurrencesPerGame !== undefined &&
+      occurrenceCount >= event.maxOccurrencesPerGame
+    ) {
+      return;
+    }
+
+    this.occurrenceCounts.set(event.id, occurrenceCount + 1);
+    this.totalOccurrences++;
+    if (this.totalOccurrences >= this.maxOccurrencesPerGame) {
+      this.stopRandomEvents();
+    }
+
     //if event type causes healAll targetpool is whole list, otherwise choose random target
     const targets =
     event.effect.type === "healAll" ? targetPool : [targetPool[Math.floor(Math.random() * targetPool.length)]];
@@ -73,15 +100,26 @@ export default class RandomEventManager {
 
 // Weighted random selection is used to select random event
 private selectEvent(): RandomEventData {
+  const availableEvents = randomEvents.filter((event) => {
+    const occurrenceCount = this.occurrenceCounts.get(event.id) ?? 0;
+    return (
+      event.maxOccurrencesPerGame === undefined ||
+      occurrenceCount < event.maxOccurrencesPerGame
+    );
+  });
 
-  const totalChance = randomEvents.reduce(
+  if (availableEvents.length === 0) {
+    throw new Error("No random events are available");
+  }
+
+  const totalChance = availableEvents.reduce(
     (sum, event) => sum + event.chance,
     0,
   );
 
   let random = Math.random() * totalChance;
 
-  for (const event of randomEvents) {
+  for (const event of availableEvents) {
     random -= event.chance;
 
     if (random < 0) {
@@ -89,6 +127,6 @@ private selectEvent(): RandomEventData {
     }
   }
 
-  return randomEvents[randomEvents.length - 1];
+  return availableEvents[availableEvents.length - 1];
 }
 }

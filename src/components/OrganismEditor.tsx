@@ -49,16 +49,14 @@ function OrganismEditor({
   onPopupTextChange,
 }: OrganismEditorProps) {
 
-  const selectedOrganism = organisms.find(
-    (organism) => organism.id === selectedOrganismId
+  const selectedIndex = organisms.findIndex(
+  (organism) => organism.id === selectedOrganismId,
   );
+  const selectedOrganism =
+    selectedIndex >= 0 ? organisms[selectedIndex] : undefined;
 
   if (!selectedOrganism) {
-    return (
-      <Typography>
-        No organism selected.
-      </Typography>
-    );
+    return <Typography>No organism selected.</Typography>;
   }
 
   const organismSchema = organismRegistry.find(
@@ -92,14 +90,14 @@ function OrganismEditor({
       </Typography>
 
       <DynamicForm
-        key={`organism-${selectedOrganism.id}`}
+        key={`organism-${selectedIndex}`}
         schema={organismSchema}
         defaults={selectedOrganism}
         organisms={organisms}
         onChange={(values) => {
           onOrganismChange(
             selectedOrganism.id,
-            values as OrganismData
+            values as OrganismData,
           );
         }}
       />

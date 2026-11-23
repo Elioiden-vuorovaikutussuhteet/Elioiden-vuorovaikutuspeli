@@ -50,6 +50,9 @@ export const GameSceneConfigSchema = z.object({
   secondOrganismIndex: z.number(),
   secondOrganismSpawnDelayMs: z.number(),
   randomEventSpawnDelayMs: z.number(),
+  randomEventCheckIntervalMs: z.number(),
+  randomEventChance: z.number().min(0).max(1),
+  randomEventMaxPerGame: z.number().int().min(0),
 });
 
 export type GameSceneConfig = z.infer<typeof GameSceneConfigSchema>;
@@ -88,6 +91,9 @@ export const gameSceneConfig: GameSceneConfig = {
   secondOrganismIndex: 1,
   secondOrganismSpawnDelayMs: 3000,
   randomEventSpawnDelayMs: 3000,
+  randomEventCheckIntervalMs: 30000,
+  randomEventChance: 0.25,
+  randomEventMaxPerGame: 4,
 };
 
 export const MenuSceneConfigSchema = OverlayBoxStyleSchema.extend({

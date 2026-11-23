@@ -22,6 +22,7 @@ export default class Organism extends Phaser.GameObjects.Sprite {
 
   public hp = organismUIConfig.initialHp;
   public previousHP = this.hp;
+  public pulseInitialHP = this.hp;
   private baseScale = organismUIConfig.defaultBaseScale;
   private breakpoint = organismUIConfig.initialBreakpoint;
 
@@ -29,10 +30,12 @@ export default class Organism extends Phaser.GameObjects.Sprite {
   public duplicateContainer: Phaser.GameObjects.Container;
   private hintGlow!: Phaser.Filters.Glow;
 
-  private onHealthChanged?: (organism: Organism, amount: number) => void;
+  private onHealthChanged?: (organism: Organism, amount: number, initialHP: number) => void;
 
   private debugHealth = organismUIConfig.debugHealth;
   private debugHealthText?: Phaser.GameObjects.Text;
+
+  private currentPulseId?: number;
 
   constructor(
     scene: Phaser.Scene,
@@ -40,7 +43,7 @@ export default class Organism extends Phaser.GameObjects.Sprite {
     x: number,
     y: number,
     uiCamera?: Phaser.Cameras.Scene2D.Camera,
-    onHealthChanged?: (organism: Organism, amount: number) => void,
+    onHealthChanged?: (organism: Organism, amount: number, initialHP: number) => void,
     config: OrganismUIConfig = organismUIConfig,
   ) {
     const organismData = getOrganismData(id);
@@ -49,6 +52,7 @@ export default class Organism extends Phaser.GameObjects.Sprite {
     this.config = config;
     this.hp = config.initialHp;
     this.previousHP = this.hp;
+    this.pulseInitialHP = this.hp;
     this.baseScale = organismData.default_scale ?? config.defaultBaseScale;
     this.breakpoint = config.initialBreakpoint;
     this.debugHealth = config.debugHealth;
@@ -206,11 +210,17 @@ export default class Organism extends Phaser.GameObjects.Sprite {
     return this.duplicateContainer;
   }
 
-  public changeHealth(totalChange: number) {
+  public changeHealth(totalChange: number, pulseId?: number) {
     if (totalChange === 0) return;
+
+    if (pulseId !== undefined && pulseId !== this.currentPulseId) {
+    this.currentPulseId = pulseId;
+    this.pulseInitialHP = this.hp;
+  }
 
     this.previousHP = this.hp;
     this.hp += totalChange;
+    
 
     if (this.debugHealth) {
       const { debugText } = this.config;
@@ -249,7 +259,7 @@ export default class Organism extends Phaser.GameObjects.Sprite {
       }
     }
 
-    this.onHealthChanged?.(this, totalChange);
+    this.onHealthChanged?.(this, totalChange, this.pulseInitialHP);
 
     if (this.organismData.growth_types.includes("multiply")) {
       this.updateDuplicates();
