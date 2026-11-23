@@ -46,12 +46,12 @@ describe("RandomEventManager", () => {
   it("attempts an event when configured chance is one", () => {
     const manager = new RandomEventManager();
     const target = {
-      organismData: { id: "sapota" },
+      organismData: { id: "amf" },
     } as Organism;
     const arrowManager = {
       playRandomEventPulses: vi.fn(),
     } as unknown as ArrowManager;
-    const randomSpy = vi.spyOn(Math, "random").mockReturnValue(0);
+    const randomSpy = vi.spyOn(Math, "random").mockReturnValue(0.9);
 
     manager.startRandomEvents(
       scene as never,
@@ -74,16 +74,14 @@ describe("RandomEventManager", () => {
     const arrowManager = {
       playRandomEventPulses: vi.fn(),
     } as unknown as ArrowManager;
+    const removeOrganism = vi.fn();
     const randomSpy = vi.spyOn(Math, "random").mockReturnValue(0);
 
-    manager.triggerRandomEvent([target], arrowManager);
-    manager.triggerRandomEvent([target], arrowManager);
+    manager.triggerRandomEvent([target], arrowManager, removeOrganism);
+    manager.triggerRandomEvent([target], arrowManager, removeOrganism);
 
-    expect(
-      vi.mocked(arrowManager.playRandomEventPulses).mock.calls.filter(
-        ([, healthChange]) => healthChange === -100,
-      ),
-    ).toHaveLength(1);
+    expect(removeOrganism).toHaveBeenCalledTimes(1);
+    expect(removeOrganism).toHaveBeenCalledWith(target);
     randomSpy.mockRestore();
   });
 

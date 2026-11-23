@@ -17,6 +17,7 @@ export default class RandomEventManager {
     checkIntervalMs: number,
     chance: number,
     maxOccurrencesPerGame = 4,
+    removeOrganism?: (organism: Organism) => void,
   ): void {
     if (this.randomEventTimer) return;
     this.maxOccurrencesPerGame = maxOccurrencesPerGame;
@@ -29,7 +30,11 @@ export default class RandomEventManager {
           return;
         }
         if (Math.random() < chance) {
-          this.triggerRandomEvent(organisms, arrowManager);
+          this.triggerRandomEvent(
+            organisms,
+            arrowManager,
+            removeOrganism,
+          );
         }
       },
       loop: true,
@@ -41,7 +46,11 @@ export default class RandomEventManager {
   this.randomEventTimer = undefined;
 }
 
-  public triggerRandomEvent(organisms: Organism[], arrowManager: ArrowManager,): void {
+  public triggerRandomEvent(
+    organisms: Organism[],
+    arrowManager: ArrowManager,
+    removeOrganism?: (organism: Organism) => void,
+  ): void {
     if (this.totalOccurrences >= this.maxOccurrencesPerGame) {
       this.stopRandomEvents();
       return;
@@ -78,6 +87,18 @@ export default class RandomEventManager {
     //if event type causes healAll targetpool is whole list, otherwise choose random target
     const targets =
     event.effect.type === "healAll" ? targetPool : [targetPool[Math.floor(Math.random() * targetPool.length)]];
+
+    if (event.effect.type === "remove") {
+      for (const target of targets) {
+        removeOrganism?.(target);
+      }
+
+      console.log(
+        "RANDOM EVENT HAPPENED",
+        `${event.name} happened`,
+      );
+      return;
+    }
 
     // healthchange parameter is damaging if type is "damage", otherwise heal
     const healthChange =

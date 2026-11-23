@@ -74,6 +74,8 @@ export const gameSceneConfig: GameSceneConfig = {
     { key: "ants_sprite", file: "ants.png" },
     { key: "antfootbacteria_sprite", file: "antfootbacteria.png" },
     { key: "sapota_sprite", file: "sapota.png" },
+    { key: "broken_acacia_sprite", file: "brokenacacia.png" },
+    { key: "broken_sapota_sprite", file: "brokensapota.png" },
     { key: "diazotroph_sprite", file: "diazotroph.png" },
     { key: "mycorrhizahelper_sprite", file: "mycorrhizabacteria.png" },
     { key: "acaciapathogen_sprite", file: "acaciapathogen.png" },
