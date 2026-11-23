@@ -84,110 +84,140 @@ describe("GlowManager", () => {
   it("does nothing when health change amount is 0", () => {
     const organism = createMockOrganism();
 
-    glowManager.healthChanged(organism, 0);
+    glowManager.healthChanged(organism, 0, 100);
 
     expect(organism.enableFilters).not.toHaveBeenCalled();
     expect(mockScene.tweens.add).not.toHaveBeenCalled();
   });
 
-  it("adds white and colored glows to filters.internal for positive and negative health changes", () => {
+  it("adds overall and colored pulse glows to internal filters", () => {
     const organism = createMockOrganism();
 
-    glowManager.healthChanged(organism, 10);
+    glowManager.healthChanged(organism, 10, 100);
 
     expect(organism.enableFilters).toHaveBeenCalledOnce();
     expect(organism.duplicateContainer.enableFilters).toHaveBeenCalledOnce();
 
+    expect(organism.filters!.internal.addGlow).toHaveBeenCalledTimes(3);
+    expect(
+      organism.duplicateContainer.filters!.internal.addGlow,
+    ).toHaveBeenCalledTimes(3);
+
     expect(organism.filters!.internal.addGlow).toHaveBeenNthCalledWith(
       1,
       glowConfig.whiteGlow,
-      undefined,
+      0,
       undefined,
       undefined,
       undefined,
       glowConfig.glowQuality,
     );
+
     expect(organism.filters!.internal.addGlow).toHaveBeenNthCalledWith(
       2,
-      glowConfig.positiveGlow,
-      undefined,
+      glowConfig.whiteGlow,
+      0,
       undefined,
       undefined,
       undefined,
       glowConfig.glowQuality,
     );
+
+    expect(organism.filters!.internal.addGlow).toHaveBeenNthCalledWith(
+      3,
+      glowConfig.positiveGlow,
+      0,
+      undefined,
+      undefined,
+      undefined,
+      glowConfig.glowQuality,
+    );
+
     expect(organism.filters!.external.addGlow).not.toHaveBeenCalled();
-    expect(mockTweens).toHaveLength(2);
   });
 
-  it("reuses existing glows and restarts tweens when already glowing", () => {
+  it("reuses overall glows and restarts the pulse when already glowing", () => {
     const organism = createMockOrganism();
 
-    glowManager.healthChanged(organism, 10);
-    expect(organism.filters!.internal.addGlow).toHaveBeenCalledTimes(2);
+    glowManager.healthChanged(organism, 10, 100);
 
-    glowManager.healthChanged(organism, -5);
+    expect(organism.filters!.internal.addGlow).toHaveBeenCalledTimes(3);
 
-    expect(organism.filters!.internal.addGlow).toHaveBeenCalledTimes(2);
-    expect(mockTweens).toHaveLength(2);
-    expect(mockTweens[0].restart).toHaveBeenCalledOnce();
-    expect(mockTweens[1].restart).toHaveBeenCalledOnce();
+    glowManager.healthChanged(organism, -5, 100);
 
-    const outerGlowInstance = vi.mocked(organism.filters!.internal.addGlow).mock
-      .results[1].value;
-    expect(outerGlowInstance.color).toBe(glowConfig.negativeGlow);
-  });
+    expect(organism.filters!.internal.addGlow).toHaveBeenCalledTimes(3);
 
-  it("removes only its own internal filters and destroys glows on tween completion", () => {
-    const organism = createMockOrganism();
-
-    glowManager.healthChanged(organism, -10);
-
-    const whiteGlow = vi.mocked(organism.filters!.internal.addGlow).mock
-      .results[0].value;
-    const outerGlow = vi.mocked(organism.filters!.internal.addGlow).mock
-      .results[1].value;
-    const dupWhiteGlow = vi.mocked(
-      organism.duplicateContainer.filters!.internal.addGlow,
-    ).mock.results[0].value;
-    const dupOuterGlow = vi.mocked(
-      organism.duplicateContainer.filters!.internal.addGlow,
-    ).mock.results[1].value;
-
-    const onComplete = (mockTweens[0].config.onComplete ??
-      mockTweens[1].config.onComplete) as () => void;
-    expect(onComplete).toBeTypeOf("function");
-
-    onComplete();
+    expect(mockTweens).toHaveLength(6);
 
     expect(mockTweens[0].stop).toHaveBeenCalledOnce();
     expect(mockTweens[1].stop).toHaveBeenCalledOnce();
 
-    expect(organism.filters!.internal.remove).toHaveBeenCalledWith(outerGlow);
-    expect(organism.filters!.internal.remove).toHaveBeenCalledWith(whiteGlow);
-    expect(
-      organism.duplicateContainer.filters!.internal.remove,
-    ).toHaveBeenCalledWith(dupOuterGlow);
-    expect(
-      organism.duplicateContainer.filters!.internal.remove,
-    ).toHaveBeenCalledWith(dupWhiteGlow);
+    expect(mockTweens[2].stop).toHaveBeenCalledOnce();
 
-    expect(outerGlow.destroy).toHaveBeenCalledOnce();
-    expect(whiteGlow.destroy).toHaveBeenCalledOnce();
-    expect(dupOuterGlow.destroy).toHaveBeenCalledOnce();
-    expect(dupWhiteGlow.destroy).toHaveBeenCalledOnce();
+    expect(mockTweens[3].stop).not.toHaveBeenCalled();
+    expect(mockTweens[4].stop).not.toHaveBeenCalled();
+    expect(mockTweens[5].stop).not.toHaveBeenCalled();
+
+    const pulseGlow = vi.mocked(organism.filters!.internal.addGlow).mock
+      .results[2].value;
+
+    expect(pulseGlow.color).toBe(glowConfig.negativeGlow);
+  });
+
+  it("removes pulse glows on tween completion", () => {
+    const organism = createMockOrganism();
+
+    glowManager.healthChanged(organism, -10, 100);
+
+    const pulseGlow = vi.mocked(organism.filters!.internal.addGlow).mock
+      .results[2].value;
+
+    const duplicatePulseGlow = vi.mocked(
+      organism.duplicateContainer.filters!.internal.addGlow,
+    ).mock.results[2].value;
+
+    const pulseTween = mockTweens[2];
+
+    const onComplete = pulseTween.config.onComplete as () => void;
+
+    expect(onComplete).toBeTypeOf("function");
+
+    onComplete();
+
+    expect(pulseTween.stop).toHaveBeenCalledOnce();
+
+    expect(organism.filters!.internal.remove).toHaveBeenCalledWith(pulseGlow);
+
+    expect(
+      organism.duplicateContainer.filters!.internal.remove,
+    ).toHaveBeenCalledWith(duplicatePulseGlow);
+
+    expect(pulseGlow.destroy).toHaveBeenCalledOnce();
+    expect(duplicatePulseGlow.destroy).toHaveBeenCalledOnce();
+
+    expect(organism.filters!.internal.remove).toHaveBeenCalledTimes(1);
   });
 
   it("cleans up all active glows and tweens on destroy()", () => {
     const first = createMockOrganism();
     const second = createMockOrganism();
 
-    glowManager.healthChanged(first, 10);
-    glowManager.healthChanged(second, -10);
+    glowManager.healthChanged(first, 10, 100);
+    glowManager.healthChanged(second, -10, 100);
 
     glowManager.destroy();
 
-    expect(first.filters!.internal.remove).toHaveBeenCalledTimes(2);
-    expect(second.filters!.internal.remove).toHaveBeenCalledTimes(2);
+    expect(first.filters!.internal.remove).toHaveBeenCalledTimes(3);
+    expect(second.filters!.internal.remove).toHaveBeenCalledTimes(3);
+
+    expect(
+      first.duplicateContainer.filters!.internal.remove,
+    ).toHaveBeenCalledTimes(3);
+
+    expect(
+      second.duplicateContainer.filters!.internal.remove,
+    ).toHaveBeenCalledTimes(3);
+
+    expect(glowManager["states"].size).toBe(0);
   });
 });

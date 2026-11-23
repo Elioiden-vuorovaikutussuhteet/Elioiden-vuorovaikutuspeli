@@ -30,6 +30,16 @@ spec:
           envFrom:
             - secretRef:
                 name: admin-auth
+            - secretRef:
+                name: possu-db
+          readinessProbe:
+            httpGet:
+              path: /api/health
+              port: http
+            initialDelaySeconds: 5
+            periodSeconds: 10
+            timeoutSeconds: 3
+            failureThreshold: 3
           resources:
             limits:
               memory: "512Mi"

@@ -21,6 +21,7 @@ export default class CursorManager {
     );
 
     this.scene.cameras.main.ignore(cursorButton);
+    this.arrowManager.setCursorButton(cursorButton);
 
     cursorButton.on("cursorButtonClicked", () => {
       this.arrowManager.setCursorMode(true);

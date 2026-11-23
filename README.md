@@ -22,7 +22,7 @@ React + TypeScript perusteinen opetuspeli.
 
 1. Asenna [docker ja docker compose](https://docs.docker.com/engine/install/). Halutessasi lisää itsesi docker-käyttäjäryhmään [ohjeiden mukaisesti](https://docs.docker.com/engine/install/linux-postinstall/). Tällöin et tarvitse sudoa.
 2. Kloonaa repositorio.
-3. Muuta halutessasi compose.yml-tiedostossa admin-salasanaa. Oletus on admin.
+3. Luo halutessasi .env-tiedosto .env.example-mallin mukaisesti ja muokkaa ympäristömuutujien arvoja. Muuten käytetään oletuksia.
 4. Avaa komentorivi repositorion kansiossa. Aja komento
 
 ```bash

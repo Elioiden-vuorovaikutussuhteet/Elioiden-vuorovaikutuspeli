@@ -19,6 +19,7 @@ export default class OrganismManager {
     private onHealthChanged?: (
         organism: Organism,
         amount: number
+        ,initialHP: number
     ) => void;
 
     constructor(
@@ -30,6 +31,7 @@ export default class OrganismManager {
         onHealthChanged?: (
             organism: Organism,
             amount: number
+            ,initialHP: number
         ) => void,
     ){
         this.scene = scene;
