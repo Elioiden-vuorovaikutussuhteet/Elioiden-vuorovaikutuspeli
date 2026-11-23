@@ -18,7 +18,9 @@ function createTestApp(isAdmin = false) {
   const app = express();
   app.use(express.json());
   app.use((req, _res, next) => {
-    req.session = (isAdmin ? { user: { isAdmin: true } } : {}) as any;
+    req.session = (
+      isAdmin ? { user: { id: "admin", isAdmin: true } } : {}
+    ) as any;
     next();
   });
   app.use("/api/configs", configRouter);
@@ -48,10 +50,12 @@ describe("configRoutes", () => {
   });
 
   describe("GET /api/configs", () => {
-    it("returns merged database overrides and defaults", async () => {
-      mockQuery.mockResolvedValueOnce({
-        rows: [{ domain: "permanentArrow", config: { pulseDuration: 9999 } }],
-      });
+    it("returns merged database overrides and defaults for active profile", async () => {
+      mockQuery
+        .mockResolvedValueOnce({ rows: [{ id: "default" }] })
+        .mockResolvedValueOnce({
+          rows: [{ domain: "permanentArrow", config: { pulseDuration: 9999 } }],
+        });
 
       const { status, body } = await request(createTestApp(), "/api/configs");
 
@@ -61,14 +65,49 @@ describe("configRoutes", () => {
         permanentArrowUIConfig.movementEpsilon,
       );
       expect(body.camera).toBeDefined();
+      expect(mockQuery).toHaveBeenLastCalledWith(
+        "SELECT domain, config FROM game_configs WHERE profile_id = $1",
+        ["default"],
+      );
+    });
+
+    it("scopes query when ?profile= is provided", async () => {
+      mockQuery
+        .mockResolvedValueOnce({ rows: [{ id: "bio-1" }] })
+        .mockResolvedValueOnce({ rows: [] });
+
+      const { status } = await request(
+        createTestApp(),
+        "/api/configs?profile=bio-1",
+      );
+
+      expect(status).toBe(200);
+      expect(mockQuery).toHaveBeenLastCalledWith(
+        "SELECT domain, config FROM game_configs WHERE profile_id = $1",
+        ["bio-1"],
+      );
+    });
+
+    it("returns 404 when requested ?profile= does not exist", async () => {
+      mockQuery.mockResolvedValueOnce({ rows: [] });
+
+      const { status, body } = await request(
+        createTestApp(),
+        "/api/configs?profile=missing",
+      );
+
+      expect(status).toBe(404);
+      expect(body.error).toContain("Unknown profile");
     });
 
     it("falls back to defaults if stored DB config fails Zod validation", async () => {
-      mockQuery.mockResolvedValueOnce({
-        rows: [
-          { domain: "permanentArrow", config: { pulseDuration: "invalid" } },
-        ],
-      });
+      mockQuery
+        .mockResolvedValueOnce({ rows: [{ id: "default" }] })
+        .mockResolvedValueOnce({
+          rows: [
+            { domain: "permanentArrow", config: { pulseDuration: "invalid" } },
+          ],
+        });
 
       const { status, body } = await request(createTestApp(), "/api/configs");
 
@@ -100,7 +139,9 @@ describe("configRoutes", () => {
     });
 
     it("returns defaults when no override exists in DB", async () => {
-      mockQuery.mockResolvedValueOnce({ rows: [] });
+      mockQuery
+        .mockResolvedValueOnce({ rows: [{ id: "default" }] })
+        .mockResolvedValueOnce({ rows: [] });
 
       const { status, body } = await request(
         createTestApp(),
@@ -112,9 +153,11 @@ describe("configRoutes", () => {
     });
 
     it("returns merged config when DB override exists", async () => {
-      mockQuery.mockResolvedValueOnce({
-        rows: [{ config: { pulseDuration: 2500 } }],
-      });
+      mockQuery
+        .mockResolvedValueOnce({ rows: [{ id: "default" }] })
+        .mockResolvedValueOnce({
+          rows: [{ config: { pulseDuration: 2500 } }],
+        });
 
       const { status, body } = await request(
         createTestApp(),
@@ -126,11 +169,11 @@ describe("configRoutes", () => {
     });
   });
 
-  describe("PUT /api/configs/:domain", () => {
+  describe("PUT /api/configs/:profileId/:domain", () => {
     it("returns 401 when user is not an admin", async () => {
       const { status, body } = await request(
         createTestApp(false),
-        "/api/configs/permanentArrow",
+        "/api/configs/default/permanentArrow",
         {
           method: "PUT",
           headers: { "Content-Type": "application/json" },
@@ -146,7 +189,7 @@ describe("configRoutes", () => {
     it("returns 400 when payload fails Zod validation", async () => {
       const { status, body } = await request(
         createTestApp(true),
-        "/api/configs/permanentArrow",
+        "/api/configs/default/permanentArrow",
         {
           method: "PUT",
           headers: { "Content-Type": "application/json" },
@@ -157,6 +200,23 @@ describe("configRoutes", () => {
       expect(status).toBe(400);
       expect(body.error).toBe("Invalid configuration payload");
       expect(mockQuery).not.toHaveBeenCalled();
+    });
+
+    it("returns 404 on FK violation for unknown profile", async () => {
+      mockQuery.mockRejectedValueOnce({ code: "23503" });
+
+      const { status, body } = await request(
+        createTestApp(true),
+        "/api/configs/missing/permanentArrow",
+        {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ pulseDuration: 1500 }),
+        },
+      );
+
+      expect(status).toBe(404);
+      expect(body.error).toContain("Unknown profile");
     });
 
     it("upserts valid config and returns updated row", async () => {
@@ -172,7 +232,7 @@ describe("configRoutes", () => {
 
       const { status, body } = await request(
         createTestApp(true),
-        "/api/configs/permanentArrow",
+        "/api/configs/default/permanentArrow",
         {
           method: "PUT",
           headers: { "Content-Type": "application/json" },
@@ -181,20 +241,21 @@ describe("configRoutes", () => {
       );
 
       expect(status).toBe(200);
+      expect(body.profileId).toBe("default");
       expect(body.domain).toBe("permanentArrow");
       expect(body.config.pulseDuration).toBe(1500);
       expect(mockQuery).toHaveBeenCalledWith(
         expect.stringContaining("INSERT INTO game_configs"),
-        ["permanentArrow", JSON.stringify(updatedConfig)],
+        ["default", "permanentArrow", JSON.stringify(updatedConfig)],
       );
     });
   });
 
-  describe("DELETE /api/configs/:domain", () => {
+  describe("DELETE /api/configs/:profileId/:domain", () => {
     it("returns 401 when user is not an admin", async () => {
       const { status } = await request(
         createTestApp(false),
-        "/api/configs/permanentArrow",
+        "/api/configs/default/permanentArrow",
         { method: "DELETE" },
       );
 
@@ -202,24 +263,40 @@ describe("configRoutes", () => {
       expect(mockQuery).not.toHaveBeenCalled();
     });
 
-    it("deletes DB override and returns section defaults", async () => {
-      mockQuery.mockResolvedValueOnce({ rowCount: 1 });
+    it("returns 404 for unknown profile", async () => {
+      mockQuery.mockResolvedValueOnce({ rows: [] });
 
       const { status, body } = await request(
         createTestApp(true),
-        "/api/configs/permanentArrow",
+        "/api/configs/missing/permanentArrow",
+        { method: "DELETE" },
+      );
+
+      expect(status).toBe(404);
+      expect(body.error).toContain("Unknown profile");
+    });
+
+    it("deletes DB override and returns section defaults", async () => {
+      mockQuery
+        .mockResolvedValueOnce({ rows: [{ id: "default" }] })
+        .mockResolvedValueOnce({ rowCount: 1 });
+
+      const { status, body } = await request(
+        createTestApp(true),
+        "/api/configs/default/permanentArrow",
         { method: "DELETE" },
       );
 
       expect(status).toBe(200);
       expect(body).toEqual({
+        profileId: "default",
         domain: "permanentArrow",
         config: permanentArrowUIConfig,
         reset: true,
       });
-      expect(mockQuery).toHaveBeenCalledWith(
-        "DELETE FROM game_configs WHERE domain = $1",
-        ["permanentArrow"],
+      expect(mockQuery).toHaveBeenLastCalledWith(
+        "DELETE FROM game_configs WHERE profile_id = $1 AND domain = $2",
+        ["default", "permanentArrow"],
       );
     });
   });

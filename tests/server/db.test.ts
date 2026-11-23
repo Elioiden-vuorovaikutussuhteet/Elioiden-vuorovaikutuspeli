@@ -40,13 +40,15 @@ describe("db", () => {
       await import("../../server/db");
 
       expect(PoolMock).toHaveBeenCalledWith({
-        connectionString: "postgresql://eliopeli:devpassword@localhost:5432/eliopeli",
+        connectionString:
+          "postgresql://eliopeli:devpassword@localhost:5432/eliopeli",
         ssl: false,
       });
     });
 
     it("disables SSL for local non-SSL connection strings", async () => {
-      const connectionString = "postgresql://postgres:postgres@db:5432/eliopeli";
+      const connectionString =
+        "postgresql://postgres:postgres@db:5432/eliopeli";
       vi.stubEnv("DATABASE_URL", connectionString);
 
       await import("../../server/db");
@@ -73,25 +75,27 @@ describe("db", () => {
 
   describe("initDb", () => {
     beforeEach(() => {
-      vi.stubEnv("DATABASE_URL", "postgresql://postgres:postgres@localhost:5432/test");
+      vi.stubEnv(
+        "DATABASE_URL",
+        "postgresql://postgres:postgres@localhost:5432/test",
+      );
     });
 
-    it("executes CREATE TABLE IF NOT EXISTS game_configs query", async () => {
-      mockQuery.mockResolvedValueOnce({ rows: [], rowCount: 0 });
+    it("creates profiles, game_configs with composite PK, and seeds default profile", async () => {
+      mockQuery.mockResolvedValue({ rows: [], rowCount: 0 });
       const { initDb } = await import("../../server/db");
 
       await initDb();
 
-      expect(mockQuery).toHaveBeenCalledTimes(1);
-      expect(mockQuery).toHaveBeenCalledWith(
-        expect.stringContaining("CREATE TABLE IF NOT EXISTS game_configs"),
-      );
-      expect(mockQuery).toHaveBeenCalledWith(
-        expect.stringContaining("domain VARCHAR(64) PRIMARY KEY"),
-      );
-      expect(mockQuery).toHaveBeenCalledWith(
-        expect.stringContaining("config JSONB NOT NULL"),
-      );
+      const executedSql = mockQuery.mock.calls
+        .map(([sql]) => String(sql))
+        .join("\n");
+
+      expect(executedSql).toContain("CREATE TABLE IF NOT EXISTS profiles");
+      expect(executedSql).toContain("CREATE TABLE IF NOT EXISTS game_configs");
+      expect(executedSql).toContain("PRIMARY KEY (profile_id, domain)");
+      expect(executedSql).toContain("config JSONB NOT NULL");
+      expect(executedSql).toContain("'default'");
     });
 
     it("propagates database errors when query fails", async () => {

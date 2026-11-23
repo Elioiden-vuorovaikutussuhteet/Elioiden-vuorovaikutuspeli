@@ -96,23 +96,37 @@ export function resetSectionConfig(sectionId: string): void {
 }
 
 /* Fetches all saved configs from the backend API and hydrates the live config objects on startup. */
-export async function loadConfigsFromServer(): Promise<void> {
+export async function loadConfigsFromServer(profileId?: string): Promise<void> {
   try {
-    const res = await fetch("/api/configs");
+    const profile =
+      profileId ??
+      (typeof window !== "undefined"
+        ? new URLSearchParams(window.location.search).get("profile")
+        : null);
+
+    const url = profile
+      ? `/api/configs?profile=${encodeURIComponent(profile)}`
+      : "/api/configs";
+
+    const res = await fetch(url);
     if (!res.ok) {
       console.warn(`Failed to fetch configs (${res.status}), using defaults.`);
       return;
     }
 
-    const data = (await res.json()) as Record<string, Record<string, unknown>>;
+    const data = (await res.json()) as Record<string, unknown>;
 
     if (data && typeof data === "object" && "ecosystem" in data) {
-      applyEcosystemConfig((data as { ecosystem?: unknown }).ecosystem);
+      applyEcosystemConfig(data.ecosystem);
     }
 
     for (const [sectionId, sectionData] of Object.entries(data)) {
-      if (sectionData && typeof sectionData === "object") {
-        applySectionConfig(sectionId, sectionData);
+      if (
+        sectionId !== "ecosystem" &&
+        sectionData &&
+        typeof sectionData === "object"
+      ) {
+        applySectionConfig(sectionId, sectionData as Record<string, unknown>);
       }
     }
   } catch (err) {
