@@ -4,27 +4,37 @@ on:
   pull_request:
 
 jobs:
+  prepare:
+    runs-on: ubuntu-latest
+    outputs:
+      pw-version: ${{ steps.version.outputs.pw }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - id: version
+        run: |
+          PW_VERSION=$(node -p "require('./package-lock.json').packages['node_modules/@playwright/test'].version")
+          echo "pw=$PW_VERSION" >> "$GITHUB_OUTPUT"
+
   test:
+    needs: prepare
     timeout-minutes: 60
     runs-on: ubuntu-latest
+    container:
+      image: mcr.microsoft.com/playwright:v${{ needs.prepare.outputs.pw-version }}-noble
+      options: --ipc=host
     steps:
-    - uses: actions/checkout@v4
-    - uses: actions/setup-node@v4
-      with:
-        node-version: lts/*
-        
-    - name: Install dependencies
-      run: npm ci
+      - uses: actions/checkout@v4
 
-    - name: Install Playwright Browsers
-      run: npx playwright install --with-deps
+      - name: Install dependencies
+        run: npm ci
 
-    - name: Run Playwright tests
-      run: npx playwright test
+      - name: Run Playwright tests
+        run: npx playwright test
 
-    - uses: actions/upload-artifact@v4
-      if: ${{ !cancelled() }}
-      with:
-        name: playwright-report
-        path: playwright-report/
-        retention-days: 30
+      - uses: actions/upload-artifact@v4
+        if: ${{ !cancelled() }}
+        with:
+          name: playwright-report
+          path: playwright-report/
+          retention-days: 30
