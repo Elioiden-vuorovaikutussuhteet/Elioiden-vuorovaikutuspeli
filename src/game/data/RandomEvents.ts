@@ -10,6 +10,9 @@ export type RandomEventEffect =
   | {
       type: "healAll";
       amount: number;
+    }
+  | {
+      type: "remove";
     };
 
 export interface RandomEventData {
@@ -29,8 +32,7 @@ export const randomEvents: RandomEventData[] = [
     chance: 50,
     maxOccurrencesPerGame: 1,
     effect: {
-      type: "damage",
-      amount: 100,
+      type: "remove",
     },
   },
   {

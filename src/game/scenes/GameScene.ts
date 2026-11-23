@@ -97,6 +97,7 @@ export default class GameScene extends Phaser.Scene {
         this.randomEventManager.triggerRandomEvent(
           this.organismManager.getOrganisms(),
           this.arrowManager,
+          (organism) => this.removeOrganismWithBrokenTexture(organism),
         );
       };
     }
@@ -195,6 +196,7 @@ export default class GameScene extends Phaser.Scene {
           this.config.randomEventCheckIntervalMs,
           this.config.randomEventChance,
           this.config.randomEventMaxPerGame,
+          (organism) => this.removeOrganismWithBrokenTexture(organism),
         );
       });
     });
@@ -204,6 +206,23 @@ export default class GameScene extends Phaser.Scene {
     this.arrowManager.clearPreview();
     this.arrowManager.deleteArrows(organism);
     this.organismManager.deleteOrganism(organism);
+  }
+
+  private removeOrganismWithBrokenTexture(organism: Organism): void {
+    const brokenTexture =
+      organism.organismData.id === "acacia"
+        ? "broken_acacia_sprite"
+        : "broken_sapota_sprite";
+    const brokenOrganism = this.add.sprite(
+      organism.x,
+      organism.y,
+      brokenTexture,
+    );
+    brokenOrganism.setScale(organism.scale);
+    brokenOrganism.setDepth(organism.depth);
+    this.uiCamera.ignore(brokenOrganism);
+
+    this.deleteOrganism(organism);
   }
 
   update() {
