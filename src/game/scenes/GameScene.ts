@@ -155,7 +155,13 @@ export default class GameScene extends Phaser.Scene {
     this.cameras.main.ignore(menubutton);
 
     menubutton.on("menuButtonClicked", () => {
-      this.scene.launch(this.config.scenes.tutorial);
+      const optionsScene = this.config.scenes.options;
+
+      if (this.scene.isActive(optionsScene)) {
+        this.scene.stop(optionsScene);
+      } else {
+        this.scene.launch(optionsScene);
+      }
     });
 
     const secondOrganism = organisms[this.config.secondOrganismIndex];

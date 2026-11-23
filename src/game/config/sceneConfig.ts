@@ -33,6 +33,7 @@ export const GameSceneConfigSchema = z.object({
     menu: z.string(),
     tutorial: z.string(),
     gameOver: z.string(),
+    options: z.string(),
   }),
   assetsPath: z.string(),
   images: z.array(AssetEntrySchema),
@@ -60,6 +61,7 @@ export const gameSceneConfig: GameSceneConfig = {
     menu: "MenuScene",
     tutorial: "TutorialScene",
     gameOver: "GameOverScene",
+    options: "OptionsScene"
   },
   assetsPath: "assets",
   images: [
@@ -191,6 +193,55 @@ export const tutorialSceneConfig: TutorialSceneConfig = {
   closeButton: {
     bottomOffset: 50,
     event: "closeButtonClicked",
+  },
+};
+
+export const OptionsSceneConfigSchema = OverlayBoxStyleSchema.extend({
+  key: z.string(),
+  assetsPath: z.string(),
+  images: z.array(AssetEntrySchema),
+  widthRatio: z.number(),
+  maxWidth: z.number(),
+  heightRatio: z.number(),
+  maxHeight: z.number(),
+  leftMarginRatio: z.number(),
+  topOffsetDivisor: z.number(),
+  infoButton: z.object({
+    leftOffset: z.number(),
+    bottomOffset: z.number(),
+    event: z.string(),
+  }),
+  settingsButton: z.object({
+    leftOffset: z.number(),
+    bottomOffset: z.number(),
+    event: z.string(),
+  }),
+});
+
+export type OptionsSceneConfig = z.infer<typeof OptionsSceneConfigSchema>;
+
+export const optionsSceneConfig: OptionsSceneConfig = {
+  ...defaultOverlayBoxStyle,
+  key: "OptionsScene",
+  assetsPath: "assets",
+  images: [
+    { key: "infobutton_sprite", file: "altinfo.png" },
+  ],
+  widthRatio: 0.5,
+  maxWidth: 250,
+  heightRatio: 0.15,
+  maxHeight: 100,
+  leftMarginRatio: 0.1,
+  topOffsetDivisor: 50,
+  infoButton: {
+    leftOffset: 15,
+    bottomOffset: 10,
+    event: "infoButtonClicked",
+  },
+  settingsButton: {
+    leftOffset: 50,
+    bottomOffset: 10,
+    event: "settingsButtonClicked",
   },
 };
 
