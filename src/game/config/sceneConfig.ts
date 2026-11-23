@@ -230,6 +230,7 @@ export const optionsSceneConfig: OptionsSceneConfig = {
   assetsPath: "assets",
   images: [
     { key: "infobutton_sprite", file: "altinfo.png" },
+    { key: "settingsbutton_sprite", file: "settingsbutton.png" },
   ],
   widthRatio: 0.5,
   maxWidth: 250,
@@ -243,7 +244,7 @@ export const optionsSceneConfig: OptionsSceneConfig = {
     event: "infoButtonClicked",
   },
   settingsButton: {
-    leftOffset: 50,
+    leftOffset: 170,
     bottomOffset: 50,
     event: "settingsButtonClicked",
   },

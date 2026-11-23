@@ -67,6 +67,22 @@ export const infoButtonUIConfig: InfoButtonUIConfig = {
   clickEvent: "infoButtonClicked",
 };
 
+export const SettingsButtonUIConfigSchema = SpriteButtonBaseSchema.extend({
+  texture: z.string(),
+  hoverTint: z.number().int().min(0).max(0xffffff).meta({ input: "color" }),
+});
+
+export type SettingsButtonUIConfig = z.infer<typeof SettingsButtonUIConfigSchema>;
+
+export const settingsButtonUIConfig: SettingsButtonUIConfig = {
+  texture: "settingsbutton_sprite",
+  scale: 0.16,
+  hoverAlpha: 0.8,
+  defaultAlpha: 1,
+  hoverTint: 0x777777,
+  clickEvent: "settingsButtonClicked",
+};
+
 export const MenuButtonUIConfigSchema = SpriteButtonBaseSchema.extend({
   texture: z.string(),
   hoverTint: z.number().int().min(0).max(0xffffff).meta({ input: "color" }),

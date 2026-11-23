@@ -1,5 +1,6 @@
 import Phaser from "phaser";
 import InfoButton from "../entities/infobutton";
+import SettingsButton from "../entities/settingsbutton";
 import {
   optionsSceneConfig,
   type OptionsSceneConfig,
@@ -75,7 +76,22 @@ export default class OptionsScene extends Phaser.Scene {
     );
 
     infoButton.on("infoButtonClicked", () => {
+      // this.scene.stop(this.config.scenes.settings);
       this.scene.launch(this.config.scenes.tutorial);
+    });
+
+    const settingsLeftMargin = this.config.settingsButton.leftOffset
+    const settingsBottomOffset = this.config.settingsButton.bottomOffset
+
+    const settingsButton = new SettingsButton(
+      this,
+      menuX + settingsLeftMargin,
+      menuY + settingsBottomOffset,
+    );
+
+    settingsButton.on("pointerdown", () => {
+      this.scene.stop(this.config.scenes.tutorial);
+      // this.scene.launch(this.config.scenes.settings);
     });
   }
 }
