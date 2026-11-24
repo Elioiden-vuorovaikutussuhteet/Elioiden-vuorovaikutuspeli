@@ -9,7 +9,7 @@ export const OrganismSchema = z.object({
   offsetX: z.number(),
   offsetY: z.number(),
   description: z.string(),
-  wikilinks: z.array(z.string()),
+  wikilinks: z.array(z.string()).default([]),
 });
 
 export type OrganismData = z.infer<typeof OrganismSchema>;
@@ -101,6 +101,7 @@ export const organisms = z.array(OrganismSchema).parse([
     offsetX: -250,
     offsetY: -250,
     description: "Bull horn acacias have very weak internal defense systems as they have externalized their defense to their symbiotic ants. In the absence of ants, the trees are highly susceptible both to bacterial and fungal diseases. Pseudomonas syringae or Xanthomonas species can cause bacterial diseases, and a wide plethora of fungi can cause fungal infections.",
+    wikilinks: []
   },
   {
     id: "antpathogen",
@@ -111,6 +112,7 @@ export const organisms = z.array(OrganismSchema).parse([
     offsetX: -700,
     offsetY: 150,
     description: "Acacia ants rarely get sick due to their bacterial symbionts and vigorous grooming practices of the ant community. Nevertheless, occasionally a generalist insect pathogen Pseudomonas entomophila or fungal pathogens belonging to genera Metarhizium or Beauveria or more specific pseudomyrmex infecting fungus Ophiocordyceps pseudomyrmicis can cause infections.",
+    wikilinks: []
   },
 ]);
 
