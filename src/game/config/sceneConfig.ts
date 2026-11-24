@@ -221,6 +221,20 @@ export const SettingsSceneConfigSchema = OverlayBoxStyleSchema.extend({
     bottomOffset: z.number(),
     event: z.string(),
   }),
+  pulseButtons: z.object({
+    speeds: z.object({
+      slow: z.number(),
+      normal: z.number(),
+      fast: z.number(),
+    }),
+    bottomOffset: z.number(),
+    leftOffsets: z.object({
+      slow: z.number(),
+      normal: z.number(),
+      fast: z.number(),
+    }),
+    event: z.string(),
+  }),
 });
 
 export type SettingsSceneConfig = z.infer<typeof SettingsSceneConfigSchema>;
@@ -229,7 +243,10 @@ export const settingsSceneConfig: SettingsSceneConfig = {
   ...defaultOverlayBoxStyle,
   key: "SettingsScene",
   assetsPath: "assets",
-  images: [{ key: "close_button_sprite", file: "closebutton.png" }],
+  images: [
+    { key: "close_button_sprite", file: "closebutton.png" },
+    { key: "pulsebutton_sprite", file: "pulsebutton.png" }
+          ],
   widthRatio: 0.3,
   maxWidth: 450,
   heightRatio: 0.7,
@@ -255,6 +272,20 @@ export const settingsSceneConfig: SettingsSceneConfig = {
     bottomOffset: 50,
     event: "closeButtonClicked",
   },
+  pulseButtons: {
+    speeds: {
+      slow: 2000,
+      normal: 1000,
+      fast: 500,
+    },
+    bottomOffset: 400
+    leftOffsets: {
+      slow: 50,
+      normal: 250,
+      fast: 450,
+    }),
+    event: "pulseButtonClicked",
+  }),
 };
 
 export const OptionsSceneConfigSchema = OverlayBoxStyleSchema.extend({
