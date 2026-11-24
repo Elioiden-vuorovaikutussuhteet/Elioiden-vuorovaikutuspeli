@@ -37,11 +37,6 @@ export default class PopupScene extends Phaser.Scene {
     }
 
     const { width, height } = this.cameras.main;
-
-    const menuHeight = Math.min(
-      height * this.config.heightRatio,
-      this.config.maxHeight,
-    );
     const centerX = width / 2;
 
     const background = this.add.graphics();
@@ -50,67 +45,72 @@ export default class PopupScene extends Phaser.Scene {
     const { text } = this.config;
     const fontSize = Math.min(width * text.fontSizeRatio, text.maxFontSize);
 
-    const sections = [
-      { content: this.popupData.title, style: text.title },
-      { content: `${this.popupData.relation} relation`, style: text.relation },
-      { content: this.popupData.description, style: text.description },
-    ];
+    const topPadding = 18;
+    const sectionGap = 10;
+    const horizontalPadding = 48;
+    const bottomReserved = this.config.closeButton.bottomOffset + 32;
+    const maxAllowedWrapWidth = Math.max(width * 0.9 - horizontalPadding, 160);
 
-    const topPadding = 16;
-    const sectionGap = 6;
-    const bottomReserved = this.config.closeButton.bottomOffset + 24;
-    const maxTextHeight = menuHeight - topPadding - bottomReserved;
+    const titleText = this.add
+      .text(centerX, 0, this.popupData.title, {
+        fontFamily: text.fontFamily,
+        fontSize: `${fontSize}px`,
+        fontStyle: text.title.fontStyle,
+        color: text.title.color,
+        wordWrap: {
+          width: maxAllowedWrapWidth,
+        },
+        align: text.align,
+      })
+      .setOrigin(text.originX, text.originY);
 
-    let wrapWidth =
-      Math.min(width * this.config.widthRatio, this.config.maxWidth) *
-      text.wordWrapWidthRatio;
-    const maxAllowedWrapWidth = width * 0.9;
-
-    const textObjects = sections.map((section) =>
-      this.add
-        .text(centerX, 0, section.content, {
-          fontFamily: text.fontFamily,
-          fontSize: `${fontSize}px`,
-          fontStyle: section.style.fontStyle,
-          color: text.color,
-          wordWrap: {
-            width: wrapWidth,
-          },
-          align: text.align,
-        })
-        .setOrigin(text.originX, text.originY),
+    let wrapWidth = Math.min(
+      Math.max(titleText.width, Math.min(width * 0.35, 360)),
+      maxAllowedWrapWidth,
     );
 
-    const getTotalTextHeight = () =>
-      textObjects.reduce((sum, obj) => sum + obj.height, 0) +
-      sectionGap * (textObjects.length - 1);
+    const descriptionText = this.add
+      .text(centerX, 0, this.popupData.description, {
+        fontFamily: text.fontFamily,
+        fontSize: `${fontSize}px`,
+        fontStyle: text.description.fontStyle,
+        color: text.color,
+        wordWrap: {
+          width: wrapWidth,
+        },
+        align: text.align,
+      })
+      .setOrigin(text.originX, text.originY);
+
+    const maxTargetDescriptionHeight = Math.ceil(fontSize * 1.4 * 3);
 
     while (
-      getTotalTextHeight() > maxTextHeight &&
+      descriptionText.height > maxTargetDescriptionHeight &&
       wrapWidth < maxAllowedWrapWidth
     ) {
       wrapWidth = Math.min(wrapWidth + 60, maxAllowedWrapWidth);
-      for (const textObject of textObjects) {
-        textObject.setWordWrapWidth(wrapWidth);
-      }
+      descriptionText.setWordWrapWidth(wrapWidth);
     }
 
+    const textObjects = [titleText, descriptionText];
     const maxContentWidth = Math.max(
       ...textObjects.map((obj) => obj.width),
       160,
     );
-    const horizontalPadding = 48;
-    const menuWidth = maxContentWidth + horizontalPadding;
+    const menuWidth = Math.min(
+      maxContentWidth + horizontalPadding,
+      width * 0.94,
+    );
+    const totalTextHeight =
+      titleText.height + sectionGap + descriptionText.height;
+    const menuHeight = topPadding + totalTextHeight + bottomReserved;
 
     const bottomMargin = height * this.config.rightMarginRatio;
     const menuX = (width - menuWidth) / 2;
     const menuY = height - menuHeight - bottomMargin;
 
-    let currentOffsetY = topPadding;
-    for (const textObject of textObjects) {
-      textObject.setY(menuY + currentOffsetY);
-      currentOffsetY += textObject.height + sectionGap;
-    }
+    titleText.setY(menuY + topPadding);
+    descriptionText.setY(menuY + topPadding + titleText.height + sectionGap);
 
     background.fillStyle(
       this.config.backgroundColor,
