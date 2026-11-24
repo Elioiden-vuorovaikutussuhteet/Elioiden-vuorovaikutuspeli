@@ -2,6 +2,7 @@ import Organism from "../entities/organism";
 import { getRelation } from "../services/RelationsService";
 import type { Connection } from "../types/Connection";
 import { interactionConfig, type InteractionConfig } from "../config";
+import { getPulseSpeedMultiplier } from "../services/PulseSpeedService";
 
 type ArrowPulseAnimationCallback = (
   fromId: string,
@@ -18,7 +19,6 @@ export default class InteractionManager {
   private interactions: Connection[];
   private pulseAnimationCallback: ArrowPulseAnimationCallback;
   private config: InteractionConfig;
-  private pulseWaitTime: number;
   private nextPulseId = 0;
   private activePulseId = -1;
   private onPulseStart?: () => void;
@@ -52,8 +52,11 @@ export default class InteractionManager {
     this.interactions = interactions;
     this.pulseAnimationCallback = pulseAnimationCallback;
     this.config = { ...interactionConfig, ...config };
-    this.pulseWaitTime = this.config.pulseWaitTime;
     this.onPulseStart = onPulseStart;
+  }
+
+  private get pulseWaitTime(): number {
+    return this.config.pulseWaitTime * getPulseSpeedMultiplier();
   }
 
   public async interactionPulse(

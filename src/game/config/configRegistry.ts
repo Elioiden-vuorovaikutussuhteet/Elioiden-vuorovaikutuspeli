@@ -9,12 +9,14 @@ import {
   ArrowButtonUIConfigSchema,
   CursorButtonUIConfigSchema,
   InfoButtonUIConfigSchema,
+  MenuButtonUIConfigSchema,
   CloseButtonUIConfigSchema,
   HintButtonUIConfigSchema,
   buttonUIConfig,
   arrowButtonUIConfig,
   cursorButtonUIConfig,
   infoButtonUIConfig,
+  menuButtonUIConfig,
   closeButtonUIConfig,
   hintButtonUIConfig,
 } from "./buttonConfig";
@@ -39,6 +41,10 @@ import {
   popupSceneConfig,
 } from "./sceneConfig";
 import { ScoreConfigSchema, scoreConfig } from "./scoreConfig";
+import {
+  PulseSpeedMultipliersSchema,
+  pulseSpeedMultipliers,
+} from "./pulseSpeedConfig";
 import { LightningConfigSchema, lightningConfig } from "./lightningConfig";
 
 export const configRegistry = [
@@ -75,6 +81,18 @@ export const configRegistry = [
         label: "Glow Settings",
         schema: GlowConfigSchema,
         defaults: glowConfig,
+      },
+    ],
+  },
+  {
+    id: "pulseSpeed",
+    label: "Pulse Speed",
+    sections: [
+      {
+        id: "pulseSpeed",
+        label: "Pulse Speed Multipliers",
+        schema: PulseSpeedMultipliersSchema,
+        defaults: pulseSpeedMultipliers,
       },
     ],
   },
@@ -195,6 +213,12 @@ export const configRegistry = [
         label: "Info Button",
         schema: InfoButtonUIConfigSchema,
         defaults: infoButtonUIConfig,
+      },
+      {
+        id: "menuButton",
+        label: "Menu Button",
+        schema: MenuButtonUIConfigSchema,
+        defaults: menuButtonUIConfig,
       },
       {
         id: "closeButton",

@@ -36,14 +36,14 @@ export const GameSceneConfigSchema = z.object({
   key: z.string(),
   scenes: z.object({
     menu: z.string(),
-    tutorial: z.string(),
     gameOver: z.string(),
+    options: z.string(),
   }),
   assetsPath: z.string(),
   images: z.array(AssetEntrySchema),
   startingMoney: z.number(),
   hintCost: z.number(),
-  infoButton: z.object({
+  menuButton: z.object({
     x: z.number(),
     y: z.number(),
   }),
@@ -66,8 +66,8 @@ export const gameSceneConfig: GameSceneConfig = {
   key: "GameScene",
   scenes: {
     menu: "MenuScene",
-    tutorial: "TutorialScene",
     gameOver: "GameOverScene",
+    options: "OptionsScene"
   },
   assetsPath: "assets",
   images: [
@@ -75,7 +75,7 @@ export const gameSceneConfig: GameSceneConfig = {
     { key: "amf_sprite", file: "amf.png" },
     { key: "greenbutton", file: "greenbutton.png" },
     { key: "redbutton", file: "redbutton.png" },
-    { key: "infobutton_sprite", file: "altinfo.png" },
+    { key: "menubutton_sprite", file: "menubutton.png" },
     { key: "ants_sprite", file: "ants.png" },
     { key: "antfootbacteria_sprite", file: "antfootbacteria.png" },
     { key: "sapota_sprite", file: "sapota.png" },
@@ -92,7 +92,7 @@ export const gameSceneConfig: GameSceneConfig = {
   ],
   startingMoney: 1000,
   hintCost: 100,
-  infoButton: { x: 40, y: 40 },
+  menuButton: { x: 40, y: 40 },
   hintButton: { x: 300, y: 40 },
   initialOrganismIndex: 0,
   secondOrganismIndex: 1,
@@ -179,7 +179,7 @@ export const tutorialSceneConfig: TutorialSceneConfig = {
   heightRatio: 0.8,
   maxHeight: 700,
   leftMarginRatio: 0.05,
-  topOffsetDivisor: 2,
+  topOffsetDivisor: 2.7,
   text: {
     content: [
       "Select whether you want to draw a positive (green arrow) or negative (red arrow) relationship by clicking on the corresponding arrow button and choosing the starting and ending organism.",
@@ -203,6 +203,158 @@ export const tutorialSceneConfig: TutorialSceneConfig = {
   closeButton: {
     bottomOffset: 40,
     event: "closeButtonClicked",
+  },
+};
+
+export const SettingsSceneConfigSchema = OverlayBoxStyleSchema.extend({
+  key: z.string(),
+  assetsPath: z.string(),
+  images: z.array(AssetEntrySchema),
+  widthRatio: z.number(),
+  maxWidth: z.number(),
+  heightRatio: z.number(),
+  maxHeight: z.number(),
+  leftMarginRatio: z.number(),
+  topOffsetDivisor: z.number(),
+  text: z.object({
+    content: z.string(),
+    topOffsetRatio: z.number(),
+    fontFamily: z.string(),
+    fontSizeRatio: z.number(),
+    maxFontSize: z.number(),
+    fontStyle: z.string(),
+    color: z.string().meta({ input: "color" }),
+    wordWrapWidthRatio: z.number(),
+    align: z.string(),
+    originX: z.number(),
+    originY: z.number(),
+  }),
+  closeButton: z.object({
+    bottomOffset: z.number(),
+    event: z.string(),
+  }),
+  pulseButtons: z.object({
+    speeds: z.object({
+      slow: z.number(),
+      normal: z.number(),
+      fast: z.number(),
+    }),
+    bottomOffset: z.number(),
+    leftOffsets: z.object({
+      slow: z.number(),
+      normal: z.number(),
+      fast: z.number(),
+    }),
+    event: z.string(),
+  }),
+});
+
+export type SettingsSceneConfig = z.infer<typeof SettingsSceneConfigSchema>;
+
+export const settingsSceneConfig: SettingsSceneConfig = {
+  ...defaultOverlayBoxStyle,
+  key: "SettingsScene",
+  assetsPath: "assets",
+  images: [
+    { key: "close_button_sprite", file: "closebutton.png" },
+    { key: "pulsebutton_sprite", file: "pulsebutton.png" }
+          ],
+  widthRatio: 0.3,
+  maxWidth: 450,
+  heightRatio: 0.7,
+  maxHeight: 600,
+  leftMarginRatio: 0.05,
+  topOffsetDivisor: 2.7,
+  text: {
+    content: [
+      "Select the desired pulse speed:",
+    ].join("\n"),
+    topOffsetRatio: 0.15,
+    fontFamily: "monospace",
+    fontSizeRatio: 0.015,
+    maxFontSize: 25,
+    fontStyle: "bold",
+    color: "#ffffff",
+    wordWrapWidthRatio: 0.8,
+    align: "center",
+    originX: 0.5,
+    originY: 0,
+  },
+  closeButton: {
+    bottomOffset: 50,
+    event: "closeButtonClicked",
+  },
+  pulseButtons: {
+    speeds: {
+      slow: 2000,
+      normal: 1000,
+      fast: 500,
+    },
+    bottomOffset: 200,
+    leftOffsets: {
+      slow: 75,
+      normal: 225,
+      fast: 375,
+    },
+    event: "pulseButtonClicked",
+  },
+};
+
+export const OptionsSceneConfigSchema = OverlayBoxStyleSchema.extend({
+  key: z.string(),
+  scenes: z.object({
+    tutorial: z.string(),
+    settings: z.string(),
+  }),
+  assetsPath: z.string(),
+  images: z.array(AssetEntrySchema),
+  widthRatio: z.number(),
+  maxWidth: z.number(),
+  heightRatio: z.number(),
+  maxHeight: z.number(),
+  leftMarginRatio: z.number(),
+  topOffsetDivisor: z.number(),
+  infoButton: z.object({
+    leftOffset: z.number(),
+    bottomOffset: z.number(),
+    event: z.string(),
+  }),
+  settingsButton: z.object({
+    leftOffset: z.number(),
+    bottomOffset: z.number(),
+    event: z.string(),
+  }),
+});
+
+export type OptionsSceneConfig = z.infer<typeof OptionsSceneConfigSchema>;
+
+export const optionsSceneConfig: OptionsSceneConfig = {
+  ...defaultOverlayBoxStyle,
+  key: "OptionsScene",
+  scenes: {
+    tutorial: "TutorialScene",
+    settings: "SettingsScene",
+  },
+  assetsPath: "assets",
+  images: [
+    { key: "infobutton_sprite", file: "altinfo.png" },
+    { key: "settingsbutton_sprite", file: "settingsbutton.png" },
+  ],
+  widthRatio: 0.5,
+  maxWidth: 250,
+  heightRatio: 0.15,
+  maxHeight: 100,
+  leftMarginRatio: 0.1,
+  topOffsetDivisor: 50,
+  infoButton: {
+    leftOffset: 70,
+    bottomOffset: 50,
+    event: "infoButtonClicked",
+  },
+  settingsButton: {
+    leftOffset: 170,
+    bottomOffset: 50,
+    event: "settingsButtonClicked",
   },
 };
 

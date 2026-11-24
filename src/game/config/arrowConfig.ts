@@ -75,7 +75,7 @@ export const permanentArrowUIConfig: PermanentArrowUIConfig = {
   pulseDepth: 101,
   pulseAlpha: 0.8,
   pulseStrokeAlpha: 0.35,
-  pulseDuration: 1000,
+  pulseDuration: 1000, // Should be linked with pulsewaittime in interactionConfig
   pulseColorInsideGlow: 15,
   pulseColorInsideOpacity: 0.5,
   pulseColorInside: 0xffffff,
