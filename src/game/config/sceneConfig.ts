@@ -491,3 +491,88 @@ export const popupSceneConfig: PopupSceneConfig = {
     event: "closeButtonClicked",
   },
 };
+
+export const OrganismInfoSceneConfigSchema = OverlayBoxStyleSchema.extend({
+  key: z.string(),
+  assetsPath: z.string(),
+  images: z.array(AssetEntrySchema),
+  widthRatio: z.number(),
+  maxWidth: z.number(),
+  heightRatio: z.number(),
+  maxHeight: z.number(),
+  rightMarginRatio: z.number(),
+  horizontalOffsetRatio: z.number().min(-0.5).max(0.5),
+  topOffsetDivisor: z.number(),
+  text: z.object({
+    fontFamily: z.string(),
+    fontSizeRatio: z.number(),
+    maxFontSize: z.number(),
+    color: z.string().meta({ input: "color" }),
+    wordWrapWidthRatio: z.number(),
+    align: z.string(),
+    originX: z.number(),
+    originY: z.number(),
+    title: z.object({
+      topOffsetRatio: z.number(),
+      fontStyle: z.string(),
+    }),
+    description: z.object({
+      topOffsetRatio: z.number(),
+      fontStyle: z.string(),
+    }),
+    links: z.object({
+      topOffsetRatio: z.number(),
+      fontStyle: z.string(),
+      color: z.string().meta({ input: "color" }),
+    }),
+  }),
+  closeButton: z.object({
+    bottomOffset: z.number(),
+    event: z.string(),
+  }),
+});
+
+export type OrganismInfoSceneConfig = z.infer<
+  typeof OrganismInfoSceneConfigSchema
+>;
+
+export const organismInfoSceneConfig: OrganismInfoSceneConfig = {
+  ...defaultOverlayBoxStyle,
+  key: "OrganismInfoScene",
+  assetsPath: "assets",
+  images: [{ key: "close_button_sprite", file: "closebutton.png" }],
+  widthRatio: 0.4,
+  maxWidth: 700,
+  heightRatio: 0.28,
+  maxHeight: 200,
+  rightMarginRatio: 0.03,
+  horizontalOffsetRatio: 0,
+  topOffsetDivisor: 9,
+  text: {
+    fontFamily: "monospace",
+    fontSizeRatio: 0.011,
+    maxFontSize: 15,
+    color: "#ffffff",
+    wordWrapWidthRatio: 0.88,
+    align: "center",
+    originX: 0.5,
+    originY: 0,
+    title: {
+      topOffsetRatio: 0.07,
+      fontStyle: "bold",
+    },
+    description: {
+      topOffsetRatio: 0.2,
+      fontStyle: "",
+    },
+    links: {
+      topOffsetRatio: 0.34,
+      fontStyle: "italic",
+      color: "#7ec8ff",
+    },
+  },
+  closeButton: {
+    bottomOffset: 30,
+    event: "closeButtonClicked",
+  },
+};

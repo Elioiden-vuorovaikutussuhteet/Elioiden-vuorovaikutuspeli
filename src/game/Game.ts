@@ -7,6 +7,7 @@ import SettingsScene from "./scenes/SettingsScene";
 import PopupScene from "./scenes/PopupScene";
 import GameOverScene from "./scenes/GameOverScene";
 import { LightningScene } from "./scenes/LightningScene";
+import OrganismInfoScene from "./scenes/OrganismInfoScene";
 
 export function createGame(parent: HTMLElement) {
   return new Phaser.Game({
@@ -15,7 +16,7 @@ export function createGame(parent: HTMLElement) {
     height: window.innerHeight,
     parent,
     backgroundColor: "#f9f980",
-    scene: [GameScene, MenuScene, TutorialScene, PopupScene, GameOverScene, OptionsScene, SettingsScene, LightningScene],
+    scene: [GameScene, MenuScene, TutorialScene, PopupScene, GameOverScene, OptionsScene, SettingsScene, LightningScene, OrganismInfoScene],
     scale: {
       mode: Phaser.Scale.RESIZE,
       autoCenter: Phaser.Scale.CENTER_BOTH,
