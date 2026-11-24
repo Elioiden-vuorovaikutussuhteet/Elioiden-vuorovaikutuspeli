@@ -435,6 +435,7 @@ export const PopupSceneConfigSchema = OverlayBoxStyleSchema.extend({
     title: z.object({
       topOffsetRatio: z.number(),
       fontStyle: z.string(),
+      color: z.string().meta({ input: "color" }),
     }),
     relation: z.object({
       topOffsetRatio: z.number(),
@@ -458,8 +459,8 @@ export const popupSceneConfig: PopupSceneConfig = {
   key: "PopupScene",
   assetsPath: "assets",
   images: [{ key: "close_button_sprite", file: "closebutton.png" }],
-  widthRatio: 0.4,
-  maxWidth: 700,
+  widthRatio: 0.8,
+  maxWidth: 1000,
   heightRatio: 0.28,
   maxHeight: 200,
   rightMarginRatio: 0.03,
@@ -467,7 +468,7 @@ export const popupSceneConfig: PopupSceneConfig = {
   text: {
     fontFamily: "monospace",
     fontSizeRatio: 0.011,
-    maxFontSize: 15,
+    maxFontSize: 18,
     color: "#ffffff",
     wordWrapWidthRatio: 0.88,
     align: "center",
@@ -476,6 +477,7 @@ export const popupSceneConfig: PopupSceneConfig = {
     title: {
       topOffsetRatio: 0.07,
       fontStyle: "bold",
+      color: "#ffd900",
     },
     relation: {
       topOffsetRatio: 0.2,
