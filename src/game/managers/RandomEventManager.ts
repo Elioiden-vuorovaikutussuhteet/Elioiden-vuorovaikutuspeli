@@ -5,7 +5,7 @@ import type Phaser from "phaser";
 import type ArrowManager from "./ArrowManager";
 
 export default class RandomEventManager {
-  private randomEventTimer?: Phaser.Time.TimerEvent;
+  private randomEventTimer?: ReturnType<typeof setInterval>;
   private occurrenceCounts = new Map<string, number>();
   private totalOccurrences = 0;
   private maxOccurrencesPerGame = 4;
@@ -18,38 +18,39 @@ export default class RandomEventManager {
     chance: number,
     maxOccurrencesPerGame = 4,
     removeOrganism?: (organism: Organism) => void,
+    playLightningAnimation?: (lightningEffects: () => void) => void,
   ): void {
     if (this.randomEventTimer) return;
     this.maxOccurrencesPerGame = maxOccurrencesPerGame;
 
-    this.randomEventTimer = _scene.time.addEvent({
-      delay: checkIntervalMs,
-      callback: () => {
-        if (this.totalOccurrences >= this.maxOccurrencesPerGame) {
-          this.stopRandomEvents();
-          return;
-        }
-        if (Math.random() < chance) {
-          this.triggerRandomEvent(
-            organisms,
-            arrowManager,
-            removeOrganism,
-          );
-        }
-      },
-      loop: true,
-    });
+    this.randomEventTimer = setInterval(() => {
+      if (this.totalOccurrences >= this.maxOccurrencesPerGame) {
+        this.stopRandomEvents();
+        return;
+      }
+      if (Math.random() < chance) {
+        this.triggerRandomEvent(
+          organisms,
+          arrowManager,
+          removeOrganism,
+          playLightningAnimation,
+        );
+      }
+    }, checkIntervalMs);
   }
 
   public stopRandomEvents(): void {
-  this.randomEventTimer?.remove();
-  this.randomEventTimer = undefined;
+    if (this.randomEventTimer !== undefined) {
+      clearInterval(this.randomEventTimer);
+      this.randomEventTimer = undefined;
+    }
 }
 
   public triggerRandomEvent(
     organisms: Organism[],
     arrowManager: ArrowManager,
     removeOrganism?: (organism: Organism) => void,
+    playLightningAnimation?: (lightningEffects: () => void) => void,
   ): void {
     if (this.totalOccurrences >= this.maxOccurrencesPerGame) {
       this.stopRandomEvents();
@@ -84,19 +85,29 @@ export default class RandomEventManager {
       this.stopRandomEvents();
     }
 
-    //if event type causes healAll targetpool is whole list, otherwise choose random target
+    // Healing events use the whole target pool; all other events affect one randomly selected organism.
     const targets =
-    event.effect.type === "healAll" ? targetPool : [targetPool[Math.floor(Math.random() * targetPool.length)]];
+      event.effect.type === "healAll"
+        ? targetPool
+        : [targetPool[Math.floor(Math.random() * targetPool.length)]];
 
     if (event.effect.type === "remove") {
-      for (const target of targets) {
-        removeOrganism?.(target);
-      }
+      const target = targets[0];
+      if (!target) return;
 
-      console.log(
-        "RANDOM EVENT HAPPENED",
-        `${event.name} happened`,
-      );
+      const applyEffect = () => {
+        removeOrganism?.(target);
+        console.log(
+          "RANDOM EVENT HAPPENED",
+          `${event.name} happened`,
+        );
+      };
+
+      if (playLightningAnimation) {
+        playLightningAnimation(applyEffect);
+      } else {
+        applyEffect();
+      }
       return;
     }
 

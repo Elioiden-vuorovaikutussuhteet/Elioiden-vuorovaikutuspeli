@@ -97,6 +97,7 @@ export default class GameScene extends Phaser.Scene {
           this.organismManager.getOrganisms(),
           this.arrowManager,
           (organism) => this.removeOrganismWithBrokenTexture(organism),
+          (lightningEffects) => this.playLightningAnimation(lightningEffects),
         );
       };
     }
@@ -114,9 +115,7 @@ export default class GameScene extends Phaser.Scene {
     }
     if (typeof window !== "undefined") {
       window.lightning = ()  => {
-        this.scene.pause();
-        this.scene.launch("LightningScene");
-        this.scene.bringToTop("LightningScene");
+        this.playLightningAnimation();
       }
         }
 
@@ -203,6 +202,7 @@ export default class GameScene extends Phaser.Scene {
           this.config.randomEventChance,
           this.config.randomEventMaxPerGame,
           (organism) => this.removeOrganismWithBrokenTexture(organism),
+          (lightningEffects) => this.playLightningAnimation(lightningEffects),
         );
       });
     });
@@ -229,6 +229,16 @@ export default class GameScene extends Phaser.Scene {
     this.uiCamera.ignore(brokenOrganism);
 
     this.deleteOrganism(organism);
+  }
+
+  private playLightningAnimation(
+    lightningEffects?: () => void,
+  ): void {
+    if (this.scene.isActive?.("LightningScene")) return;
+
+    this.scene.pause();
+    this.scene.launch("LightningScene", { lightningEffects });
+    this.scene.bringToTop("LightningScene");
   }
 
   update() {
