@@ -209,6 +209,21 @@ export default class GameScene extends Phaser.Scene {
   }
 
   public deleteOrganism(organism: Organism): void {
+    if (organism.organismData.id === "acacia") {
+      this.arrowManager.removeOrganismFromSpawnOrder("diazotroph");
+      const diazotroph = this.organismManager
+        .getOrganismMap()
+        .get("diazotroph");
+      if (diazotroph) {
+        this.removeOrganism(diazotroph);
+      }
+    }
+
+    this.removeOrganism(organism);
+    this.arrowManager.checkProgress();
+  }
+
+  private removeOrganism(organism: Organism): void {
     this.arrowManager.clearPreview();
     this.arrowManager.deleteArrows(organism);
     this.organismManager.deleteOrganism(organism);

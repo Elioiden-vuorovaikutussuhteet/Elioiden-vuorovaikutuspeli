@@ -196,28 +196,32 @@ export default class ArrowManager {
     console.log(firstId, first.x, first.y, relation);
     console.log(secondId, second.x, second.y, relation);
 
-    const allRelationsCorrect = this.connectionManager.checkConnections();
-    const nextOrganism = this.organismSpawnOrder[this.nextOrganismToSpawn];
-
-    if (allRelationsCorrect && nextOrganism) {
-      const position = this.getSpawnPosition(nextOrganism);
-      const created = this.organismManager.createOrganism(
-        position.x,
-        position.y,
-        nextOrganism,
-      ) as Organism | void;
-
-      if (created?.organismData) {
-        this.knownOrganisms.set(created.organismData.id, created);
-        this.enableDrag(created);
-      }
-
-      this.nextOrganismToSpawn += 1;
-      this.recalculateLayout();
-    }
+    this.checkProgress();
 
     this.selectedOrganism = null;
     this.onRightArrowDrawn?.();
+  }
+
+  public checkProgress(): void {
+    if (!this.connectionManager.checkConnections()) return;
+
+    const nextOrganism = this.organismSpawnOrder[this.nextOrganismToSpawn];
+    if (!nextOrganism) return;
+
+    const position = this.getSpawnPosition(nextOrganism);
+    const created = this.organismManager.createOrganism(
+      position.x,
+      position.y,
+      nextOrganism,
+    ) as Organism | void;
+
+    if (created?.organismData) {
+      this.knownOrganisms.set(created.organismData.id, created);
+      this.enableDrag(created);
+    }
+
+    this.nextOrganismToSpawn += 1;
+    this.recalculateLayout();
   }
 
   public redrawPermanentArrows(): void {
@@ -292,6 +296,13 @@ export default class ArrowManager {
 
   public areAllOrganismsSpawned(): boolean {
     return this.nextOrganismToSpawn >= this.organismSpawnOrder.length;
+  }
+
+  public removeOrganismFromSpawnOrder(organismId: string): void {
+    const spawnIndex = this.organismSpawnOrder.indexOf(organismId);
+    if (spawnIndex >= this.nextOrganismToSpawn) {
+      this.organismSpawnOrder.splice(spawnIndex, 1);
+    }
   }
 
   public clearPreview(): void {
