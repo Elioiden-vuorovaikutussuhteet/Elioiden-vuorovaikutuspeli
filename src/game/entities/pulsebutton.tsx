@@ -26,11 +26,20 @@ export default class PulseButton extends BaseButtonSprite {
         this.pulseSpeed = pulseSpeed;
     }
 
+    private override handlePointerDown(): void {
+      this.setTint(this.config.activeTint);
+      this.emit(this.eventName, this);
+    }
+
     protected override handlePointerOver(): void {
         this.setTint(this.config.hoverTint);
     }
 
     protected override handlePointerOut(): void {
+        this.clearTint();
+    }
+
+    public resetTint(): void {
         this.clearTint();
     }
 }

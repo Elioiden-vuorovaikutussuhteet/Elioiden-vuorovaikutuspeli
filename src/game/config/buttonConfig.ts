@@ -99,6 +99,24 @@ export const menuButtonUIConfig: MenuButtonUIConfig = {
   clickEvent: "menuButtonClicked",
 };
 
+export const PulseButtonUIConfigSchema = SpriteButtonBaseSchema.extend({
+  texture: z.string(),
+  hoverTint: z.number().int().min(0).max(0xffffff).meta({ input: "color" }),
+  activeTint: z.number().int().min(0).max(0xffffff).meta({ input: "color" }),
+});
+
+export type PulseButtonUIConfig = z.infer<typeof PulseButtonUIConfigSchema>;
+
+export const pulseButtonUIConfig: PulseButtonUIConfig = {
+  texture: "pulsebutton_sprite",
+  scale: 0.15,
+  hoverAlpha: 0.6,
+  defaultAlpha: 1,
+  hoverTint: 0x777777,
+  activeTint: 0xffffff,
+  clickEvent: "pulseButtonClicked",
+};
+
 export const BaseButtonBoxStyleSchema = z.object({
   cornerRadius: z.number(),
   backgroundColor: z.number().int().min(0).max(0xffffff).meta({ input: "color" }),

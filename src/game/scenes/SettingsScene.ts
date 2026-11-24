@@ -1,5 +1,6 @@
 import Phaser from "phaser";
 import CloseButton from "../entities/closebutton";
+import PulseButton from "../entities/pulsebutton";
 import {
   settingsSceneConfig,
   type SettingsSceneConfig,
