@@ -9,7 +9,12 @@ export type AssetEntry = z.infer<typeof AssetEntrySchema>;
 
 export const OverlayBoxStyleSchema = z.object({
   cornerRadius: z.number(),
-  backgroundColor: z.number().int().min(0).max(0xffffff).meta({ input: "color" }),
+  backgroundColor: z
+    .number()
+    .int()
+    .min(0)
+    .max(0xffffff)
+    .meta({ input: "color" }),
   backgroundAlpha: z.number(),
   borderWidth: z.number(),
   borderColor: z.number().int().min(0).max(0xffffff).meta({ input: "color" }),
@@ -50,6 +55,9 @@ export const GameSceneConfigSchema = z.object({
   secondOrganismIndex: z.number(),
   secondOrganismSpawnDelayMs: z.number(),
   randomEventSpawnDelayMs: z.number(),
+  randomEventCheckIntervalMs: z.number(),
+  randomEventChance: z.number().min(0).max(1),
+  randomEventMaxPerGame: z.number().int().min(0),
 });
 
 export type GameSceneConfig = z.infer<typeof GameSceneConfigSchema>;
@@ -71,6 +79,8 @@ export const gameSceneConfig: GameSceneConfig = {
     { key: "ants_sprite", file: "ants.png" },
     { key: "antfootbacteria_sprite", file: "antfootbacteria.png" },
     { key: "sapota_sprite", file: "sapota.png" },
+    { key: "broken_acacia_sprite", file: "brokenacacia.png" },
+    { key: "broken_sapota_sprite", file: "brokensapota.png" },
     { key: "diazotroph_sprite", file: "diazotroph.png" },
     { key: "mycorrhizahelper_sprite", file: "mycorrhizabacteria.png" },
     { key: "acaciapathogen_sprite", file: "acaciapathogen.png" },
@@ -88,6 +98,9 @@ export const gameSceneConfig: GameSceneConfig = {
   secondOrganismIndex: 1,
   secondOrganismSpawnDelayMs: 3000,
   randomEventSpawnDelayMs: 3000,
+  randomEventCheckIntervalMs: 30000,
+  randomEventChance: 0.25,
+  randomEventMaxPerGame: 4,
 };
 
 export const MenuSceneConfigSchema = OverlayBoxStyleSchema.extend({
@@ -161,35 +174,34 @@ export const tutorialSceneConfig: TutorialSceneConfig = {
   key: "TutorialScene",
   assetsPath: "assets",
   images: [{ key: "close_button_sprite", file: "closebutton.png" }],
-  widthRatio: 0.3,
-  maxWidth: 450,
-  heightRatio: 0.7,
-  maxHeight: 600,
+  widthRatio: 0.4,
+  maxWidth: 550,
+  heightRatio: 0.8,
+  maxHeight: 700,
   leftMarginRatio: 0.05,
   topOffsetDivisor: 2.7,
   text: {
     content: [
-      "Select whether you want",
-      "to draw a positive",
-      "or a negative relation",
-      "by clicking on",
-      "the corresponding icon",
-      "and then choosing your",
-      "starting and end organism.",
-    ].join("\n"),
-    topOffsetRatio: 0.15,
+      "Select whether you want to draw a positive (green arrow) or negative (red arrow) relationship by clicking on the corresponding arrow button and choosing the starting and ending organism.",
+      "Click the cursor button and then an arrow or organism to check a relationship's or organism's description.",
+      "Get a hint when stuck by clicking the Hint button, which will subtract 100 from your score. Two organisms with a missing relationship will be highlighted.",
+      "Move organisms around by pressing the Shift button on your keyboard and clicking the organism.",
+      "Move the view of the screen up, down, left and right by pressing the arrow keys on your keyboard.",
+      "The starting score is 1000. Correct relationships add 10 points and incorrect relationships subtract 20 points from your score.",
+    ].join("\n\n"),
+    topOffsetRatio: 0.07,
     fontFamily: "monospace",
     fontSizeRatio: 0.015,
-    maxFontSize: 25,
-    fontStyle: "bold",
+    maxFontSize: 17,
+    fontStyle: "",
     color: "#ffffff",
-    wordWrapWidthRatio: 0.8,
+    wordWrapWidthRatio: 0.88,
     align: "center",
     originX: 0.5,
     originY: 0,
   },
   closeButton: {
-    bottomOffset: 50,
+    bottomOffset: 40,
     event: "closeButtonClicked",
   },
 };

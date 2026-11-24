@@ -28,9 +28,7 @@ export default class GameScene extends Phaser.Scene {
   private scoreManager!: ScoreManager;
   private cursorManager!: CursorManager;
   private randomEventManager = new RandomEventManager();
-  private randomEventsStarted = false;
   private config: GameSceneConfig;
-  
 
   constructor(config?: GameSceneConfig) {
     const resolvedConfig =
@@ -90,7 +88,6 @@ export default class GameScene extends Phaser.Scene {
       this.scoreManager,
       interactions,
       { centerY: this.scale.height * 0.4 },
-      this.updateGameCompletion.bind(this),
     );
     this.cursorManager = new CursorManager(this, this.arrowManager);
     // creates random event spawn command
@@ -99,6 +96,8 @@ export default class GameScene extends Phaser.Scene {
         this.randomEventManager.triggerRandomEvent(
           this.organismManager.getOrganisms(),
           this.arrowManager,
+          (organism) => this.removeOrganismWithBrokenTexture(organism),
+          (lightningEffects) => this.playLightningAnimation(lightningEffects),
         );
       };
     }
@@ -114,8 +113,14 @@ export default class GameScene extends Phaser.Scene {
         this.deleteOrganism(organism);
       }
     }
+    if (typeof window !== "undefined") {
+      window.lightning = ()  => {
+        this.playLightningAnimation();
+      }
+        }
 
     this.scoreManager.outOfMoney = () => {
+      this.randomEventManager.stopRandomEvents();
       this.scene.pause();
       this.scene.launch(this.config.scenes.gameOver);
     };
@@ -194,24 +199,18 @@ export default class GameScene extends Phaser.Scene {
           secondOrganism.id,
         );
       });
-    });
-  }
-
-  //this starts random events after all organisms have spawned & all right arrows have been drawn
-  private updateGameCompletion(): void {
-    const gameComplete =
-      this.arrowManager.areAllOrganismsSpawned() &&
-      this.connectionManager.checkConnections();
-
-    if (!gameComplete || this.randomEventsStarted) return;
-
-    this.randomEventsStarted = true;
-    this.time.delayedCall(this.config.randomEventSpawnDelayMs, () => {
-      this.randomEventManager.startRandomEvents(
-        this,
-        this.organismManager.getOrganisms(),
-        this.arrowManager,
-      );
+      this.time.delayedCall(this.config.randomEventSpawnDelayMs, () => {
+        this.randomEventManager.startRandomEvents(
+          this,
+          this.organismManager.getOrganisms(),
+          this.arrowManager,
+          this.config.randomEventCheckIntervalMs,
+          this.config.randomEventChance,
+          this.config.randomEventMaxPerGame,
+          (organism) => this.removeOrganismWithBrokenTexture(organism),
+          (lightningEffects) => this.playLightningAnimation(lightningEffects),
+        );
+      });
     });
   }
 
@@ -219,6 +218,33 @@ export default class GameScene extends Phaser.Scene {
     this.arrowManager.clearPreview();
     this.arrowManager.deleteArrows(organism);
     this.organismManager.deleteOrganism(organism);
+  }
+
+  private removeOrganismWithBrokenTexture(organism: Organism): void {
+    const brokenTexture =
+      organism.organismData.id === "acacia"
+        ? "broken_acacia_sprite"
+        : "broken_sapota_sprite";
+    const brokenOrganism = this.add.sprite(
+      organism.x,
+      organism.y,
+      brokenTexture,
+    );
+    brokenOrganism.setScale(organism.scale);
+    brokenOrganism.setDepth(organism.depth);
+    this.uiCamera.ignore(brokenOrganism);
+
+    this.deleteOrganism(organism);
+  }
+
+  private playLightningAnimation(
+    lightningEffects?: () => void,
+  ): void {
+    if (this.scene.isActive?.("LightningScene")) return;
+
+    this.scene.pause();
+    this.scene.launch("LightningScene", { lightningEffects });
+    this.scene.bringToTop("LightningScene");
   }
 
   update() {

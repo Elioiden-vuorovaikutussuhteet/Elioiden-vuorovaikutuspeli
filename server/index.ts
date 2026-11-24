@@ -22,7 +22,7 @@ if (!process.env.SESSION_SECRET || !process.env.ADMIN_PASSWORD_HASH) {
 import express from "express";
 import session from "express-session";
 import helmet from "helmet";
-import authRouter from "./auth";
+import authRouter, { requireAdmin } from "./auth";
 import configRouter from "./configRoutes";
 import { profileRoutes } from "./profileRoutes";
 import { initDb } from "./db";
@@ -34,6 +34,10 @@ app.set("trust proxy", 1);
 
 app.use(helmet());
 app.use(express.json());
+
+app.get("/api/health", (_req, res) => {
+  res.json({ status: "ok" });
+});
 
 app.use(
   session({
@@ -54,20 +58,7 @@ app.use("/api/auth", authRouter);
 app.use("/api/configs", configRouter);
 app.use("/api/profiles", profileRoutes);
 
-function requireAdmin(
-  req: express.Request,
-  res: express.Response,
-  next: express.NextFunction,
-) {
-  if (!req.session.user?.isAdmin) {
-    return res.status(401).json({ error: "Unauthorized" });
-  }
-  next();
-}
-
-app.use("/api/hello", requireAdmin);
-
-app.get("/api/hello", (_req, res) => {
+app.get("/api/hello", requireAdmin, (_req, res) => {
   res.json({
     message: "Hello from Express!",
     status: "success",
