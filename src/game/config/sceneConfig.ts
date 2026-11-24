@@ -193,6 +193,7 @@ export const tutorialSceneConfig: TutorialSceneConfig = {
     fontFamily: "monospace",
     fontSizeRatio: 0.015,
     maxFontSize: 17,
+    fontStyle: "",
     color: "#ffffff",
     wordWrapWidthRatio: 0.88,
     align: "center",
