@@ -2,6 +2,7 @@ import Phaser from "phaser";
 import type Organism from "./organism";
 import { drawArrow } from "../services/DrawArrowService";
 import { arrowUIConfig, permanentArrowUIConfig } from "../config";
+import { getPulseSpeedMultiplier } from "../services/PulseSpeedService";
 
 export interface PermanentArrowConfig {
   targetOffset?: number;
@@ -175,7 +176,7 @@ export default class PermanentArrow {
     pulse.tween = this.scene.tweens.add({
       targets: pulse,
       progress: 1,
-      duration: permanentArrowUIConfig.pulseDuration,
+      duration: permanentArrowUIConfig.pulseDuration * getPulseSpeedMultiplier(),
       ease: "Linear",
       onUpdate: () => {
         const t = pulse.progress;

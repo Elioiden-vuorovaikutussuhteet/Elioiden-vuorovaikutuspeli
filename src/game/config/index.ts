@@ -8,3 +8,4 @@ export * from "./loadConfigs";
 export * from "./organismConfig";
 export * from "./sceneConfig";
 export * from "./scoreConfig";
+export * from "./pulseSpeedConfig";

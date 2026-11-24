@@ -3,15 +3,15 @@ import { mockDeep } from "vitest-mock-extended";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import GameScene from "../../../src/game/scenes/GameScene";
 import Organism from "../../../src/game/entities/organism";
-import InfoButton from "../../../src/game/entities/infobutton";
+import MenuButton from "../../../src/game/entities/menubutton";
 import HintButton from "../../../src/game/entities/hintbutton";
 import { gameSceneConfig, type GameSceneConfig } from "../../../src/game/config";
 import { organisms } from "../../../src/game/data/organisms";
 
 const {
   MockOrganism,
-  MockInfoButton,
-  mockInfoButtonOn,
+  MockMenuButton,
+  mockMenuButtonOn,
   MockHintButton,
   mockHintButtonOn,
   mockArrowButtonsOn,
@@ -19,7 +19,7 @@ const {
   MockCursorButton,
 } = vi.hoisted(() => {
   const mockOrganismOn = vi.fn();
-  const mockInfoButtonOn = vi.fn();
+  const mockMenuButtonOn = vi.fn();
   const mockHintButtonOn = vi.fn();
   const mockArrowButtonsOn = vi.fn();
   const mockCursorButtonOn = vi.fn();
@@ -48,9 +48,9 @@ const {
     };
   });
 
-  const MockInfoButton = vi.fn(function () {
-    return {
-      on: mockInfoButtonOn,
+  const MockMenuButton = vi.fn(function () {
+    return { 
+      on: mockMenuButtonOn,
     };
   });
 
@@ -75,8 +75,8 @@ const {
   return {
     MockOrganism,
     mockOrganismOn,
-    MockInfoButton,
-    mockInfoButtonOn,
+    MockMenuButton,
+    mockMenuButtonOn,
     MockHintButton,
     mockHintButtonOn,
     MockArrowButtons,
@@ -89,8 +89,8 @@ vi.mock("../../../src/game/entities/organism", () => ({
   default: MockOrganism,
 }));
 
-vi.mock("../../../src/game/entities/infobutton", () => ({
-  default: MockInfoButton,
+vi.mock("../../../src/game/entities/menubutton", () => ({
+  default: MockMenuButton,
 }));
 
 vi.mock("../../../src/game/entities/hintbutton", () => ({
@@ -147,6 +147,8 @@ describe("GameScene", () => {
       pause: vi.fn(),
       bringToTop: vi.fn(),
       resume: vi.fn(),
+      isActive: vi.fn().mockReturnValue(false),
+      stop: vi.fn(),
     });
 
     scene.events = mockPartial<typeof scene.events>({
@@ -254,21 +256,29 @@ describe("GameScene", () => {
     );
   });
 
-  it("launches the configured tutorial scene when the info button is clicked", () => {
+  it("launches the options scene when the menu button is clicked", () => {
     scene.create();
 
-    expect(InfoButton).toHaveBeenCalledWith(
+    expect(MenuButton).toHaveBeenCalledWith(
       scene,
-      gameSceneConfig.infoButton.x,
-      gameSceneConfig.infoButton.y,
+      gameSceneConfig.menuButton.x,
+      gameSceneConfig.menuButton.y,
     );
 
-    const infoButtonCallback = vi.mocked(mockInfoButtonOn).mock.calls[0][1];
-    infoButtonCallback();
+    const menuButtonCallback = vi.mocked(mockMenuButtonOn).mock.calls[0][1];
+    menuButtonCallback();
 
-    expect(scene.scene.launch).toHaveBeenCalledWith(
-      gameSceneConfig.scenes.tutorial,
-    );
+    expect(scene.scene.launch).toHaveBeenCalledWith(gameSceneConfig.scenes.options);
+  });
+
+  it("stops the options scene when the menu button is clicked while it is open", () => {
+    vi.mocked(scene.scene.isActive).mockReturnValue(true);
+    scene.create();
+
+    const menuButtonCallback = vi.mocked(mockMenuButtonOn).mock.calls[0][1];
+    menuButtonCallback();
+
+    expect(scene.scene.stop).toHaveBeenCalledWith(gameSceneConfig.scenes.options);
   });
 
   it("highlights a missing connection pair and deducts configured hintCost when hint button is clicked", () => {

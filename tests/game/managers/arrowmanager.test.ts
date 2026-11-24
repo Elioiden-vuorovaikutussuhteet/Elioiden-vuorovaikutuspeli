@@ -117,6 +117,12 @@ vi.mock("../../../src/game/services/DrawArrowService", () => ({
   drawArrow: vi.fn(),
 }));
 
+vi.mock("../../../src/game/entities/menubutton", () => ({
+  default: vi.fn(function () {
+    return { on: vi.fn() };
+  }),
+}));
+
 const { MockPermanentArrow } = vi.hoisted(() => ({
   MockPermanentArrow: vi.fn(function () {
     return {

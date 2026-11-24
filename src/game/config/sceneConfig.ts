@@ -278,14 +278,14 @@ export const settingsSceneConfig: SettingsSceneConfig = {
       normal: 1000,
       fast: 500,
     },
-    bottomOffset: 400
+    bottomOffset: 200,
     leftOffsets: {
-      slow: 50,
-      normal: 250,
-      fast: 450,
-    }),
+      slow: 75,
+      normal: 225,
+      fast: 375,
+    },
     event: "pulseButtonClicked",
-  }),
+  },
 };
 
 export const OptionsSceneConfigSchema = OverlayBoxStyleSchema.extend({

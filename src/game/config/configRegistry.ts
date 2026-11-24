@@ -41,6 +41,10 @@ import {
   popupSceneConfig,
 } from "./sceneConfig";
 import { ScoreConfigSchema, scoreConfig } from "./scoreConfig";
+import {
+  PulseSpeedMultipliersSchema,
+  pulseSpeedMultipliers,
+} from "./pulseSpeedConfig";
 
 export const configRegistry = [
   {
@@ -76,6 +80,18 @@ export const configRegistry = [
         label: "Glow Settings",
         schema: GlowConfigSchema,
         defaults: glowConfig,
+      },
+    ],
+  },
+  {
+    id: "pulseSpeed",
+    label: "Pulse Speed",
+    sections: [
+      {
+        id: "pulseSpeed",
+        label: "Pulse Speed Multipliers",
+        schema: PulseSpeedMultipliersSchema,
+        defaults: pulseSpeedMultipliers,
       },
     ],
   },

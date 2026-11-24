@@ -5,6 +5,11 @@ import {
   settingsSceneConfig,
   type SettingsSceneConfig,
 } from "../config/sceneConfig";
+import {
+  getPulseSpeed,
+  setPulseSpeed,
+  type PulseSpeed,
+} from "../services/PulseSpeedService";
 
 export default class SettingsScene extends Phaser.Scene {
   private config: SettingsSceneConfig;
@@ -98,5 +103,28 @@ export default class SettingsScene extends Phaser.Scene {
     closeButton.on(this.config.closeButton.event, () => {
       this.scene.stop();
     });
+
+    const { leftOffsets, bottomOffset, event } = this.config.pulseButtons;
+    const buttonY = menuY + bottomOffset;
+
+    const buttons: Record<PulseSpeed, PulseButton> = {
+      slow: new PulseButton(this, menuX + leftOffsets.slow, buttonY),
+      normal: new PulseButton(this, menuX + leftOffsets.normal, buttonY),
+      fast: new PulseButton(this, menuX + leftOffsets.fast, buttonY),
+    };
+
+    const select = (speed: PulseSpeed) => {
+      setPulseSpeed(speed);
+      (Object.keys(buttons) as PulseSpeed[]).forEach((key) => {
+        if (key === speed) buttons[key].setSelected();
+        else buttons[key].clearTint();
+      });
+    };
+
+    (Object.keys(buttons) as PulseSpeed[]).forEach((speed) => {
+      buttons[speed].on(event, () => select(speed));
+    });
+
+    select(getPulseSpeed());
   }
 }

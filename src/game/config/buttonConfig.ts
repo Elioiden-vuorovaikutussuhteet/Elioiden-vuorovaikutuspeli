@@ -113,7 +113,7 @@ export const pulseButtonUIConfig: PulseButtonUIConfig = {
   hoverAlpha: 0.6,
   defaultAlpha: 1,
   hoverTint: 0x777777,
-  activeTint: 0xffffff,
+  activeTint: 0xFFFF00,
   clickEvent: "pulseButtonClicked",
 };
 

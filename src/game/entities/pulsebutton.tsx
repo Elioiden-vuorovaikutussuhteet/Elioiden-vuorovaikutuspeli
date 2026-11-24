@@ -9,7 +9,6 @@ export default class PulseButton extends BaseButtonSprite {
         scene: Phaser.Scene,
         x: number,
         y: number,
-        pulseSpeed: number,
         config: PulseButtonUIConfig = pulseButtonUIConfig,
     ) {
         super(
@@ -23,23 +22,13 @@ export default class PulseButton extends BaseButtonSprite {
             config.defaultAlpha,
         );
         this.config = config;
-        this.pulseSpeed = pulseSpeed;
-    }
-
-    private override handlePointerDown(): void {
-      this.setTint(this.config.activeTint);
-      this.emit(this.eventName, this);
-    }
-
-    protected override handlePointerOver(): void {
-        this.setTint(this.config.hoverTint);
-    }
-
-    protected override handlePointerOut(): void {
-        this.clearTint();
     }
 
     public resetTint(): void {
         this.clearTint();
+    }
+
+    public setSelected(): void {
+        this.setTint(this.config.activeTint)
     }
 }
