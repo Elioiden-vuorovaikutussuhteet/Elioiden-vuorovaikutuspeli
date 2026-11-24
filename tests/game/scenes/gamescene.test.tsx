@@ -45,6 +45,7 @@ const {
       changeHealth: vi.fn(),
       changeScale: vi.fn(),
       highlight: vi.fn(),
+      destroy: vi.fn(),
     };
   });
 
@@ -325,6 +326,48 @@ describe("GameScene", () => {
 
     expect(acacia.highlight).not.toHaveBeenCalled();
     expect((scene as any).scoreManager.money).toBe(1000);
+  });
+
+  it("removes diazotroph from the spawn queue when acacia is deleted", () => {
+    scene.create();
+
+    const organismManager = (
+      scene as unknown as {
+        organismManager: {
+          getOrganismMap: () => Map<string, Organism>;
+        };
+      }
+    ).organismManager;
+    const arrowManager = (
+      scene as unknown as { arrowManager: { organismSpawnOrder: string[] } }
+    ).arrowManager;
+
+    scene.deleteOrganism(organismManager.getOrganismMap().get("acacia")!);
+
+    expect(organismManager.getOrganismMap().has("acacia")).toBe(false);
+    expect(organismManager.getOrganismMap().has("diazotroph")).toBe(false);
+    expect(arrowManager.organismSpawnOrder).not.toContain("diazotroph");
+    expect(organismManager.getOrganismMap().has("ants")).toBe(true);
+  });
+
+  it("deletes an already spawned diazotroph when acacia is deleted", () => {
+    scene.create();
+
+    const organismManager = (
+      scene as unknown as {
+        organismManager: {
+          createOrganism: (x: number, y: number, id: string) => Organism;
+          getOrganismMap: () => Map<string, Organism>;
+        };
+      }
+    ).organismManager;
+    const diazotroph = organismManager.createOrganism(0, 0, "diazotroph");
+
+    scene.deleteOrganism(organismManager.getOrganismMap().get("acacia")!);
+
+    expect(organismManager.getOrganismMap().has("acacia")).toBe(false);
+    expect(organismManager.getOrganismMap().has("diazotroph")).toBe(false);
+    expect(diazotroph.destroy).toHaveBeenCalledOnce();
   });
 
   it("pauses properly on game start", () => {
