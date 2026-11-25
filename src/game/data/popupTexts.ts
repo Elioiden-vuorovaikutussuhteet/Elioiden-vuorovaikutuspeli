@@ -149,4 +149,16 @@ export const popupTexts: Record<string, PopupText> = {
     description:
       "Bullhorn acacias have relatively weak defense systems as ants take care of their defense. Without acacia ants acacias are more susceptible to both bacterial and fungal diseases.",
   },
+  "acacia-acaciapathogen": {
+    title:
+      "Symbiotic relationship between Bullhorn Acacia and Bullhorn Acacia Pathogens",
+    relation: "Symbiotic",
+    description: "",
+  },
+  "antpathogen-ants": {
+    title:
+      "Harmful relationship between Ant Infecting Pathogens and Acacia Ants",
+    relation: "Harmful",
+    description: "",
+  },
 };
