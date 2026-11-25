@@ -20,7 +20,9 @@ function linkLabel(url: string): string {
   let hostname = "";
   try {
     hostname = new URL(url).hostname;
-  } catch {}
+  } catch {
+    // Ignore invalid URLs.
+  }
 
   const isWikipedia = /(^|\.)wikipedia\.org$/.test(hostname);
 
@@ -28,7 +30,9 @@ function linkLabel(url: string): string {
   let slug = lastSegment;
   try {
     slug = decodeURIComponent(lastSegment);
-  } catch {}
+  } catch {
+    // Keep the original slug if decoding fails.
+  }
   slug = slug.replace(/_/g, " ");
 
   if (isWikipedia) return `Wikipedia: ${slug}`;
