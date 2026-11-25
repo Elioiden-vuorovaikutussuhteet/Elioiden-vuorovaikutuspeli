@@ -1,6 +1,6 @@
 import { configRegistry } from "./configRegistry";
 import { deepMerge } from "../utils/deepMerge";
-import { organisms, type OrganismData } from "../data/organisms";
+import { organismDataMap, organisms, type OrganismData } from "../data/organisms";
 import { relations, type OrganismsRelations } from "../data/relations";
 import { popupTexts, type PopupText } from "../data/popupTexts";
 
@@ -33,6 +33,12 @@ export function applyEcosystemConfig(raw: unknown): void {
       organisms.length,
       ...(candidate.organisms as OrganismData[]),
     );
+  }
+
+  if (Array.isArray(candidate.organisms)) {
+    organisms.splice(0, organisms.length, ...(candidate.organisms as OrganismData[]));
+    organismDataMap.clear();
+    for (const org of organisms) organismDataMap.set(org.id, org);
   }
 
   if (Array.isArray(candidate.relations)) {

@@ -16,9 +16,23 @@ interface InfoSection {
   url?: string;
 }
 
-function wikiLinkLabel(url: string): string {
-  const slug = url.split("/").pop() ?? url;
-  return `Wikipedia: ${decodeURIComponent(slug).replace(/_/g, " ")}`;
+function linkLabel(url: string): string {
+  let hostname = "";
+  try {
+    hostname = new URL(url).hostname;
+  } catch {}
+
+  const isWikipedia = /(^|\.)wikipedia\.org$/.test(hostname);
+
+  const lastSegment = url.split("/").filter(Boolean).pop() ?? url;
+  let slug = lastSegment;
+  try {
+    slug = decodeURIComponent(lastSegment);
+  } catch {}
+  slug = slug.replace(/_/g, " ");
+
+  if (isWikipedia) return `Wikipedia: ${slug}`;
+  return hostname ? `${hostname}: ${slug}` : slug;
 }
 
 export default class OrganismInfoScene extends Phaser.Scene {
@@ -70,8 +84,8 @@ export default class OrganismInfoScene extends Phaser.Scene {
     const sections: InfoSection[] = [
       { content: this.organism.name, style: text.title },
       { content: this.organism.description, style: text.description },
-      ...this.organism.wikilinks.map((url) => ({
-        content: wikiLinkLabel(url),
+      ...(this.organism.wikilinks ?? []).map((url) => ({
+        content: linkLabel(url),
         style: text.links,
         url,
       })),
