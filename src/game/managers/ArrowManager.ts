@@ -140,7 +140,12 @@ export default class ArrowManager {
   }
 
   public arrowChecker(organism: Organism): void {
-    if (this.cursorMode) return;
+    if (this.cursorMode) {
+    this.scene.scene.launch("OrganismInfoScene", {
+      organismId: organism.organismData.id,
+    });
+    return;
+  }
     if (this.scene.input?.activePointer?.event?.shiftKey) return;
 
     this.knownOrganisms.set(organism.organismData.id, organism);

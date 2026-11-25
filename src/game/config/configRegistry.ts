@@ -34,11 +34,13 @@ import {
   TutorialSceneConfigSchema,
   GameOverSceneConfigSchema,
   PopupSceneConfigSchema,
+  OrganismInfoSceneConfigSchema,
   gameSceneConfig,
   menuSceneConfig,
   tutorialSceneConfig,
   gameOverSceneConfig,
   popupSceneConfig,
+  organismInfoSceneConfig,
 } from "./sceneConfig";
 import { ScoreConfigSchema, scoreConfig } from "./scoreConfig";
 import {
@@ -153,6 +155,12 @@ export const configRegistry = [
         label: "Popup Scene",
         schema: PopupSceneConfigSchema,
         defaults: popupSceneConfig,
+      },
+      {
+        id: "organismInfo",
+        label: "Organism Info Scene",
+        schema: OrganismInfoSceneConfigSchema,
+        defaults: organismInfoSceneConfig,
       },
       {
         id: "lightning",
