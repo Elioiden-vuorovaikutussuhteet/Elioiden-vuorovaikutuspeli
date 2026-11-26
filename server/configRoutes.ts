@@ -151,6 +151,10 @@ router.put<{ profileId: string; domain: string }>(
   async (req, res) => {
     const { profileId, domain } = req.params;
     const entry = sectionMap.get(domain);
+    if (profileId === "default") {
+      res.status(403).json({ error: "Default profile is read-only" });
+      return;
+    }
 
     if (!entry) {
       res.status(404).json({ error: `Unknown config section: ${domain}` });
@@ -167,7 +171,10 @@ router.put<{ profileId: string; domain: string }>(
     }
 
     try {
-      const { rows } = await pool.query<{ config: unknown; updated_at: string }>(
+      const { rows } = await pool.query<{
+        config: unknown;
+        updated_at: string;
+      }>(
         `INSERT INTO game_configs (profile_id, domain, config, updated_at)
          VALUES ($1, $2, $3::jsonb, NOW())
          ON CONFLICT (profile_id, domain)
@@ -200,6 +207,11 @@ router.delete<{ profileId: string; domain: string }>(
   async (req, res) => {
     const { profileId, domain } = req.params;
     const entry = sectionMap.get(domain);
+
+    if (profileId === "default") {
+      res.status(403).json({ error: "Default profile is read-only" });
+      return;
+    }
 
     if (!entry) {
       res.status(404).json({ error: `Unknown config section: ${domain}` });

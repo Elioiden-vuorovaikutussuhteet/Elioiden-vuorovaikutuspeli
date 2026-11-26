@@ -71,4 +71,6 @@ export async function initDb(): Promise<void> {
       END IF;
     END $$;
   `);
+  /* Ensures default profile gets defaults from config files */
+  await pool.query("DELETE FROM game_configs WHERE profile_id = 'default'");
 }
