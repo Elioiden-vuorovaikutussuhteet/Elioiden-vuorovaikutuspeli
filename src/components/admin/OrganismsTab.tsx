@@ -185,30 +185,7 @@ export default function OrganismsTab({
     }
   }
 
-  async function handleReset() {
-    setSaving(true);
-    setFeedback(null);
-    try {
-      const reset = await deleteConfigSection(profileId, "ecosystem", false);
-      if (isActive) await loadConfigsFromServer(profileId);
-      const next = normalizeOrganismConfig(reset);
-      setConfig(next);
-      setSelectedId(next.organisms[0]?.id ?? "");
-      setDirty(false);
-      setFeedback({
-        severity: "success",
-        text: "Organisms reset to default values.",
-      });
-    } catch (err) {
-      setFeedback({
-        severity: "error",
-        text: err instanceof Error ? err.message : "Failed to reset organisms.",
-      });
-    } finally {
-      setSaving(false);
-    }
-  }
-
+  const [formVersion, setFormVersion] = useState(0);
   function handleDelete(id: string) {
     update((prev) => {
       const isLinked = (r: OrganismsRelations) =>
@@ -226,7 +203,34 @@ export default function OrganismsTab({
       };
     });
     setSelectedId("");
+    setFormVersion((v) => v + 1);
   }
+
+  async function handleReset() {
+    setSaving(true);
+    setFeedback(null);
+    try {
+      const reset = await deleteConfigSection(profileId, "ecosystem", false);
+      if (isActive) await loadConfigsFromServer(profileId);
+      const next = normalizeOrganismConfig(reset);
+      setConfig(next);
+      setFormVersion((v) => v + 1);
+      setSelectedId(next.organisms[0]?.id ?? "");
+      setDirty(false);
+      setFeedback({
+        severity: "success",
+        text: "Organisms reset to default values.",
+      });
+    } catch (err) {
+      setFeedback({
+        severity: "error",
+        text: err instanceof Error ? err.message : "Failed to reset organisms.",
+      });
+    } finally {
+      setSaving(false);
+    }
+  }
+
 
   return (
     <Box sx={{ mt: 3 }}>
@@ -264,6 +268,8 @@ export default function OrganismsTab({
             },
           }))
         }
+        onDeleteOrganism={handleDelete}
+        formVersion={formVersion}
       />
 
       <Stack direction="row" spacing={2} sx={{ alignItems: "center", mt: 3 }}>

@@ -24,6 +24,8 @@ interface OrganismEditorProps {
 
   selectedOrganismId: string;
 
+  formVersion: number
+
   onOrganismChange: (
     originalId: string,
     organism: OrganismData
@@ -47,6 +49,7 @@ function OrganismEditor({
   relations,
   popupTexts,
   selectedOrganismId,
+  formVersion,
   onOrganismChange,
   onRelationChange,
   onPopupTextChange,
@@ -94,7 +97,7 @@ function OrganismEditor({
       </Typography>
 
       <DynamicForm
-        key={`organism-${selectedIndex}`}
+        key={`organism-${selectedIndex}-${formVersion}`}
         schema={organismSchema}
         defaults={selectedOrganism}
         organisms={organisms}
@@ -156,7 +159,7 @@ function OrganismEditor({
             </Typography>
 
             <DynamicForm
-              key={`relation-${index}`}
+              key={`relation-${index}-${formVersion}`}
               schema={relationSchema}
               defaults={relation}
               organisms={organisms}
@@ -176,7 +179,7 @@ function OrganismEditor({
             </Typography>
 
             <DynamicForm
-              key={`popup-${interactionId}`}
+              key={`popup-${interactionId}-${formVersion}`}
               schema={popupTextSchema}
               defaults={
                 popupText ?? ({} as PopupText)
