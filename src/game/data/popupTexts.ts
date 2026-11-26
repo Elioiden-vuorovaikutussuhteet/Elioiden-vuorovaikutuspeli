@@ -159,6 +159,13 @@ export const popupTexts: Record<string, PopupText> = {
     title:
       "Harmful relationship between Ant Infecting Pathogens and Acacia Ants",
     relation: "Harmful",
-    description: "",
+    description:
+      "Acacia ants rarely get sick as they groom vigorously. However, occasionally they can get fungal or bacterial diseases.",
+  },
+  "amf-acaciapathogen": {
+    title:
+      "Harmful relationship between Arbuscular Mycorrhizal Fungi and Bullhorn Acacia Pathogens",
+    relation: "Harmful",
+    description: "Mycorrhizal fungi protect acacia trees from plant pathogens.",
   },
 };

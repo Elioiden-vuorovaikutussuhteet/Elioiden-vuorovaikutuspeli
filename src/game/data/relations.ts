@@ -32,4 +32,5 @@ export const relations: OrganismsRelations[] = [
   { source: "antfootbacteria", target: "acaciapathogen", value: -1, mult: 1 },
   { source: "antpathogen", target: "ants", value: -1, mult: 1 },
   { source: "acacia", target: "acaciapathogen", value: 1, mult: 1 },
+  { source: "amf", target: "acaciapathogen", value: -1, mult: 1 },
 ];
