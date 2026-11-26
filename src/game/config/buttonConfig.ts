@@ -109,7 +109,7 @@ export type PulseButtonUIConfig = z.infer<typeof PulseButtonUIConfigSchema>;
 
 export const pulseButtonUIConfig: PulseButtonUIConfig = {
   texture: "pulsebutton_sprite",
-  scale: 0.15,
+  scale: 0.05,
   hoverAlpha: 0.6,
   defaultAlpha: 1,
   hoverTint: 0x777777,
