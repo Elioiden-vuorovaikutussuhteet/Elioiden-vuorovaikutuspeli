@@ -1,3 +1,4 @@
+import { useState } from "react";
 import {
   Box,
   TextField,
@@ -8,6 +9,38 @@ import {
 } from "@mui/material";
 import { z } from "zod";
 import { type OrganismData } from "../game/data/organisms";
+
+function parseCommaSeparated(text: string): string[] {
+  return text
+    .split(",")
+    .map((item) => item.trim())
+    .filter((item) => item.length > 0);
+}
+
+interface CommaSeparatedFieldProps {
+  label: string;
+  value: unknown;
+  onChange: (value: string[]) => void;
+}
+
+function CommaSeparatedField({ label, value, onChange }: CommaSeparatedFieldProps) {
+  const [text, setText] = useState(
+    Array.isArray(value) ? (value as string[]).join(", ") : ""
+  );
+
+  return (
+    <TextField
+      label={label}
+      value={text}
+      onChange={(e) => {
+        setText(e.target.value);
+        onChange(parseCommaSeparated(e.target.value));
+      }}
+      helperText="Separate multiple links with commas"
+      fullWidth
+    />
+  );
+}
 
 interface DynamicFormProps {
   schema: z.ZodObject<z.ZodRawShape>;
@@ -200,6 +233,18 @@ export default function DynamicForm({ schema, defaults, onChange, organisms }: D
                   }
                 />
               }
+            />
+          );
+        }
+
+        // Wikilinks (comma-separated list of URLs)
+        if (key === "wikilinks") {
+          return (
+            <CommaSeparatedField
+              key={key}
+              label={key}
+              value={currentValue}
+              onChange={(links) => handleChange(key, links)}
             />
           );
         }
