@@ -1,6 +1,7 @@
 import Phaser from "phaser";
 import CloseButton from "../entities/closebutton";
 import {
+  optionsSceneConfig,
   tutorialSceneConfig,
   type TutorialSceneConfig,
 } from "../config/sceneConfig";
@@ -25,18 +26,34 @@ export default class TutorialScene extends Phaser.Scene {
   create() {
     const { width, height } = this.cameras.main;
 
+    const optionsHeight = Math.min(
+      height * optionsSceneConfig.heightRatio,
+      optionsSceneConfig.maxHeight,
+    );
+    const optionsY =
+      (height - optionsHeight) / optionsSceneConfig.topOffsetDivisor;
+    const minTopY = optionsY + optionsHeight + 20;
+    const bottomMargin = 20;
+
     const menuWidth = Math.min(
       width * this.config.widthRatio,
       this.config.maxWidth,
     );
-    const menuHeight = Math.min(
-      height * this.config.heightRatio,
-      this.config.maxHeight,
+    const menuHeight = Math.max(
+      0,
+      Math.min(
+        height * this.config.heightRatio,
+        this.config.maxHeight,
+        height - minTopY - bottomMargin,
+      ),
     );
 
     const leftMargin = width * this.config.leftMarginRatio;
     const menuX = leftMargin / 2;
-    const menuY = (height - menuHeight) / this.config.topOffsetDivisor;
+    const menuY = Math.max(
+      minTopY,
+      (height - menuHeight) / this.config.topOffsetDivisor,
+    );
 
     const background = this.add.graphics();
     background.fillStyle(
