@@ -47,6 +47,10 @@ import {
   PulseSpeedMultipliersSchema,
   pulseSpeedMultipliers,
 } from "./pulseSpeedConfig";
+import {
+  SpawnOrderSchema,
+  spawnOrder
+} from "./spawnOrderConfig"
 import { LightningConfigSchema, lightningConfig } from "./lightningConfig";
 
 export const configRegistry = [
@@ -95,6 +99,18 @@ export const configRegistry = [
         label: "Pulse Speed Multipliers",
         schema: PulseSpeedMultipliersSchema,
         defaults: pulseSpeedMultipliers,
+      },
+    ],
+  },
+  {
+    id: "spawnOrder",
+    label: "Spawn Order",
+    sections: [
+      {
+        id: "spawnOrder",
+        label: "Organism Spawn Order",
+        schema: SpawnOrderSchema,
+        defaults: spawnOrder,
       },
     ],
   },

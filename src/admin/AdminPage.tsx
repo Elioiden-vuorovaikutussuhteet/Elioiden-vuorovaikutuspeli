@@ -22,6 +22,7 @@ import {
 import ProfileBar from "../components/admin/ProfileBar";
 import ConfigTab from "../components/admin/ConfigTab";
 import OrganismsTab from "../components/admin/OrganismsTab";
+import { type OrganismData } from "../game/data/organisms";
 
 type PendingAction = { kind: "switch"; profileId: string } | { kind: "logout" };
 
@@ -41,6 +42,8 @@ export default function AdminPage() {
   const [pendingAction, setPendingAction] = useState<PendingAction | null>(
     null,
   );
+
+  const [organisms, setOrganisms] = useState<OrganismData[]>([]);
 
   const hasUnsavedChanges = configDirty || organismsDirty;
   const selectedProfile = profiles.find((p) => p.id === selectedProfileId);
@@ -213,6 +216,7 @@ export default function AdminPage() {
                 profileId={loadedProfile.id}
                 isActive={isActive}
                 initialData={loadedProfile.data}
+                organisms={organisms}
                 onDirtyChange={setConfigDirty}
               />
             </Box>
@@ -223,6 +227,7 @@ export default function AdminPage() {
                 isActive={isActive}
                 initialData={loadedProfile.data.ecosystem}
                 onDirtyChange={setOrganismsDirty}
+                onOrganismsChange={setOrganisms}
               />
             </Box>
           </>

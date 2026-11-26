@@ -16,6 +16,7 @@ import {
   DEFAULT_FORCE_CONFIG,
   type ForceLayoutConfig,
 } from "../config/forceConfig";
+import { spawnOrder } from "../config/spawnOrderConfig";
 
 export { DEFAULT_FORCE_CONFIG, type ForceLayoutConfig };
 
@@ -38,16 +39,7 @@ export default class ArrowManager {
   private redButton?: ArrowButtons;
   private cursorButton?: CursorButton;
 
-  private readonly defaultOrganismSpawnOrder: readonly string[] = [
-    "ants",
-    "sapota",
-    "antfootbacteria",
-    "diazotroph",
-    "mycorrhizahelper",
-    "acaciapathogen",
-    "antpathogen",
-  ];
-  public organismSpawnOrder: string[] = [...this.defaultOrganismSpawnOrder];
+  public organismSpawnOrder: string[] = [...spawnOrder.spawnOrder];
   private nextOrganismToSpawn = 0;
 
   private knownOrganisms = new Map<string, Organism>();
@@ -207,13 +199,12 @@ export default class ArrowManager {
     this.onRightArrowDrawn?.();
   }
 
-  public checkProgress(): void {
-    if (!this.connectionManager.checkConnections()) return;
-
+  public spawnNextOrganism(): Organism | void {
     const nextOrganism = this.organismSpawnOrder[this.nextOrganismToSpawn];
     if (!nextOrganism) return;
 
     const position = this.getSpawnPosition(nextOrganism);
+
     const created = this.organismManager.createOrganism(
       position.x,
       position.y,
@@ -225,8 +216,16 @@ export default class ArrowManager {
       this.enableDrag(created);
     }
 
-    this.nextOrganismToSpawn += 1;
+    this.nextOrganismToSpawn++;
     this.recalculateLayout();
+
+    return created;
+  }
+
+  public checkProgress(): void {
+    if (!this.connectionManager.checkConnections()) return;
+
+    this.spawnNextOrganism();
   }
 
   public redrawPermanentArrows(): void {

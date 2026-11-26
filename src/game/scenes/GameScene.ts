@@ -127,14 +127,9 @@ export default class GameScene extends Phaser.Scene {
 
     this.arrowManager.createArrowButtons(centerX, this.config.menuButton.y);
     this.cursorManager.createCursorButton(centerX, this.config.menuButton.y);
-
-    const initialOrganism = organisms[this.config.initialOrganismIndex];
-
-    this.organismManager.createOrganism(
-      centerX + initialOrganism.offsetX,
-      centerY + initialOrganism.offsetY,
-      initialOrganism.id,
-    );
+    
+    // spawns the first organism on the spawnorder
+    this.arrowManager.spawnNextOrganism();
 
     this.input.on(
       "pointerdown",
@@ -169,8 +164,6 @@ export default class GameScene extends Phaser.Scene {
       }
     });
 
-    const secondOrganism = organisms[this.config.secondOrganismIndex];
-
     const hintbutton = new HintButton(
       this,
       this.scale.width - this.config.hintButton.x,
@@ -192,12 +185,8 @@ export default class GameScene extends Phaser.Scene {
     this.events.once("menuClosed", () => {
       this.scene.resume();
       this.time.delayedCall(this.config.secondOrganismSpawnDelayMs, () => {
-        console.log(secondOrganism);
-        this.organismManager.createOrganism(
-          centerX + secondOrganism.offsetX,
-          centerY + secondOrganism.offsetY,
-          secondOrganism.id,
-        );
+        // spawns the second organism
+        this.arrowManager.spawnNextOrganism();
       });
       this.time.delayedCall(this.config.randomEventSpawnDelayMs, () => {
         this.randomEventManager.startRandomEvents(

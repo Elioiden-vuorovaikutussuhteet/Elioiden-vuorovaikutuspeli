@@ -6,11 +6,13 @@ import {
   deleteConfigSection,
 } from "../../game/config/configApi";
 import DynamicForm from "../DynamicForm";
+import { type OrganismData } from "../../game/data/organisms";
 
 interface ConfigTabProps {
   profileId: string;
   isActive: boolean;
   initialData: Record<string, unknown>;
+  organisms: OrganismData[];
   onDirtyChange?: (dirty: boolean) => void;
 }
 
@@ -36,6 +38,7 @@ export default function ConfigTab({
   profileId,
   isActive,
   initialData,
+  organisms,
   onDirtyChange,
 }: ConfigTabProps) {
   const [activeTab, setActiveTab] = useState(configRegistry[0]?.id ?? "camera");
@@ -143,6 +146,7 @@ export default function ConfigTab({
                   key={`${profileId}-${activeCategory.id}-${section.id}-${resetCounts[section.id] ?? 0}`}
                   schema={section.schema}
                   defaults={values[section.id] ?? section.defaults}
+                  organisms={organisms}
                   onChange={(next) => {
                     setValues((prev) => ({ ...prev, [section.id]: next }));
                     setDirty((prev) => ({ ...prev, [section.id]: true }));

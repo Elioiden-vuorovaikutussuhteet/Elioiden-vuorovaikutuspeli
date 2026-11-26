@@ -31,6 +31,7 @@ interface OrganismsTabProps {
   isActive: boolean;
   initialData: unknown;
   onDirtyChange?: (dirty: boolean) => void;
+  onOrganismsChange?: (organisms: OrganismData[]) => void;
 }
 
 function defaultOrganismConfig(): OrganismConfig {
@@ -79,6 +80,7 @@ export default function OrganismsTab({
   isActive,
   initialData,
   onDirtyChange,
+  onOrganismsChange,
 }: OrganismsTabProps) {
   const [config, setConfig] = useState(() =>
     normalizeOrganismConfig(initialData),
@@ -93,6 +95,9 @@ export default function OrganismsTab({
   useEffect(() => {
     onDirtyChange?.(dirty);
   }, [dirty, onDirtyChange]);
+  useEffect(() => {
+    onOrganismsChange?.(config.organisms);
+  }, [config.organisms, onOrganismsChange]);
   const { organisms, relations, popupTexts } = config;
   const activeOrganismId = organisms.some((o) => o.id === selectedId)
     ? selectedId

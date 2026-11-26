@@ -6,6 +6,7 @@ import {
   FormControlLabel,
   Typography,
   MenuItem,
+  Button,
 } from "@mui/material";
 import { z } from "zod";
 import { type OrganismData } from "../game/data/organisms";
@@ -42,6 +43,116 @@ function CommaSeparatedField({ label, value, onChange }: CommaSeparatedFieldProp
   );
 }
 
+interface OrganismOrderFieldProps {
+  label: string;
+  value: unknown;
+  organisms: OrganismData[];
+  onChange: (value: string[]) => void;
+}
+
+function OrganismOrderField({
+  label,
+  value,
+  organisms,
+  onChange,
+}: OrganismOrderFieldProps) {
+  const items = Array.isArray(value) ? (value as string[]) : [];
+  const nameById = new Map(organisms.map((o) => [o.id, o.name]));
+  const available = organisms.filter((o) => !items.includes(o.id));
+
+  function move(index: number, delta: -1 | 1) {
+    const target = index + delta;
+    if (target < 0 || target >= items.length) return;
+    const next = [...items];
+    [next[index], next[target]] = [next[target], next[index]];
+    onChange(next);
+  }
+
+  function remove(index: number) {
+    onChange(items.filter((_, i) => i !== index));
+  }
+
+  return (
+    <Box>
+      <Typography variant="body2" sx={{ mb: 1 }}>
+        {label}
+      </Typography>
+
+      <Box sx={{ display: "flex", flexDirection: "column", gap: 1, mb: 2 }}>
+        {items.length === 0 && (
+          <Typography variant="body2" color="text.secondary">
+            No organisms in the spawn order yet.
+          </Typography>
+        )}
+
+        {items.map((id, index) => {
+          const name = nameById.get(id);
+          return (
+            <Box
+              key={`${id}-${index}`}
+              sx={{
+                display: "flex",
+                alignItems: "center",
+                gap: 1,
+                p: 1,
+                border: 1,
+                borderColor: name ? "divider" : "error.main",
+                borderRadius: 1,
+                backgroundColor: "background.paper",
+              }}
+            >
+              <Typography sx={{ width: 24 }} color="text.secondary">
+                {index + 1}.
+              </Typography>
+              <Typography
+                sx={{ flexGrow: 1 }}
+                color={name ? "text.primary" : "error"}
+              >
+                {name ?? `${id} (organism not found)`}
+              </Typography>
+              <Button
+                size="small"
+                disabled={index === 0}
+                onClick={() => move(index, -1)}
+              >
+                ↑
+              </Button>
+              <Button
+                size="small"
+                disabled={index === items.length - 1}
+                onClick={() => move(index, 1)}
+              >
+                ↓
+              </Button>
+              <Button size="small" color="error" onClick={() => remove(index)}>
+                ✕
+              </Button>
+            </Box>
+          );
+        })}
+      </Box>
+
+      <TextField
+        select
+        label="Add organism"
+        value=""
+        onChange={(e) => onChange([...items, e.target.value])}
+        disabled={available.length === 0}
+        helperText={
+          available.length === 0 ? "All organisms are already in the list" : ""
+        }
+        fullWidth
+      >
+        {available.map((o) => (
+          <MenuItem key={o.id} value={o.id}>
+            {o.name}
+          </MenuItem>
+        ))}
+      </TextField>
+    </Box>
+  );
+}
+
 interface DynamicFormProps {
   schema: z.ZodObject<z.ZodRawShape>;
   defaults: Record<string, unknown>;
@@ -73,6 +184,18 @@ export default function DynamicForm({ schema, defaults, onChange, organisms }: D
       {Object.entries(schema.shape).map(([key, field]) => {
 
         const currentValue = values[key];
+
+        if (key === "spawnOrder" && organisms) {
+          return (
+            <OrganismOrderField
+              key={key}
+              label={key}
+              value={currentValue}
+              organisms={organisms}
+              onChange={(next) => handleChange(key, next)}
+            />
+          );
+        }
 
         // Number fields
         if (field instanceof z.ZodNumber) {
