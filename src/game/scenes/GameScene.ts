@@ -1,7 +1,6 @@
 import Phaser from "phaser";
 import GlowManager from "../managers/GlowManager";
 import Organism from "../entities/organism";
-import { organisms } from "../data/organisms";
 import MenuButton from "../entities/menubutton";
 import HintButton from "../entities/hintbutton";
 import CameraManager from "../managers/CameraManager";
@@ -49,7 +48,6 @@ export default class GameScene extends Phaser.Scene {
     this.uiCamera = this.cameraManager.getUICamera();
     this.scoreManager = new ScoreManager(this, this.config.startingMoney);
     const centerX = this.cameras.main.centerX;
-    const centerY = this.cameras.main.centerY;
 
     const interactions: Connection[] = [];
     const rightConnections: Connection[] = [];

@@ -304,9 +304,12 @@ export default class ArrowManager {
 
   public removeOrganismFromSpawnOrder(organismId: string): void {
     const spawnIndex = this.organismSpawnOrder.indexOf(organismId);
-    if (spawnIndex >= this.nextOrganismToSpawn) {
-      this.organismSpawnOrder.splice(spawnIndex, 1);
+
+    if (spawnIndex === -1 || spawnIndex < this.nextOrganismToSpawn) {
+      return;
     }
+
+    this.organismSpawnOrder.splice(spawnIndex, 1);
   }
 
   public clearPreview(): void {

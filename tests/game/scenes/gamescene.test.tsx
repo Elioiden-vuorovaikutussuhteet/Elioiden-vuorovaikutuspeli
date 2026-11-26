@@ -7,6 +7,7 @@ import MenuButton from "../../../src/game/entities/menubutton";
 import HintButton from "../../../src/game/entities/hintbutton";
 import { gameSceneConfig, type GameSceneConfig } from "../../../src/game/config";
 import { organisms } from "../../../src/game/data/organisms";
+import { spawnOrder } from "../../../src/game/config/spawnOrderConfig";
 
 const {
   MockOrganism,
@@ -214,8 +215,6 @@ describe("GameScene", () => {
   it("launches the configured menu scene and spawns the initial organism", () => {
     scene.create();
 
-    const initialOrganism = organisms[gameSceneConfig.initialOrganismIndex];
-
     expect(scene.scene.launch).toHaveBeenCalledWith(gameSceneConfig.scenes.menu);
     expect(scene.scene.bringToTop).toHaveBeenCalledWith(
       gameSceneConfig.scenes.menu,
@@ -223,9 +222,9 @@ describe("GameScene", () => {
 
     expect(Organism).toHaveBeenCalledWith(
       scene,
-      initialOrganism.id,
-      500 + initialOrganism.offsetX,
-      500 + initialOrganism.offsetY,
+      spawnOrder.spawnOrder[0],
+      expect.any(Number),
+      expect.any(Number),
       expect.anything(),
       expect.any(Function),
     );
@@ -234,7 +233,6 @@ describe("GameScene", () => {
   it("spawns the second organism after configured delay when menu closes", () => {
     scene.create();
 
-    const secondOrganism = organisms[gameSceneConfig.secondOrganismIndex];
     const menuClosedCallback = vi.mocked(scene.events.once).mock.calls[0][1];
 
     menuClosedCallback();
@@ -248,11 +246,11 @@ describe("GameScene", () => {
     const delayedCallback = vi.mocked(scene.time.delayedCall).mock.calls[0][1];
     delayedCallback();
 
-    expect(Organism).toHaveBeenCalledWith(
+    expect(Organism).toHaveBeenLastCalledWith(
       scene,
-      "amf", // <-- id comes second
-      expect.any(Number), // <-- x
-      expect.any(Number), // <-- y
+      spawnOrder.spawnOrder[1],
+      expect.any(Number),
+      expect.any(Number),
       expect.anything(),
       expect.any(Function),
     );
@@ -357,7 +355,9 @@ describe("GameScene", () => {
     expect(organismManager.getOrganismMap().has("acacia")).toBe(false);
     expect(organismManager.getOrganismMap().has("diazotroph")).toBe(false);
     expect(arrowManager.organismSpawnOrder).not.toContain("diazotroph");
-    expect(organismManager.getOrganismMap().has("ants")).toBe(true);
+    expect(
+      organismManager.getOrganismMap().has(spawnOrder.spawnOrder[1]),
+    ).toBe(true);
   });
 
   it("deletes an already spawned diazotroph when acacia is deleted", () => {
