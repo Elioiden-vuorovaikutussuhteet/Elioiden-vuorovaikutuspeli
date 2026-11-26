@@ -186,10 +186,26 @@ describe("configRoutes", () => {
       expect(mockQuery).not.toHaveBeenCalled();
     });
 
-    it("returns 400 when payload fails Zod validation", async () => {
+    it("returns 403 when updating the default profile", async () => {
       const { status, body } = await request(
         createTestApp(true),
         "/api/configs/default/permanentArrow",
+        {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ pulseDuration: 1500 }),
+        },
+      );
+
+      expect(status).toBe(403);
+      expect(body.error).toBe("Default profile is read-only");
+      expect(mockQuery).not.toHaveBeenCalled();
+    });
+
+    it("returns 400 when payload fails Zod validation", async () => {
+      const { status, body } = await request(
+        createTestApp(true),
+        "/api/configs/bio-1/permanentArrow",
         {
           method: "PUT",
           headers: { "Content-Type": "application/json" },
@@ -232,7 +248,7 @@ describe("configRoutes", () => {
 
       const { status, body } = await request(
         createTestApp(true),
-        "/api/configs/default/permanentArrow",
+        "/api/configs/bio-1/permanentArrow",
         {
           method: "PUT",
           headers: { "Content-Type": "application/json" },
@@ -241,12 +257,12 @@ describe("configRoutes", () => {
       );
 
       expect(status).toBe(200);
-      expect(body.profileId).toBe("default");
+      expect(body.profileId).toBe("bio-1");
       expect(body.domain).toBe("permanentArrow");
       expect(body.config.pulseDuration).toBe(1500);
       expect(mockQuery).toHaveBeenCalledWith(
         expect.stringContaining("INSERT INTO game_configs"),
-        ["default", "permanentArrow", JSON.stringify(updatedConfig)],
+        ["bio-1", "permanentArrow", JSON.stringify(updatedConfig)],
       );
     });
   });
@@ -260,6 +276,18 @@ describe("configRoutes", () => {
       );
 
       expect(status).toBe(401);
+      expect(mockQuery).not.toHaveBeenCalled();
+    });
+
+    it("returns 403 when deleting from the default profile", async () => {
+      const { status, body } = await request(
+        createTestApp(true),
+        "/api/configs/default/permanentArrow",
+        { method: "DELETE" },
+      );
+
+      expect(status).toBe(403);
+      expect(body.error).toBe("Default profile is read-only");
       expect(mockQuery).not.toHaveBeenCalled();
     });
 
@@ -278,25 +306,25 @@ describe("configRoutes", () => {
 
     it("deletes DB override and returns section defaults", async () => {
       mockQuery
-        .mockResolvedValueOnce({ rows: [{ id: "default" }] })
+        .mockResolvedValueOnce({ rows: [{ id: "bio-1" }] })
         .mockResolvedValueOnce({ rowCount: 1 });
 
       const { status, body } = await request(
         createTestApp(true),
-        "/api/configs/default/permanentArrow",
+        "/api/configs/bio-1/permanentArrow",
         { method: "DELETE" },
       );
 
       expect(status).toBe(200);
       expect(body).toEqual({
-        profileId: "default",
+        profileId: "bio-1",
         domain: "permanentArrow",
         config: permanentArrowUIConfig,
         reset: true,
       });
       expect(mockQuery).toHaveBeenLastCalledWith(
         "DELETE FROM game_configs WHERE profile_id = $1 AND domain = $2",
-        ["default", "permanentArrow"],
+        ["bio-1", "permanentArrow"],
       );
     });
   });

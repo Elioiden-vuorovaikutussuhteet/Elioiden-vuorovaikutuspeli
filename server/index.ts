@@ -69,7 +69,7 @@ app.use("/api/hello", requireAdmin);
 
 app.get("/api/hello", (_req, res) => {
   res.json({
-    message: "Hello from Express!",
+    message: "Logged in as admin",
     status: "success",
   });
 });
