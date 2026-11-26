@@ -104,14 +104,40 @@ export default class SettingsScene extends Phaser.Scene {
       this.scene.stop();
     });
 
-    const { leftOffsets, bottomOffset, event } = this.config.pulseButtons;
-    const buttonY = menuY + bottomOffset;
+    const { xRatios, topOffsetRatio, slotFillRatio, labels, labelText, event } = this.config.pulseButtons;
+    const buttonY = menuY + menuHeight * topOffsetRatio;
 
     const buttons: Record<PulseSpeed, PulseButton> = {
-      slow: new PulseButton(this, menuX + leftOffsets.slow, buttonY),
-      normal: new PulseButton(this, menuX + leftOffsets.normal, buttonY),
-      fast: new PulseButton(this, menuX + leftOffsets.fast, buttonY),
+      slow: new PulseButton(this, menuX + menuWidth * xRatios.slow, buttonY),
+      normal: new PulseButton(this, menuX + menuWidth * xRatios.normal, buttonY),
+      fast: new PulseButton(this, menuX + menuWidth * xRatios.fast, buttonY),
     };
+
+    const slotWidth = menuWidth / 3;
+    const labelFontSize = Math.min(
+      width * labelText.fontSizeRatio,
+      labelText.maxFontSize,
+    );
+
+    (Object.keys(buttons) as PulseSpeed[]).forEach((speed) => {
+      const btn = buttons[speed];
+      const scale = Math.min(1, (slotWidth * slotFillRatio) / btn.width);
+      btn.setScale(scale);
+      this.add
+        .text(
+          btn.x,
+          btn.y + btn.displayHeight / 2 + labelText.gap,
+          labels[speed],
+          {
+            fontFamily: labelText.fontFamily,
+            fontSize: `${labelFontSize}px`,
+            fontStyle: labelText.fontStyle,
+            color: labelText.color,
+            align: "center",
+          },
+        )
+        .setOrigin(0.5, 0);
+    });
 
     const select = (speed: PulseSpeed) => {
       setPulseSpeed(speed);
