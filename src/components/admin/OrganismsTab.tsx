@@ -209,6 +209,25 @@ export default function OrganismsTab({
     }
   }
 
+  function handleDelete(id: string) {
+    update((prev) => {
+      const isLinked = (r: OrganismsRelations) =>
+        r.source === id || r.target === id;
+
+      const nextPopupTexts = { ...prev.popupTexts };
+      for (const rel of prev.relations.filter(isLinked)) {
+        delete nextPopupTexts[getInteractionId(rel.source, rel.target)];
+      }
+
+      return {
+        organisms: prev.organisms.filter((o) => o.id !== id),
+        relations: prev.relations.filter((r) => !isLinked(r)),
+        popupTexts: nextPopupTexts,
+      };
+    });
+    setSelectedId("");
+  }
+
   return (
     <Box sx={{ mt: 3 }}>
       <Typography variant="h5" sx={{ mb: 2 }}>

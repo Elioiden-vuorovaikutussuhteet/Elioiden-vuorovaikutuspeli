@@ -2,6 +2,7 @@ import {
   Box,
   Typography,
   Divider,
+  Button,
 } from "@mui/material";
 import DynamicForm from '../components/DynamicForm';
 import {
@@ -37,6 +38,8 @@ interface OrganismEditorProps {
     interactionId: string,
     popupText: PopupText
   ) => void;
+
+  onDeleteOrganism: (id: string) => void;
 }
 
 function OrganismEditor({
@@ -47,6 +50,7 @@ function OrganismEditor({
   onOrganismChange,
   onRelationChange,
   onPopupTextChange,
+  onDeleteOrganism,
 }: OrganismEditorProps) {
 
   const selectedIndex = organisms.findIndex(
@@ -101,6 +105,14 @@ function OrganismEditor({
           );
         }}
       />
+
+      <Button
+        color="error"
+        variant="outlined"
+        onClick={() => onDeleteOrganism(selectedOrganismId)}
+      >
+        Delete Organism
+      </Button>
 
       <Divider sx={{ my: 4 }} />
 
