@@ -10,6 +10,7 @@ import DynamicForm from "../DynamicForm";
 interface ConfigTabProps {
   profileId: string;
   isActive: boolean;
+  readOnly?: boolean;
   initialData: Record<string, unknown>;
   onDirtyChange?: (dirty: boolean) => void;
 }
@@ -35,6 +36,7 @@ function buildInitialValues(
 export default function ConfigTab({
   profileId,
   isActive,
+  readOnly = false,
   initialData,
   onDirtyChange,
 }: ConfigTabProps) {
@@ -55,7 +57,7 @@ export default function ConfigTab({
 
   async function handleSave(sectionId: string) {
     const current = values[sectionId];
-    if (!current) return;
+    if (readOnly || !current) return;
 
     setSavingId(sectionId);
     setFeedback(null);
@@ -87,6 +89,8 @@ export default function ConfigTab({
   }
 
   async function handleReset(sectionId: string, fallbackDefaults: unknown) {
+    if (readOnly) return;
+
     setSavingId(sectionId);
     setFeedback(null);
     try {
@@ -139,33 +143,47 @@ export default function ConfigTab({
                   {section.label}
                 </Typography>
 
-                <DynamicForm
-                  key={`${profileId}-${activeCategory.id}-${section.id}-${resetCounts[section.id] ?? 0}`}
-                  schema={section.schema}
-                  defaults={values[section.id] ?? section.defaults}
-                  onChange={(next) => {
-                    setValues((prev) => ({ ...prev, [section.id]: next }));
-                    setDirty((prev) => ({ ...prev, [section.id]: true }));
+                <Box
+                  ref={(el: HTMLDivElement | null) => {
+                    if (el) el.inert = readOnly;
                   }}
-                />
-
-                <Box sx={{ mt: 2, display: "flex", gap: 2 }}>
-                  <Button
-                    variant="contained"
-                    disabled={isSaving || !dirty[section.id]}
-                    onClick={() => handleSave(section.id)}
-                  >
-                    {isSaving ? "Saving..." : "Save"}
-                  </Button>
-                  <Button
-                    variant="outlined"
-                    color="secondary"
-                    disabled={isSaving}
-                    onClick={() => handleReset(section.id, section.defaults)}
-                  >
-                    Reset to Defaults
-                  </Button>
+                  sx={
+                    readOnly
+                      ? { opacity: 0.65, pointerEvents: "none" }
+                      : undefined
+                  }
+                >
+                  <DynamicForm
+                    key={`${profileId}-${activeCategory.id}-${section.id}-${resetCounts[section.id] ?? 0}`}
+                    schema={section.schema}
+                    defaults={values[section.id] ?? section.defaults}
+                    onChange={(next) => {
+                      if (readOnly) return;
+                      setValues((prev) => ({ ...prev, [section.id]: next }));
+                      setDirty((prev) => ({ ...prev, [section.id]: true }));
+                    }}
+                  />
                 </Box>
+
+                {!readOnly && (
+                  <Box sx={{ mt: 2, display: "flex", gap: 2 }}>
+                    <Button
+                      variant="contained"
+                      disabled={isSaving || !dirty[section.id]}
+                      onClick={() => handleSave(section.id)}
+                    >
+                      {isSaving ? "Saving..." : "Save"}
+                    </Button>
+                    <Button
+                      variant="outlined"
+                      color="secondary"
+                      disabled={isSaving}
+                      onClick={() => handleReset(section.id, section.defaults)}
+                    >
+                      Reset to Defaults
+                    </Button>
+                  </Box>
+                )}
 
                 {feedback?.sectionId === section.id && (
                   <Alert

@@ -29,6 +29,7 @@ interface OrganismConfig {
 interface OrganismsTabProps {
   profileId: string;
   isActive: boolean;
+  readOnly?: boolean;
   initialData: unknown;
   onDirtyChange?: (dirty: boolean) => void;
 }
@@ -77,6 +78,7 @@ function movePopupKey(
 export default function OrganismsTab({
   profileId,
   isActive,
+  readOnly = false,
   initialData,
   onDirtyChange,
 }: OrganismsTabProps) {
@@ -99,6 +101,7 @@ export default function OrganismsTab({
     : (organisms[0]?.id ?? "");
 
   function update(updater: (prev: OrganismConfig) => OrganismConfig) {
+    if (readOnly) return;
     setConfig(updater);
     setDirty(true);
   }
@@ -135,7 +138,7 @@ export default function OrganismsTab({
       };
     });
 
-    if (originalId !== updated.id) setSelectedId(updated.id);
+    if (!readOnly && originalId !== updated.id) setSelectedId(updated.id);
   }
 
   function handleRelationChange(index: number, updated: OrganismsRelations) {
@@ -159,6 +162,7 @@ export default function OrganismsTab({
   }
 
   async function handleSave() {
+    if (readOnly) return;
     setSaving(true);
     setFeedback(null);
     try {
@@ -186,6 +190,7 @@ export default function OrganismsTab({
   }
 
   async function handleReset() {
+    if (readOnly) return;
     setSaving(true);
     setFeedback(null);
     try {
@@ -229,41 +234,50 @@ export default function OrganismsTab({
         </select>
       </Box>
 
-      <OrganismEditor
-        organisms={organisms}
-        relations={relations}
-        popupTexts={popupTexts}
-        selectedOrganismId={activeOrganismId}
-        onOrganismChange={handleOrganismChange}
-        onRelationChange={handleRelationChange}
-        onPopupTextChange={(interactionId, updatedPopupText) =>
-          update((prev) => ({
-            ...prev,
-            popupTexts: {
-              ...prev.popupTexts,
-              [interactionId]: updatedPopupText,
-            },
-          }))
-        }
-      />
+      <Box
+        ref={(el: HTMLDivElement | null) => {
+          if (el) el.inert = readOnly;
+        }}
+        sx={readOnly ? { opacity: 0.65, pointerEvents: "none" } : undefined}
+      >
+        <OrganismEditor
+          organisms={organisms}
+          relations={relations}
+          popupTexts={popupTexts}
+          selectedOrganismId={activeOrganismId}
+          onOrganismChange={handleOrganismChange}
+          onRelationChange={handleRelationChange}
+          onPopupTextChange={(interactionId, updatedPopupText) =>
+            update((prev) => ({
+              ...prev,
+              popupTexts: {
+                ...prev.popupTexts,
+                [interactionId]: updatedPopupText,
+              },
+            }))
+          }
+        />
+      </Box>
 
-      <Stack direction="row" spacing={2} sx={{ alignItems: "center", mt: 3 }}>
-        <Button
-          variant="contained"
-          disabled={!dirty || saving}
-          onClick={handleSave}
-        >
-          {saving ? "Saving..." : "Save"}
-        </Button>
-        <Button
-          variant="outlined"
-          color="secondary"
-          disabled={saving}
-          onClick={handleReset}
-        >
-          Reset to Defaults
-        </Button>
-      </Stack>
+      {!readOnly && (
+        <Stack direction="row" spacing={2} sx={{ alignItems: "center", mt: 3 }}>
+          <Button
+            variant="contained"
+            disabled={!dirty || saving}
+            onClick={handleSave}
+          >
+            {saving ? "Saving..." : "Save"}
+          </Button>
+          <Button
+            variant="outlined"
+            color="secondary"
+            disabled={saving}
+            onClick={handleReset}
+          >
+            Reset to Defaults
+          </Button>
+        </Stack>
+      )}
 
       {feedback && (
         <Alert

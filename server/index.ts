@@ -60,7 +60,7 @@ app.use("/api/profiles", profileRoutes);
 
 app.get("/api/hello", requireAdmin, (_req, res) => {
   res.json({
-    message: "Hello from Express!",
+    message: "Logged in as admin",
     status: "success",
   });
 });

@@ -7,8 +7,7 @@ import { defineConfig, globalIgnores } from 'eslint/config'
 import markdown from '@eslint/markdown'
 
 export default defineConfig([
-  globalIgnores(['dist', 'coverage', 'tests']),
-
+  globalIgnores(['dist', 'coverage', 'tests', 'playwright-report/**', 'test-results/**']),
   // 1. TypeScript & React files
   {
     files: ['**/*.{ts,tsx}'],

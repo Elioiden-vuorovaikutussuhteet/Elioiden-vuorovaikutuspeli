@@ -104,5 +104,20 @@ describe("db", () => {
 
       await expect(initDb()).rejects.toThrow("Connection failed");
     });
+
+    it("clears default profile rows from game_configs", async () => {
+      mockQuery.mockResolvedValue({ rows: [], rowCount: 0 });
+      const { initDb } = await import("../../server/db");
+
+      await initDb();
+
+      const executedSql = mockQuery.mock.calls
+        .map(([sql]) => String(sql))
+        .join("\n");
+
+      expect(executedSql).toContain(
+        "DELETE FROM game_configs WHERE profile_id = 'default'",
+      );
+    });
   });
 });
