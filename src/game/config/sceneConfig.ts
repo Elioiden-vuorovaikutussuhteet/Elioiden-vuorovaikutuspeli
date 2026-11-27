@@ -187,7 +187,7 @@ export const tutorialSceneConfig: TutorialSceneConfig = {
       "Get a hint when stuck by clicking the Hint button, which will subtract 100 from your score. Two organisms with a missing relationship will be highlighted.",
       "Move organisms around by pressing Shift on your keyboard and dragging the organism.",
       "Zoom in or out and move the view of the screen up, down, left and right by pressing the arrow keys on your keyboard.",
-      "The starting score is 1000. Correct relationships add 10 points and incorrect relationships subtract 20 points from your score.",
+      "The starting score is 1000. Correct relationships add 50 points and incorrect relationships subtract 100 points from your score.",
       "You may encounter random events during the game, which will either negatively or positively affect organisms and their relationships.",
     ].join("\n\n"),
     topOffsetRatio: 0.05,
