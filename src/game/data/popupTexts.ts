@@ -149,4 +149,23 @@ export const popupTexts: Record<string, PopupText> = {
     description:
       "Bullhorn acacias have relatively weak defense systems as ants take care of their defense. Without acacia ants acacias are more susceptible to both bacterial and fungal diseases.",
   },
+  "acacia-acaciapathogen": {
+    title:
+      "Symbiotic relationship between Bullhorn Acacia and Bullhorn Acacia Pathogens",
+    relation: "Symbiotic",
+    description: "",
+  },
+  "antpathogen-ants": {
+    title:
+      "Harmful relationship between Ant Infecting Pathogens and Acacia Ants",
+    relation: "Harmful",
+    description:
+      "Acacia ants rarely get sick as they groom vigorously. However, occasionally they can get fungal or bacterial diseases.",
+  },
+  "amf-acaciapathogen": {
+    title:
+      "Harmful relationship between Arbuscular Mycorrhizal Fungi and Bullhorn Acacia Pathogens",
+    relation: "Harmful",
+    description: "Mycorrhizal fungi protect acacia trees from plant pathogens.",
+  },
 };
