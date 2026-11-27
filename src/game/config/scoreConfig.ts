@@ -46,8 +46,8 @@ export const scoreConfig: ScoreConfig = {
   fontSize: "30px",
   fontColor: "#000000",
   fontStyle: "bold",
-  gainAmount: 10,
-  defaultLoseAmount: 20,
+  gainAmount: 50,
+  defaultLoseAmount: 100,
   minMoney: 0,
 
   coin: {
