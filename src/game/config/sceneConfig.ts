@@ -185,7 +185,7 @@ export const tutorialSceneConfig: TutorialSceneConfig = {
       "Select whether you want to draw a positive (green arrow) or negative (red arrow) relationship by clicking on the corresponding arrow button and choosing the starting and ending organism.",
       "Click the cursor button and then an arrow or organism to check a relationship's or organism's description.",
       "Get a hint when stuck by clicking the Hint button, which will subtract 100 from your score. Two organisms with a missing relationship will be highlighted.",
-      "Move organisms around by pressing the Shift button on your keyboard and clicking the organism.",
+      "Move organisms around by pressing Shift on your keyboard and dragging the organism.",
       "Zoom in or out and move the view of the screen up, down, left and right by pressing the arrow keys on your keyboard.",
       "The starting score is 1000. Correct relationships add 10 points and incorrect relationships subtract 20 points from your score.",
       "You may encounter random events during the game, which will either negatively or positively affect organisms and their relationships.",
