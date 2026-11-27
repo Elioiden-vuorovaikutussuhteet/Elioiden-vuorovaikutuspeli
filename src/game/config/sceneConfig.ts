@@ -67,7 +67,7 @@ export const gameSceneConfig: GameSceneConfig = {
   scenes: {
     menu: "MenuScene",
     gameOver: "GameOverScene",
-    options: "OptionsScene"
+    options: "OptionsScene",
   },
   assetsPath: "assets",
   images: [
@@ -176,8 +176,8 @@ export const tutorialSceneConfig: TutorialSceneConfig = {
   images: [{ key: "close_button_sprite", file: "closebutton.png" }],
   widthRatio: 0.4,
   maxWidth: 550,
-  heightRatio: 0.8,
-  maxHeight: 700,
+  heightRatio: 0.9,
+  maxHeight: 800,
   leftMarginRatio: 0.05,
   topOffsetDivisor: 2.7,
   text: {
@@ -186,10 +186,11 @@ export const tutorialSceneConfig: TutorialSceneConfig = {
       "Click the cursor button and then an arrow or organism to check a relationship's or organism's description.",
       "Get a hint when stuck by clicking the Hint button, which will subtract 100 from your score. Two organisms with a missing relationship will be highlighted.",
       "Move organisms around by pressing the Shift button on your keyboard and clicking the organism.",
-      "Move the view of the screen up, down, left and right by pressing the arrow keys on your keyboard.",
+      "Zoom in or out and move the view of the screen up, down, left and right by pressing the arrow keys on your keyboard.",
       "The starting score is 1000. Correct relationships add 10 points and incorrect relationships subtract 20 points from your score.",
+      "You may encounter random events during the game, which will either negatively or positively affect organisms and their relationships.",
     ].join("\n\n"),
-    topOffsetRatio: 0.07,
+    topOffsetRatio: 0.05,
     fontFamily: "monospace",
     fontSizeRatio: 0.015,
     maxFontSize: 17,
@@ -271,8 +272,8 @@ export const settingsSceneConfig: SettingsSceneConfig = {
   assetsPath: "assets",
   images: [
     { key: "close_button_sprite", file: "closebutton.png" },
-    { key: "pulsebutton_sprite", file: "pulsebutton.png" }
-          ],
+    { key: "pulsebutton_sprite", file: "pulsebutton.png" },
+  ],
   widthRatio: 0.3,
   maxWidth: 450,
   heightRatio: 0.7,
@@ -280,9 +281,7 @@ export const settingsSceneConfig: SettingsSceneConfig = {
   leftMarginRatio: 0.05,
   topOffsetDivisor: 2.7,
   text: {
-    content: [
-      "Select the desired pulse speed:",
-    ].join("\n"),
+    content: ["Select the desired pulse speed:"].join("\n"),
     topOffsetRatio: 0.15,
     fontFamily: "monospace",
     fontSizeRatio: 0.015,
