@@ -153,7 +153,7 @@ export const popupTexts: Record<string, PopupText> = {
     title:
       "Symbiotic relationship between Bullhorn Acacia and Bullhorn Acacia Pathogens",
     relation: "Symbiotic",
-    description: "",
+    description: "Plant pathogens need their host to live.",
   },
   "antpathogen-ants": {
     title:
